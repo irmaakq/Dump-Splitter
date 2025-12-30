@@ -6,15 +6,15 @@ import {
   ArrowLeft, X, RotateCcw, RotateCw, History, Monitor,
   Zap, AlertTriangle, ChevronDown, CheckCircle2, Scissors,
   Grid, Layout, DownloadCloud, FileImage, Fullscreen, Rows,
-  Wand2, FileType, ShieldCheck, Cpu, Activity, Target
+  Wand2, FileType, ShieldCheck, Cpu, Activity, Target, Lock, Shield, ServerOff
 } from 'lucide-react';
 
 // --- CONSTANTS ---
 const SPLITTER_STATUS_MSGS = [
-  "Processing media to 4K canvas...",
-  "Locking vertical segmentation boundaries...",
-  "HD Pixel smoothing active...",
-  "Packaging slides in high resolution."
+  "Medya verisi 4K kanvasa işleniyor...",
+  "Dikey segmentasyon sınırları kilitleniyor...",
+  "HD Piksel pürüzsüzleştirme aktif...",
+  "Parçalar yüksek çözünürlükte paketleniyor."
 ];
 
 const App = () => {
@@ -23,18 +23,17 @@ const App = () => {
   const [notification, setNotification] = useState(null);
   const [aiLogs, setAiLogs] = useState([]);
   
-  // Varsayılanı 4 yaptık. Otomatik değişmeyecek.
+  // Gizlilik Politikası Modal Kontrolü
+  const [showPrivacy, setShowPrivacy] = useState(false);
+
   const [splitCount, setSplitCount] = useState(4); 
   const [downloadFormat, setDownloadFormat] = useState('png'); 
   const [autoEnhance, setAutoEnhance] = useState(false); 
   const [hdMode, setHdMode] = useState(false); 
   const [optimizeMode, setOptimizeMode] = useState(false); 
   const [smartCrop, setSmartCrop] = useState(false);
-  
-  // Yeni Ultra HD Modu (Upscale)
   const [ultraHdMode, setUltraHdMode] = useState(false);
   
-  // Multiple file management states
   const [fileList, setFileList] = useState([]);
   const [uploadedFile, setUploadedFile] = useState(null);
   const [fileType, setFileType] = useState(null);
@@ -77,20 +76,14 @@ const App = () => {
     const type = file.type.startsWith('video/') ? 'video' : 'image';
     const newFileObj = { url, type, id: Date.now() };
     
-    // Listeye ekle
     setFileList(prev => [...prev, newFileObj]);
-    
-    // Yeni dosyaya odaklan
     setUploadedFile(url);
     setFileType(type);
     setSplitSlides([]);
     setIsProcessing(false); 
-    
-    // Varsayılanı her yeni dosyada 4'e zorluyoruz
     setSplitCount(4);
     
     setPage('loading');
-    
     setTimeout(() => {
       setPage('editor');
     }, 800);
@@ -123,7 +116,6 @@ const App = () => {
       const w = isVideo ? mediaElement.videoWidth : mediaElement.width;
       const h = isVideo ? mediaElement.videoHeight : mediaElement.height;
       
-      // ULTRA HD MANTIĞI
       const scaleFactor = ultraHdMode ? 2 : 1;
       const sW = w * scaleFactor;
       const sH = h * scaleFactor;
@@ -247,18 +239,111 @@ const App = () => {
     </header>
   );
 
+  // --- GÜNCELLENMİŞ GİZLİLİK POLİTİKASI MODALI ---
+  const PrivacyModal = () => (
+    <div className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300">
+      <div className="bg-[#0f0f0f] border border-white/10 rounded-3xl max-w-3xl w-full p-10 relative shadow-2xl">
+        <button 
+          onClick={() => setShowPrivacy(false)}
+          className="absolute top-6 right-6 text-gray-500 hover:text-white transition-colors"
+        >
+          <X size={24} />
+        </button>
+        
+        <div className="flex items-center gap-4 mb-8 border-b border-white/10 pb-6">
+          <div className="p-3 bg-green-500/10 rounded-2xl">
+             <ShieldCheck size={32} className="text-green-500" />
+          </div>
+          <div>
+             <h2 className="text-2xl font-black text-white uppercase tracking-tighter">Güvenlik ve Gizlilik Protokolü</h2>
+             <p className="text-xs text-gray-500 font-medium uppercase tracking-widest mt-1">Son Güncelleme: 30.12.2025 • Sürüm 2.4.0 (Secure Build)</p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
+          {/* Madde 1 */}
+          <div className="bg-white/[0.03] p-5 rounded-2xl border border-white/5 hover:border-white/10 transition-colors">
+            <h3 className="text-white font-bold mb-3 flex items-center gap-3">
+                <Lock size={18} className="text-blue-400"/> 
+                <span className="uppercase tracking-tight text-xs">İstemci Taraflı İşleme (Client-Side)</span>
+            </h3>
+            <p className="text-gray-400 leading-relaxed text-xs">
+                Dump Splitter, dosyalarınızı <strong>uzak bir sunucuya (Cloud) yüklemez.</strong> Tüm bölme ve iyileştirme işlemleri, tarayıcınızın belleğinde (HTML5 Canvas teknolojisi ile) gerçekleşir. Verileriniz cihazınızdan asla dışarı çıkmaz.
+            </p>
+          </div>
+
+          {/* Madde 2 */}
+          <div className="bg-white/[0.03] p-5 rounded-2xl border border-white/5 hover:border-white/10 transition-colors">
+            <h3 className="text-white font-bold mb-3 flex items-center gap-3">
+                <ServerOff size={18} className="text-red-400"/> 
+                <span className="uppercase tracking-tight text-xs">Sunucu Kaydı Yoktur</span>
+            </h3>
+            <p className="text-gray-400 leading-relaxed text-xs">
+                Uygulama, "Serverless" (Sunucusuz) mimari üzerine kuruludur. Yüklediğiniz fotoğrafların veya videoların bir kopyası alınmaz, loglanmaz ve veritabanına kaydedilmez. Sayfayı yenilediğinizde tüm geçici veriler RAM'den silinir.
+            </p>
+          </div>
+
+          {/* Madde 3 */}
+          <div className="bg-white/[0.03] p-5 rounded-2xl border border-white/5 hover:border-white/10 transition-colors">
+            <h3 className="text-white font-bold mb-3 flex items-center gap-3">
+                <Eye size={18} className="text-purple-400"/> 
+                <span className="uppercase tracking-tight text-xs">AI Modeli Eğitilmez</span>
+            </h3>
+            <p className="text-gray-400 leading-relaxed text-xs">
+                Kullanılan görüntü iyileştirme algoritmaları yereldir. Görselleriniz, herhangi bir yapay zeka modelini eğitmek, yüz taraması yapmak veya veri madenciliği amacıyla <strong>kullanılmaz.</strong>
+            </p>
+          </div>
+
+          {/* Madde 4 */}
+          <div className="bg-white/[0.03] p-5 rounded-2xl border border-white/5 hover:border-white/10 transition-colors">
+            <h3 className="text-white font-bold mb-3 flex items-center gap-3">
+                <Shield size={18} className="text-yellow-400"/> 
+                <span className="uppercase tracking-tight text-xs">Sıfır İz Politikası</span>
+            </h3>
+            <p className="text-gray-400 leading-relaxed text-xs">
+                Kişisel verileriniz, IP adresiniz veya kullanım alışkanlıklarınız hiçbir üçüncü taraf reklam şirketi veya veri analisti ile paylaşılmaz. Uygulama tamamen anonim kullanıma uygundur.
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-8 pt-6 border-t border-white/10 flex flex-col items-center gap-4">
+             <p className="text-[10px] text-gray-600 uppercase tracking-widest">Bu uygulama KVKK ve GDPR gizlilik standartlarına uygun olarak tasarlanmıştır.</p>
+             <button 
+              onClick={() => setShowPrivacy(false)}
+              className="w-full bg-white text-black font-black py-4 rounded-xl hover:bg-gray-200 transition-all uppercase tracking-widest text-xs shadow-xl"
+            >
+              Güvenlik Protokollerini Onayla ve Devam Et
+            </button>
+        </div>
+      </div>
+    </div>
+  );
+
   if (page === 'landing') {
     return (
-      <div className="min-h-screen bg-[#050505] text-white flex flex-col items-center justify-center p-6 text-center">
+      <div className="min-h-screen bg-[#050505] text-white flex flex-col items-center justify-center p-6 text-center relative">
         <input type="file" ref={fileInputRef} className="hidden" accept="image/*,video/*" onChange={handleFileSelect} />
         <Header isEditor={false} />
+        
+        {/* Gizlilik Butonu */}
+        <div className="absolute top-8 right-8 z-[80]">
+            <button 
+              onClick={() => setShowPrivacy(true)}
+              className="flex items-center gap-2 text-[10px] font-bold text-gray-500 hover:text-white transition-colors uppercase tracking-widest border border-white/10 px-4 py-2 rounded-full hover:bg-white/5"
+            >
+              <ShieldCheck size={14} /> Gizlilik & Güvenlik
+            </button>
+        </div>
+
         <div className="absolute top-0 -z-10 w-full h-full bg-gradient-to-b from-blue-900/10 via-transparent to-transparent" />
-        <h1 className="text-7xl md:text-9xl font-black tracking-tighter mb-8 leading-normal pt-48 pb-6 italic uppercase">DUMP <br /> Split</h1>
-        <p className="text-gray-400 max-w-xl mb-12 font-medium tracking-tight uppercase text-xs tracking-[0.2em]">Instagram için profesyonel Dump Bölme ve Kalite Artırma Aracı</p>
+        <h1 className="text-7xl md:text-9xl font-black tracking-tighter mb-8 leading-normal pt-48 pb-6 italic uppercase">DUMP <br /> SPLITTER</h1>
+        <p className="text-gray-400 max-w-xl mb-12 font-medium tracking-tight uppercase text-xs tracking-[0.2em]">İNSTAGRAM İÇİN DUMP BÖLME ARACI</p>
         <button onClick={triggerFileInput} className="w-full max-w-xl aspect-video bg-[#0c0c0c] border-2 border-dashed border-white/10 rounded-[48px] flex flex-col items-center justify-center group hover:border-white/30 transition-all p-12 shadow-2xl relative overflow-hidden">
            <div className="w-20 h-20 bg-white text-black rounded-3xl flex items-center justify-center mb-8 shadow-2xl group-hover:scale-110 transition-transform"><Upload size={36} /></div>
            <p className="text-2xl font-black uppercase italic">Dosya Yükle</p>
         </button>
+
+        {showPrivacy && <PrivacyModal />}
       </div>
     );
   }
@@ -392,7 +477,6 @@ const App = () => {
                                    className={`relative ${splitCount === 1 ? 'w-full h-auto min-h-[50vh] max-h-[85vh]' : ''} bg-[#0c0c0c] rounded-[48px] overflow-hidden border-2 border-white/5 group hover:border-white/30 transition-all shadow-2xl flex items-center justify-center`}>
                                   <img src={s.dataUrl} className={`w-full h-full ${splitCount === 1 ? 'object-contain' : 'object-cover'}`} alt="Slide" />
                                   
-                                  {/* YENİ İNDİRME BUTONU - KESİN ÇÖZÜM */}
                                   <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center z-50 pointer-events-none">
                                      <a 
                                       href={s.dataUrl}
@@ -506,4 +590,3 @@ const App = () => {
 };
 
 export default App;
-
