@@ -519,200 +519,182 @@ const App = () => {
       <input type="file" ref={fileInputRef} className="hidden" accept="image/*,video/*" onChange={handleFileSelect} />
       <Header isEditor={true} />
       <FeatureInfoModal />
-      {/* MOBİL UYUMLU LAYOUT YAPISI */}
-      <main className="flex-1 pt-20 flex flex-col lg:flex-row overflow-hidden relative">
+      {/* MOBİL UYUMLU LAYOUT - GÜNCELLENDİ */}
+      <main className="flex-1 pt-16 lg:pt-20 flex flex-col lg:flex-row overflow-hidden relative">
         
-        {/* ORTA CANVAS (MOBİLDE ÜSTTE) */}
-        <section className="flex-1 bg-[#050505] p-2 md:p-6 flex flex-col items-center justify-center relative overflow-hidden order-1 lg:order-2 z-10">
-          <div className="relative w-full h-full max-w-[95vw] bg-black rounded-[32px] md:rounded-[56px] overflow-hidden border border-white/10 shadow-[0_0_150px_rgba(0,0,0,1)] flex items-center justify-center group/canvas">
-              {uploadedFile ? (
-                <div className="w-full h-full p-4 md:p-12 flex flex-col overflow-y-auto custom-scrollbar bg-black/40">
-                  <div className={`w-full ${splitCount === 1 ? 'max-w-none px-2 md:px-4' : 'max-w-6xl'} mx-auto space-y-8 md:space-y-16 pb-32 md:pb-40 flex flex-col items-center`}>
-                      <div className="text-center mt-4"><h3 className="text-2xl md:text-4xl font-black uppercase tracking-tighter italic">Bölünen Parçalar</h3></div>
-                      <div className={`grid gap-6 md:gap-12 w-full justify-items-center ${splitCount === 1 ? 'grid-cols-1' : (splitCount % 2 !== 0 || splitCount === 2 ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2')}`}>
-                          {splitSlides.length > 0 ? splitSlides.map((s) => (
-                              <div key={`${uploadedFile}-${s.id}`} style={{ aspectRatio: s.aspectRatio, transform: `scale(${zoom / 100})`, transformOrigin: 'center center', transition: 'transform 0.2s' }} className="relative w-full max-w-[500px] h-auto max-h-[50vh] md:max-h-[70vh] bg-white/5 group hover:scale-[1.01] transition-all flex items-center justify-center snap-center rounded-2xl md:rounded-3xl overflow-hidden shadow-2xl">
-                                  <img 
-                                    src={s.dataUrl} 
-                                    className="w-full h-full object-contain drop-shadow-2xl rounded-2xl md:rounded-3xl cursor-move touch-none" 
-                                    alt="Slide" 
-                                    draggable="false"
-                                    onMouseDown={(e) => {
-                                      e.preventDefault();
-                                      const img = e.target;
-                                      // Eğer daha önce transform yoksa matrix'ten 0,0 başlat
-                                      const style = window.getComputedStyle(img);
-                                      const matrix = new DOMMatrix(style.transform);
-                                      const currentX = matrix.m41;
-                                      const currentY = matrix.m42;
-                                      
-                                      const startX = e.clientX;
-                                      const startY = e.clientY;
-
-                                      const handleMouseMove = (moveEvent) => {
-                                        const dx = moveEvent.clientX - startX;
-                                        const dy = moveEvent.clientY - startY;
-                                        img.style.transform = `translate(${currentX + dx}px, ${currentY + dy}px)`;
-                                      };
-
-                                      const handleMouseUp = () => {
-                                        window.removeEventListener('mousemove', handleMouseMove);
-                                        window.removeEventListener('mouseup', handleMouseUp);
-                                      };
-
-                                      window.addEventListener('mousemove', handleMouseMove);
-                                      window.addEventListener('mouseup', handleMouseUp);
-                                    }}
-                                    onTouchStart={(e) => {
-                                      // Touch için varsayılan davranışı (scroll) engellemiyoruz ki kullanıcı sayfayı kaydırabilsin
-                                      // Ancak resim üzerinde sürüklemeye başladığında engellenebilir.
-                                      // Şimdilik sadece resim hareketi:
-                                      if(e.touches.length !== 1) return;
-                                      
-                                      const img = e.target;
-                                      const style = window.getComputedStyle(img);
-                                      const matrix = new DOMMatrix(style.transform);
-                                      const currentX = matrix.m41;
-                                      const currentY = matrix.m42;
-                                      
-                                      const startX = e.touches[0].clientX;
-                                      const startY = e.touches[0].clientY;
-
-                                      const handleTouchMove = (moveEvent) => {
-                                        moveEvent.preventDefault(); // Resim sürüklerken sayfa kaymasın
-                                        const dx = moveEvent.touches[0].clientX - startX;
-                                        const dy = moveEvent.touches[0].clientY - startY;
-                                        img.style.transform = `translate(${currentX + dx}px, ${currentY + dy}px)`;
-                                      };
-
-                                      const handleTouchEnd = () => {
-                                        window.removeEventListener('touchmove', handleTouchMove);
-                                        window.removeEventListener('touchend', handleTouchEnd);
-                                      };
-
-                                      window.addEventListener('touchmove', handleTouchMove, { passive: false });
-                                      window.addEventListener('touchend', handleTouchEnd);
-                                    }}
-                                  />
-                                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center z-50 pointer-events-none rounded-2xl md:rounded-3xl">
-                                     <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); e.nativeEvent.stopImmediatePropagation(); downloadFile(s.dataUrl, `part_${s.id}`); }} className="bg-white text-black w-12 h-12 md:w-14 md:h-14 rounded-full flex items-center justify-center hover:scale-110 active:scale-95 transition-all shadow-[0_0_50px_rgba(255,255,255,0.4)] cursor-pointer pointer-events-auto" title="Bu parçayı indir"><Download size={24} strokeWidth={2.5} /></button>
-                                     <div className="absolute top-4 left-4 text-white font-bold bg-black/50 px-3 py-1 rounded-full text-[10px] border border-white/20">PARÇA {s.id}</div>
-                                  </div>
-                              </div>
-                          )) : (
-                              <div className="w-full text-center py-40 opacity-10 italic text-xl md:text-2xl font-black uppercase tracking-widest">Medya Analiz Ediliyor...</div>
-                          )}
-                      </div>
+        {/* KAYDIRILABİLİR İÇERİK ALANI (Canvas + Ayarlar) */}
+        <div className="flex-1 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden custom-scrollbar pb-24 lg:pb-0"> 
+          
+          {/* 1. AYARLAR (Telefonda resmin altında, Masaüstünde solda) */}
+          <aside className="w-full lg:w-[320px] h-auto lg:h-full bg-[#0a0a0a] border-r border-white/5 flex flex-col order-2 lg:order-1 z-20 shrink-0">
+            <div className="flex-1 lg:overflow-y-auto custom-scrollbar p-6 space-y-6 lg:space-y-8">
+              <div className="space-y-6">
+                  <div className="p-5 bg-white/[0.03] border border-white/10 rounded-[28px] space-y-5 shadow-inner">
+                    <div className="space-y-2"><FeatureToggle featureKey="aiEnhance" state={autoEnhance} setState={setAutoEnhance} shortDesc="Renkleri ve netliği yapay zeka ile otomatik iyileştirir." /></div>
+                    <div className="space-y-2 border-t border-white/5 pt-4"><FeatureToggle featureKey="hdMode" state={hdMode} setState={setHdMode} shortDesc="HD modu ile pikseller 4K keskinliğine taşınır." /></div>
+                    <div className="space-y-2 border-t border-white/5 pt-4"><FeatureToggle featureKey="optimize" state={optimizeMode} setState={setOptimizeMode} shortDesc="Görseli paylaşım için en ideal boyut ve keskinliğe getirir." /></div>
+                    <div className="space-y-2 border-t border-white/5 pt-4"><FeatureToggle featureKey="smartCrop" state={smartCrop} setState={setSmartCrop} shortDesc="Yapay zeka ile ana odağı otomatik tespit eder." /></div>
                   </div>
-                  
-                  {splitSlides.length > 0 && (
-                    <div 
-                      onPointerDown={handleDockPointerDown}
-                      onPointerMove={handleDockPointerMove}
-                      onPointerUp={handleDockPointerUp}
-                      style={{ 
-                        left: '50%', 
-                        bottom: '20px', 
-                        transform: `translate(calc(-50% + ${dockPos.x}px), ${dockPos.y}px)`,
-                        cursor: isDraggingDock ? 'grabbing' : 'grab',
-                        touchAction: 'none' // Mobilde menüyü rahat sürüklemek için
-                      }}
-                      className="fixed bg-black/90 backdrop-blur-xl border border-white/10 rounded-full px-4 py-2 md:px-6 md:py-3 flex items-center justify-center gap-4 md:gap-6 shadow-[0_20px_50px_rgba(0,0,0,0.5)] z-50 animate-in slide-in-from-bottom-5 w-[90%] max-w-sm md:w-auto md:max-w-[90vw] select-none"
-                    >
-                      <div className="flex flex-col items-start gap-1 border-r border-white/10 pr-4 md:pr-6 min-w-[80px] md:min-w-[140px] shrink-0 pointer-events-none">
-                          <span className="text-[8px] md:text-[10px] font-black text-gray-500 uppercase tracking-wider">Çözünürlük</span>
-                          <div className="flex items-center gap-1 md:gap-2 text-xs md:text-base font-black text-white italic">
-                            <span>{mediaDimensions.width}</span>
-                            <span className="text-gray-600 text-[10px] md:text-xs">×</span>
-                            <span>{mediaDimensions.height}</span>
-                          </div>
-                      </div>
+                  <div className="space-y-3">
+                    <span className="text-[12px] font-black text-gray-500 uppercase tracking-widest block">Format</span>
+                    <div className="flex gap-2 p-1 bg-white/5 rounded-xl border border-white/10">
+                        {['png', 'jpg', 'webp'].map(fmt => (
+                          <button key={fmt} onClick={() => setDownloadFormat(fmt)} className={`flex-1 py-2 rounded-lg text-[12px] font-black uppercase transition-all ${downloadFormat === fmt ? 'bg-white text-black shadow-lg' : 'text-gray-500 hover:text-white'}`}>{fmt}</button>
+                        ))}
+                    </div>
+                  </div>
+                  <div className="space-y-2 border-t border-white/5 pt-3"><FeatureToggle featureKey="ultraHd" state={ultraHdMode} setState={setUltraHdMode} shortDesc="Görsel çözünürlüğünü 2 katına çıkararak maksimum netlik sağlar." /></div>
+                  <div className="space-y-3">
+                    <span className="text-[12px] font-black text-gray-500 uppercase tracking-widest block">Parça Sayısı</span>
+                    <div className="grid grid-cols-5 gap-2 w-full">
+                        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(num => (
+                          <button key={num} onClick={() => setSplitCount(num)} className={`aspect-square rounded-xl text-[12px] font-black flex items-center justify-center transition-all border ${splitCount === num ? 'bg-white text-black border-white shadow-[0_0_15px_rgba(255,255,255,0.3)] scale-105' : 'bg-white/5 border-white/10 text-gray-500 hover:bg-white/10 hover:text-white hover:border-white/30'}`}>{num}</button>
+                        ))}
+                    </div>
+                  </div>
+              </div>
+            </div>
+            <div className="p-6 lg:p-8 border-t border-white/5 hidden lg:block">
+               <button onClick={() => processSplit(uploadedFile, fileType === 'video')} disabled={isProcessing || !uploadedFile} className={`w-full py-4 lg:py-5 rounded-[24px] font-black text-xs transition-all shadow-2xl ${isProcessing || !uploadedFile ? 'bg-white/5 text-gray-600' : 'bg-white text-black hover:bg-gray-200 active:scale-95 uppercase tracking-widest'}`}>{isProcessing ? 'İŞLENİYOR...' : 'YENİDEN BÖL'}</button>
+            </div>
+            {/* Mobilde "Yeniden Böl" butonu ayarların altına eklendi, kaydırma ile ulaşılabilir */}
+            <div className="p-6 lg:hidden border-t border-white/5 pb-8">
+               <button onClick={() => processSplit(uploadedFile, fileType === 'video')} disabled={isProcessing || !uploadedFile} className={`w-full py-4 rounded-[24px] font-black text-xs transition-all shadow-2xl ${isProcessing || !uploadedFile ? 'bg-white/5 text-gray-600' : 'bg-white text-black hover:bg-gray-200 active:scale-95 uppercase tracking-widest'}`}>{isProcessing ? 'İŞLENİYOR...' : 'YENİDEN BÖL'}</button>
+            </div>
+          </aside>
 
-                      <div className="flex items-center gap-2 md:gap-4 pl-2 justify-end shrink-0 flex-1">
-                        <button 
-                          onClick={() => setZoom(prev => Math.max(10, prev - 10))} 
-                          onPointerDown={(e) => e.stopPropagation()}
-                          className="text-gray-500 hover:text-white transition-colors shrink-0 p-2"
-                        >
-                          <Minus size={14} />
-                        </button>
-                        
-                        <div className="flex items-center gap-2 group/zoom">
-                           <span className="text-[10px] md:text-xs font-black text-white/50 w-8 text-center group-hover/zoom:text-white transition-colors shrink-0">{zoom}%</span>
+          {/* 2. TUVAL (CANVAS) (Telefonda üstte, Masaüstünde ortada) */}
+          <section className="flex-1 bg-[#050505] p-2 md:p-6 flex flex-col items-center relative order-1 lg:order-2 min-h-[50vh] lg:min-h-0">
+            <div className="relative w-full h-full max-w-[95vw] bg-black rounded-[32px] md:rounded-[56px] overflow-hidden border border-white/10 shadow-[0_0_150px_rgba(0,0,0,1)] flex items-center justify-center group/canvas my-auto">
+                {uploadedFile ? (
+                  <div className="w-full h-full p-4 md:p-12 flex flex-col overflow-y-auto custom-scrollbar bg-black/40">
+                    <div className={`w-full ${splitCount === 1 ? 'max-w-none px-2 md:px-4' : 'max-w-6xl'} mx-auto space-y-8 md:space-y-16 pb-32 md:pb-40 flex flex-col items-center`}>
+                        <div className="text-center mt-4"><h3 className="text-2xl md:text-4xl font-black uppercase tracking-tighter italic">Bölünen Parçalar</h3></div>
+                        <div className={`grid gap-6 md:gap-12 w-full justify-items-center ${splitCount === 1 ? 'grid-cols-1' : (splitCount % 2 !== 0 || splitCount === 2 ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2')}`}>
+                            {splitSlides.length > 0 ? splitSlides.map((s) => (
+                                <div key={`${uploadedFile}-${s.id}`} style={{ aspectRatio: s.aspectRatio, transform: `scale(${zoom / 100})`, transformOrigin: 'center center', transition: 'transform 0.2s' }} className="relative w-full max-w-[500px] h-auto max-h-[50vh] md:max-h-[70vh] bg-white/5 group hover:scale-[1.01] transition-all flex items-center justify-center snap-center rounded-2xl md:rounded-3xl overflow-hidden shadow-2xl">
+                                    <img 
+                                      src={s.dataUrl} 
+                                      className="w-full h-full object-contain drop-shadow-2xl rounded-2xl md:rounded-3xl cursor-move touch-none" 
+                                      alt="Slide" 
+                                      draggable="false"
+                                      onMouseDown={(e) => {
+                                        e.preventDefault();
+                                        const img = e.target;
+                                        const style = window.getComputedStyle(img);
+                                        const matrix = new DOMMatrix(style.transform);
+                                        const currentX = matrix.m41;
+                                        const currentY = matrix.m42;
+                                        const startX = e.clientX;
+                                        const startY = e.clientY;
+                                        const handleMouseMove = (moveEvent) => {
+                                          const dx = moveEvent.clientX - startX;
+                                          const dy = moveEvent.clientY - startY;
+                                          img.style.transform = `translate(${currentX + dx}px, ${currentY + dy}px)`;
+                                        };
+                                        const handleMouseUp = () => {
+                                          window.removeEventListener('mousemove', handleMouseMove);
+                                          window.removeEventListener('mouseup', handleMouseUp);
+                                        };
+                                        window.addEventListener('mousemove', handleMouseMove);
+                                        window.addEventListener('mouseup', handleMouseUp);
+                                      }}
+                                      onTouchStart={(e) => {
+                                        if(e.touches.length !== 1) return;
+                                        const img = e.target;
+                                        const style = window.getComputedStyle(img);
+                                        const matrix = new DOMMatrix(style.transform);
+                                        const currentX = matrix.m41;
+                                        const currentY = matrix.m42;
+                                        const startX = e.touches[0].clientX;
+                                        const startY = e.touches[0].clientY;
+                                        const handleTouchMove = (moveEvent) => {
+                                          moveEvent.preventDefault(); 
+                                          const dx = moveEvent.touches[0].clientX - startX;
+                                          const dy = moveEvent.touches[0].clientY - startY;
+                                          img.style.transform = `translate(${currentX + dx}px, ${currentY + dy}px)`;
+                                        };
+                                        const handleTouchEnd = () => {
+                                          window.removeEventListener('touchmove', handleTouchMove);
+                                          window.removeEventListener('touchend', handleTouchEnd);
+                                        };
+                                        window.addEventListener('touchmove', handleTouchMove, { passive: false });
+                                        window.addEventListener('touchend', handleTouchEnd);
+                                      }}
+                                    />
+                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center z-50 pointer-events-none rounded-2xl md:rounded-3xl">
+                                       <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); e.nativeEvent.stopImmediatePropagation(); downloadFile(s.dataUrl, `part_${s.id}`); }} className="bg-white text-black w-12 h-12 md:w-14 md:h-14 rounded-full flex items-center justify-center hover:scale-110 active:scale-95 transition-all shadow-[0_0_50px_rgba(255,255,255,0.4)] cursor-pointer pointer-events-auto" title="Bu parçayı indir"><Download size={24} strokeWidth={2.5} /></button>
+                                       <div className="absolute top-4 left-4 text-white font-bold bg-black/50 px-3 py-1 rounded-full text-[10px] border border-white/20">PARÇA {s.id}</div>
+                                    </div>
+                                </div>
+                            )) : (
+                                <div className="w-full text-center py-40 opacity-10 italic text-xl md:text-2xl font-black uppercase tracking-widest">Medya Analiz Ediliyor...</div>
+                            )}
+                        </div>
+                    </div>
+                    
+                    {splitSlides.length > 0 && (
+                      <div 
+                        onPointerDown={handleDockPointerDown}
+                        onPointerMove={handleDockPointerMove}
+                        onPointerUp={handleDockPointerUp}
+                        style={{ 
+                          left: '50%', 
+                          bottom: '20px', 
+                          transform: `translate(calc(-50% + ${dockPos.x}px), ${dockPos.y}px)`,
+                          cursor: isDraggingDock ? 'grabbing' : 'grab',
+                          touchAction: 'none' 
+                        }}
+                        className="absolute bg-black/90 backdrop-blur-xl border border-white/10 rounded-full px-4 py-2 md:px-6 md:py-3 flex items-center justify-center gap-4 md:gap-6 shadow-[0_20px_50px_rgba(0,0,0,0.5)] z-50 animate-in slide-in-from-bottom-5 w-[90%] max-w-sm md:w-auto md:max-w-[90vw] select-none"
+                      >
+                        <div className="flex flex-col items-start gap-1 border-r border-white/10 pr-4 md:pr-6 min-w-[80px] md:min-w-[140px] shrink-0 pointer-events-none">
+                            <span className="text-[8px] md:text-[10px] font-black text-gray-500 uppercase tracking-wider">Çözünürlük</span>
+                            <div className="flex items-center gap-1 md:gap-2 text-xs md:text-base font-black text-white italic">
+                              <span>{mediaDimensions.width}</span>
+                              <span className="text-gray-600 text-[10px] md:text-xs">×</span>
+                              <span>{mediaDimensions.height}</span>
+                            </div>
                         </div>
 
-                        <button 
-                          onClick={() => setZoom(prev => Math.min(200, prev + 10))} 
-                          onPointerDown={(e) => e.stopPropagation()}
-                          className="text-gray-500 hover:text-white transition-colors shrink-0 p-2"
-                        >
-                          <Plus size={14} />
-                        </button>
-                        
-                        <button 
-                          onClick={() => setZoom(100)} 
-                          onPointerDown={(e) => e.stopPropagation()}
-                          className="w-8 h-8 md:w-9 md:h-9 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center transition-all text-gray-400 hover:text-white ml-1 border border-white/5 shrink-0" 
-                          title="Sıfırla"
-                        >
-                          <Maximize size={12} />
-                        </button>
+                        <div className="flex items-center gap-2 md:gap-4 pl-2 justify-end shrink-0 flex-1">
+                          <button onClick={() => setZoom(prev => Math.max(10, prev - 10))} onPointerDown={(e) => e.stopPropagation()} className="text-gray-500 hover:text-white transition-colors shrink-0 p-2"><Minus size={14} /></button>
+                          <div className="flex items-center gap-2 group/zoom"><span className="text-[10px] md:text-xs font-black text-white/50 w-8 text-center group-hover/zoom:text-white transition-colors shrink-0">{zoom}%</span></div>
+                          <button onClick={() => setZoom(prev => Math.min(200, prev + 10))} onPointerDown={(e) => e.stopPropagation()} className="text-gray-500 hover:text-white transition-colors shrink-0 p-2"><Plus size={14} /></button>
+                          <button onClick={() => setZoom(100)} onPointerDown={(e) => e.stopPropagation()} className="w-8 h-8 md:w-9 md:h-9 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center transition-all text-gray-400 hover:text-white ml-1 border border-white/5 shrink-0" title="Sıfırla"><Maximize size={12} /></button>
+                        </div>
                       </div>
-                    </div>
-                  )}
-               </div>
-             ) : (
-               <div className="text-center p-10 md:p-20 flex flex-col items-center">
-                  <div className="w-24 h-24 md:w-32 md:h-32 bg-white/5 rounded-[48px] flex items-center justify-center mb-6 md:mb-10 text-gray-700 border border-white/5 shadow-inner"><ImageIcon size={40} className="md:w-12 md:h-12" /></div>
-                  <h3 className="text-2xl md:text-4xl font-black mb-4 tracking-tighter uppercase tracking-widest">Medya Bekleniyor</h3>
-                  <button onClick={triggerFileInput} className="bg-white text-black px-10 py-4 md:px-14 md:py-5 rounded-[24px] font-black shadow-2xl hover:bg-gray-200 transition-all active:scale-95 uppercase tracking-widest text-[10px] md:text-xs">Dosya Seç</button>
-               </div>
-             )}
-             {isProcessing && (
-               <div className="absolute inset-0 z-[100] bg-black/98 backdrop-blur-3xl flex flex-col items-center justify-center">
-                  <div className="w-16 h-16 md:w-20 md:h-20 border-[6px] border-white/5 border-t-white rounded-[40px] animate-spin mb-8 md:mb-10 shadow-2xl" />
-                  <div className="space-y-4 text-center">{aiLogs.map((log, i) => (<p key={i} className="text-xs md:text-sm font-black text-gray-400 px-10 uppercase tracking-[0.3em] italic">{log}</p>))}</div>
-               </div>
-             )}
-          </div>
-        </section>
-
-        {/* SOL PANEL (AYARLAR) - MOBİLDE ALTA GELİR */}
-        <aside className="w-full lg:w-[300px] h-auto lg:h-full border-t lg:border-t-0 lg:border-r border-white/5 bg-[#0a0a0a] flex flex-col shadow-2xl z-20 order-2 lg:order-1 overflow-visible">
-          <div className="flex-1 lg:overflow-y-auto custom-scrollbar p-6 space-y-6 lg:space-y-8">
-            <div className="space-y-6">
-                <div className="p-5 bg-white/[0.03] border border-white/10 rounded-[28px] space-y-5 shadow-inner">
-                  <div className="space-y-2"><FeatureToggle featureKey="aiEnhance" state={autoEnhance} setState={setAutoEnhance} shortDesc="Renkleri ve netliği yapay zeka ile otomatik iyileştirir." /></div>
-                  <div className="space-y-2 border-t border-white/5 pt-4"><FeatureToggle featureKey="hdMode" state={hdMode} setState={setHdMode} shortDesc="HD modu ile pikseller 4K keskinliğine taşınır." /></div>
-                  <div className="space-y-2 border-t border-white/5 pt-4"><FeatureToggle featureKey="optimize" state={optimizeMode} setState={setOptimizeMode} shortDesc="Görseli paylaşım için en ideal boyut ve keskinliğe getirir." /></div>
-                  <div className="space-y-2 border-t border-white/5 pt-4"><FeatureToggle featureKey="smartCrop" state={smartCrop} setState={setSmartCrop} shortDesc="Yapay zeka ile ana odağı otomatik tespit eder." /></div>
-                </div>
-                <div className="space-y-3">
-                  <span className="text-[12px] font-black text-gray-500 uppercase tracking-widest block">Format</span>
-                  <div className="flex gap-2 p-1 bg-white/5 rounded-xl border border-white/10">
-                      {['png', 'jpg', 'webp'].map(fmt => (
-                        <button key={fmt} onClick={() => setDownloadFormat(fmt)} className={`flex-1 py-2 rounded-lg text-[12px] font-black uppercase transition-all ${downloadFormat === fmt ? 'bg-white text-black shadow-lg' : 'text-gray-500 hover:text-white'}`}>{fmt}</button>
-                      ))}
-                  </div>
-                </div>
-                <div className="space-y-2 border-t border-white/5 pt-3"><FeatureToggle featureKey="ultraHd" state={ultraHdMode} setState={setUltraHdMode} shortDesc="Görsel çözünürlüğünü 2 katına çıkararak maksimum netlik sağlar." /></div>
-                <div className="space-y-3">
-                  <span className="text-[12px] font-black text-gray-500 uppercase tracking-widest block">Parça Sayısı</span>
-                  <div className="grid grid-cols-5 gap-2">
-                      {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(num => (
-                        <button key={num} onClick={() => setSplitCount(num)} className={`aspect-square rounded-xl text-[12px] font-black flex items-center justify-center transition-all border ${splitCount === num ? 'bg-white text-black border-white shadow-[0_0_15px_rgba(255,255,255,0.3)] scale-105' : 'bg-white/5 border-white/10 text-gray-500 hover:bg-white/10 hover:text-white hover:border-white/30'}`}>{num}</button>
-                      ))}
-                  </div>
-                </div>
+                    )}
+                 </div>
+               ) : (
+                 <div className="text-center p-10 md:p-20 flex flex-col items-center">
+                    <div className="w-24 h-24 md:w-32 md:h-32 bg-white/5 rounded-[48px] flex items-center justify-center mb-6 md:mb-10 text-gray-700 border border-white/5 shadow-inner"><ImageIcon size={40} className="md:w-12 md:h-12" /></div>
+                    <h3 className="text-2xl md:text-4xl font-black mb-4 tracking-tighter uppercase tracking-widest">Medya Bekleniyor</h3>
+                    <button onClick={triggerFileInput} className="bg-white text-black px-10 py-4 md:px-14 md:py-5 rounded-[24px] font-black shadow-2xl hover:bg-gray-200 transition-all active:scale-95 uppercase tracking-widest text-[10px] md:text-xs">Dosya Seç</button>
+                 </div>
+               )}
+               {isProcessing && (
+                 <div className="absolute inset-0 z-[100] bg-black/98 backdrop-blur-3xl flex flex-col items-center justify-center">
+                    <div className="w-16 h-16 md:w-20 md:h-20 border-[6px] border-white/5 border-t-white rounded-[40px] animate-spin mb-8 md:mb-10 shadow-2xl" />
+                    <div className="space-y-4 text-center">{aiLogs.map((log, i) => (<p key={i} className="text-xs md:text-sm font-black text-gray-400 px-10 uppercase tracking-[0.3em] italic">{log}</p>))}</div>
+                 </div>
+               )}
             </div>
-          </div>
-          <div className="p-6 lg:p-8 border-t border-white/5">
-             <button onClick={() => processSplit(uploadedFile, fileType === 'video')} disabled={isProcessing || !uploadedFile} className={`w-full py-4 lg:py-5 rounded-[24px] font-black text-xs transition-all shadow-2xl ${isProcessing || !uploadedFile ? 'bg-white/5 text-gray-600' : 'bg-white text-black hover:bg-gray-200 active:scale-95 uppercase tracking-widest'}`}>{isProcessing ? 'İŞLENİYOR...' : 'YENİDEN BÖL'}</button>
-          </div>
-        </aside>
+          </section>
 
-        {/* SAĞ PANEL (GEÇMİŞ) - MOBİLDE EN ALTA ŞERİT OLARAK */}
-        <aside className="w-full lg:w-[100px] h-auto lg:h-full border-t lg:border-t-0 lg:border-l border-white/5 bg-[#0a0a0a] flex flex-row lg:flex-col shadow-2xl z-20 overflow-x-auto lg:overflow-y-auto custom-scrollbar p-4 space-x-4 lg:space-x-0 lg:space-y-6 order-3 items-center lg:items-center">
+        </div>
+
+        {/* 3. GEÇMİŞ (Telefonda EN ALTTA SABİT, Masaüstünde Sağda) */}
+        <aside className="
+          fixed bottom-0 left-0 right-0 h-24 lg:static lg:h-full lg:w-[120px] 
+          bg-[#080808]/95 backdrop-blur-xl lg:bg-[#080808] 
+          border-t lg:border-t-0 lg:border-l border-white/10 
+          flex flex-row lg:flex-col items-center 
+          shadow-[0_-10px_40px_rgba(0,0,0,0.5)] lg:shadow-none 
+          z-[60] lg:z-20 
+          overflow-x-auto lg:overflow-y-auto lg:overflow-x-hidden custom-scrollbar 
+          p-4 space-x-4 lg:space-x-0 lg:space-y-6 
+          order-3
+        ">
             {fileList.length === 0 && <div className="text-[10px] text-gray-600 font-bold uppercase tracking-widest whitespace-nowrap lg:whitespace-normal text-center w-full">GEÇMİŞ BOŞ</div>}
             {fileList.map((file, idx) => (
               <div key={file.id} onClick={() => { if (uploadedFile === file.url) return; setIsProcessing(false); setUploadedFile(file.url); setFileType(file.type); setSplitCount(4); setSplitSlides([]); setPage('loading'); setTimeout(() => setPage('editor'), 600); }} className={`relative group rounded-[16px] lg:rounded-[20px] overflow-hidden aspect-square h-16 lg:h-auto lg:w-full border-2 shadow-xl cursor-pointer transition-all shrink-0 ${uploadedFile === file.url ? 'border-white ring-2 ring-white/20' : 'border-white/10 opacity-60 hover:opacity-100'}`}>
