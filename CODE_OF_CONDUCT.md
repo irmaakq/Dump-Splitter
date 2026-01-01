@@ -1,76 +1,44 @@
-Davranış Kuralları (Code of Conduct)
+# Dump Splitter Code of Conduct
 
-Taahhüdümüz
+## Taahhüdümüz
 
-Üyeler, katkıda bulunanlar ve liderler olarak bizler, herkes için cinsiyet, cinsel yönelim, engellilik, dış görünüş, vücut ölçüsü, ırk, etnik köken veya din ayrımı gözetmeksizin tacizden arındırılmış bir katılım deneyimi sağlamayı taahhüt ediyoruz.
+Katılımcılar, katkıda bulunanlar ve proje yöneticileri olarak, herkes için
+yaş, cinsiyet, cinsel yönelim, engellilik durumu, fiziksel görünüm, vücut ölçüsü,
+ırk, etnik köken, din veya benzeri kişisel özellikler gözetilmeksizin
+tacizden arındırılmış bir ortam sağlamayı taahhüt ediyoruz.
 
-Standartlarımız
+Proje ile veya yapılan katkılarla ilgisi olmayan yorum ve davranışlara izin verilmez.
 
-Olumlu bir ortam yaratmaya katkıda bulunan davranış örnekleri:
+---
 
-Açık ve samimi bir dil kullanmak
+## Standartlarımız
 
-Farklı görüşlere ve deneyimlere saygı duymak
+Olumlu ve yapıcı bir ortam oluşturmaya katkı sağlayan davranışlar şunları içerir:
 
-Yapıcı eleştirileri nezaketle kabul etmek
+- Açık, saygılı ve profesyonel bir dil kullanılması
+- Farklı görüş ve deneyimlere saygı gösterilmesi
+- Yapıcı eleştirilerin nezaket çerçevesinde kabul edilmesi
+- Projenin ve topluluğun yararının ön planda tutulması
+- Diğer topluluk üyelerine karşı empati gösterilmesi
 
-Topluluk için en iyisine odaklanmak
+---
 
-Diğer topluluk üyelerine karşı empati göstermek
+## Kabul Edilemez Davranışlar
 
-Kabul edilemez davranışlar:
+Aşağıdaki davranışlar kabul edilemez olarak değerlendirilir:
 
-Cinsel içerikli dil veya görsellerin kullanımı
+- Cinsel içerikli dil veya görsellerin kullanılması
+- Trolleme, hakaret, aşağılayıcı veya küçük düşürücü yorumlar
+- Her türlü taciz (özel mesajlar dahil)
+- Başkalarına ait kişisel bilgilerin izinsiz paylaşılması
+- Proje ile ilgisi olmayan siyasi veya provoke edici içerikler
 
-Trolleme, hakaret veya aşağılayıcı yorumlar
+---
 
-Her türlü taciz (özel veya genel)
+## Sorumluluklar
 
-Başkalarının kişisel bilgilerini izinsiz yayınlamak
+Proje yöneticileri, bildirilen ihlalleri adil ve tarafsız bir şekilde incelemek
+ve duruma uygun önlemleri almakla sorumludur.
 
-Sorumluluklar
-
-Proje yöneticileri, kabul edilemez davranış bildirimlerini adil ve objektif bir şekilde araştırmakla ve duruma uygun düzeltici önlemleri almakla sorumludur.
-
-2. Dosya Adı: CONTRIBUTING.md
-
-(Bu dosyayı oluşturup aşağıdaki metni yapıştır)
-
-Katkıda Bulunma Rehberi (Contributing)
-
-Dump Splitter projesine katkıda bulunmak istediğiniz için teşekkürler! Açık kaynak topluluğu sizin gibi geliştiricilerle büyür.
-
-Nasıl Katkıda Bulunabilirim?
-
-Projeyi Fork'layın: Sağ üstteki "Fork" butonuna basarak projeyi kendi hesabınıza kopyalayın.
-
-Clone Yapın: Projeyi bilgisayarınıza indirin.
-
-Branch Oluşturun: Yapacığınız değişiklik için yeni bir dal açın.
-
-git checkout -b ozellik/YeniOzellikAdi
-
-
-Değişiklikleri Yapın: Kodunuzu geliştirin veya hataları düzeltin.
-
-Commit Atın: Değişikliklerinizi açıklayıcı bir mesajla kaydedin.
-
-git commit -m "Eklendi: Yeni filtreleme özelliği"
-
-
-Push Yapın: Dalınızı GitHub'a gönderin.
-
-git push origin ozellik/YeniOzellikAdi
-
-
-Pull Request (PR) Açın: GitHub sayfasından "Compare & pull request" butonuna basarak değişikliklerinizi ana projeye gönderme isteği oluşturun.
-
-Kurallar
-
-Lütfen kod formatına ve mevcut yapıya sadık kalın.
-
-Gereksiz veya projeyi bozacak değişikliklerden kaçının.
-
-Herhangi bir hata bulursanız "Issues" sekmesinden bildirebilirsiniz.
-
-Teşekkürler! 🚀
+Bu kurallara uymayan davranışlar, geçici veya kalıcı katkı kısıtlamalarıyla
+sonuçlanabilir.
