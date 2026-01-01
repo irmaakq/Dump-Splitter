@@ -1,76 +1,70 @@
-📸 Dump Splitter
+# Dump Splitter
 
-Instagram için Geliştirilmiş Photo Dump ve Kalite Artırma Aracı
+Instagram için deneysel fotoğraf bölme ve kalite artırma aracı
 
-Dump Splitter, panoramik veya geniş fotoğraflarınızı Instagram'ın kaydırmalı post (carousel) formatına uygun, yüksek kaliteli parçalara ayıran profesyonel bir web aracıdır.
+Dump Splitter, panoramik veya geniş fotoğrafları Instagram kaydırmalı gönderi (carousel) formatına uygun şekilde yüksek kaliteli parçalara ayırmak için geliştirilmiş web tabanlı bir araçtır.
 
-🚀 Nasıl Kullanılır
+---
 
-Görsel Yükleyin
-Galerinizden yüksek çözünürlüklü bir fotoğraf veya video seçin.
+## Nasıl kullanılır
 
-Ayarları Yapılandırın
+1. Cihazınızdan yüksek çözünürlüklü bir fotoğraf veya video yükleyin.
+2. Çıktı ayarlarını yapılandırın:
+   - Parça sayısı (1–10 arası)
+   - Çıktı formatı (PNG, JPG, WEBP)
+   - Kalite modları (AI Enhance, Ultra HD)
+3. Masaüstünde görseli sürükleyerek, mobilde iki parmakla yakınlaştırarak en uygun kadrajı ayarlayın.
+4. Oluşturulan parçaları tek tek veya **Tümünü İndir** seçeneği ile indirin.
 
-Sol menüden (veya mobilde alttan) parça sayısını (1-10 arası) belirleyin.
+---
 
-Çıktı formatını (PNG, JPG, WEBP) seçin.
+## Özellikler
 
-İsteğe bağlı olarak AI Enhance veya Ultra HD gibi kalite modlarını aktif edin.
+- **Client-side çalışma**  
+  Tüm işlemler tarayıcı üzerinde gerçekleşir. Dosyalar hiçbir sunucuya yüklenmez.
 
-Kadrajı Ayarlayın
-Görseli tuval üzerinde sürükleyerek veya mobilde iki parmakla yakınlaştırarak (pinch-to-zoom) en iyi açıyı yakalayın.
+- **Otomatik bölme**  
+  Görseller Instagram carousel yapısına uygun olacak şekilde eşit dikey parçalara ayrılır.
 
-İndirin ve Paylaşın
-Hazırlanan parçaları tek tek veya "Tümünü İndir" butonuyla toplu olarak cihazınıza kaydedin.
+- **Yapay zekâ destekli iyileştirme**  
+  Renk ve netlik otomatik olarak artırılır.
 
-✨ Temel Özellikler
+- **Mobil uyumluluk**  
+  Dokunmatik cihazlar için optimize edilmiştir.
 
-🔒 %100 Gizlilik: Verileriniz asla bir sunucuya gönderilmez. Tüm işlemler (bölme, upscale, crop) cihazınızın tarayıcısında gerçekleşir.
+- **Ultra HD modu**  
+  2× upscale ile kalite kaybı minimuma indirilir.
 
-✂️ Akıllı Bölme: Görselleri otomatik olarak eşit dikey parçalara böler.
+---
 
-🤖 AI Enhance: Renkleri ve netliği yapay zeka algoritmalarıyla otomatik iyileştirir.
+## Sık karşılaşılan durumlar
 
-📱 Mobil Uyumlu: Dokunmatik ekranlar için optimize edilmiştir (Sürükle, Bırak, Büyüt).
+### Video yükleyebilir miyim?
+Evet. Video dosyaları yüklenebilir.  
+Ancak video parça parça kesilmez; videodan yüksek kaliteli bir kare alınarak fotoğraf gibi işlenir.
 
-⚡ HD & Ultra HD: 2x Upscale teknolojisi ile kalite kaybını önler.
+### Dosyalarım bir sunucuya gönderiliyor mu?
+Hayır.  
+Uygulama tamamen client-side çalışır. Yüklenen dosyalar yalnızca tarayıcınızın geçici belleğinde işlenir ve sayfa yenilendiğinde silinir.
 
-❓ Sıkça Karşılaşılan Durumlar (Common Issues)
+### İndirme işlemi başlamıyor
+**Tümünü İndir** butonuna bastığınızda indirme başlamıyorsa tarayıcınızın pop-up engelleyicisini kontrol edin.  
+Alternatif olarak parçaları tek tek indirebilirsiniz.
 
-Video yükleyebilir miyim?
+---
 
-Evet, video dosyalarını (MP4, MOV vb.) sisteme yükleyebilirsiniz. Ancak sistem videoları parça parça video olarak kesmez; videonun o anki karesini yüksek kaliteli bir fotoğraf olarak yakalar ve bunu parçalara ayırır.
+## Geliştirme
 
-Fotoğraflarım bir sunucuya yükleniyor mu?
+Projeyi yerel ortamda çalıştırmak için:
 
-Hayır. Uygulama tamamen "Client-Side" (İstemci Taraflı) çalışır. Yüklediğiniz dosyalar sadece tarayıcınızın geçici hafızasında işlenir ve sayfayı yenilediğinizde silinir.
-
-İndirme işlemi başlamıyor
-
-Eğer "Tümünü İndir" butonuna bastığınızda işlem başlamıyorsa, tarayıcınızın Pop-up engelleyicisini kontrol edin. Alternatif olarak parçaları tek tek üzerlerindeki indirme butonuna basarak indirebilirsiniz.
-
-💻 Geliştirici Kılavuzu
-
-Bu projeyi kendi bilgisayarınıza indirip geliştirmek istiyorsanız:
-
-Projeyi Klonlayın:
-
-git clone [https://github.com/KULLANICI_ADINIZ/dump-splitter.git](https://github.com/KULLANICI_ADINIZ/dump-splitter.git)
+### Depoyu klonlayın
+```bash
+git clone https://github.com/KULLANICI_ADINIZ/dump-splitter.git
 cd dump-splitter
 
-
-Paketleri Yükleyin:
-
 npm install
-
-
-Başlatın:
-
 npm start
 
+## Lisans
 
-Tarayıcınızda http://localhost:3000 adresine gidin.
-
-📄 Lisans
-
-Bu proje MIT Lisansı altında açık kaynak olarak sunulmaktadır.
+**Bu proje MIT Lisansı ile lisanslanmıştır.**
