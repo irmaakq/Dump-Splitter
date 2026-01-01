@@ -6,7 +6,7 @@ import {
   Zap, CheckCircle2,
   Grid, DownloadCloud, FileImage, 
   ShieldCheck, Cpu, Activity, Target, Lock, ServerOff, HelpCircle as HelpIcon, Info, MessageCircleQuestion, FileQuestion, ZoomIn, Maximize,
-  Download, Eye, Shield // Shield ikonu buraya eklendi
+  Download, Eye, Shield, Github, Settings
 } from 'lucide-react';
 
 // --- ICONS (Custom) ---
@@ -384,7 +384,7 @@ const App = () => {
           <div className="bg-white/[0.03] p-5 rounded-2xl border border-white/5"><h3 className="text-white font-bold text-xs uppercase tracking-wider mb-2 flex items-center gap-2"><FileQuestion size={14} className="text-yellow-400"/> Video yükleyebilir miyim?</h3><p className="text-gray-400 text-xs leading-relaxed">Evet, video dosyalarını (MP4, MOV vb.) sisteme yükleyebilirsiniz. Ancak sistem videoları parça parça kesip video olarak vermez. Videonun o anki karesini <strong>yüksek kaliteli bir fotoğraf</strong> olarak yakalar ve bunu parçalara ayırır.</p></div>
           <div className="bg-white/[0.03] p-5 rounded-2xl border border-white/5"><h3 className="text-white font-bold text-xs uppercase tracking-wider mb-2 flex items-center gap-2"><Lock size={14} className="text-green-400"/> Fotoğraflarım güvende mi?</h3><p className="text-gray-400 text-xs leading-relaxed">Kesinlikle. Sitemiz "Client-Side" (İstemci Taraflı) çalışır. Yüklediğiniz dosyalar sunucuya gönderilmez, sadece tarayıcınızın geçici hafızasında (RAM) işlenir. Sayfayı kapattığınız an her şey silinir.</p></div>
           <div className="bg-white/[0.03] p-5 rounded-2xl border border-white/5"><h3 className="text-white font-bold text-xs uppercase tracking-wider mb-2 flex items-center gap-2"><Monitor size={14} className="text-purple-400"/> Hangi cihazlarda çalışır?</h3><p className="text-gray-400 text-xs leading-relaxed">Dump Splitter; iPhone, Android, Tablet ve Bilgisayar (PC/Mac) tarayıcılarında sorunsuz çalışır. Herhangi bir uygulama indirmenize gerek yoktur.</p></div>
-          <div className="bg-white/[0.03] p-5 rounded-2xl border border-white/5"><h3 className="text-white font-bold text-xs uppercase tracking-wider mb-2 flex items-center gap-2"><Check size={14} className="text-blue-400"/> Ücretli mi, Sınır var mı?</h3><p className="text-gray-400 text-xs leading-relaxed">Tamamen ücretsizdir. Üyelik veya kredi sistemi yoktur. Performansın düşmemesi için aynı anda en fazla 10 dosya yükleyebilirsiniz ancak işlem bitince listeyi temizleyip tekrar yükleyebilirsiniz.</p></div>
+          <div className="bg-white/[0.03] p-5 rounded-2xl border border-white/5"><h3 className="text-white font-bold text-xs uppercase tracking-wider mb-2 flex items-center gap-2"><Check size={14} className="text-blue-400"/> Ücretli mi, Sınır var mı?</h3><p className="text-gray-400 text-xs leading-relaxed">Tamamen ücretsizdir. Üyelik veya kredi sistemi yoktur. Performansın düşmemesi için aynı anda en fazla 20 dosya yükleyebilirsiniz ancak işlem bitince listeyi temizleyip tekrar yükleyebilirsiniz.</p></div>
            <div className="bg-white/[0.03] p-5 rounded-2xl border border-white/5"><h3 className="text-white font-bold text-xs uppercase tracking-wider mb-2 flex items-center gap-2"><ImageIcon size={14} className="text-pink-400"/> Hangi formatlar destekleniyor?</h3><p className="text-gray-400 text-xs leading-relaxed">Giriş olarak JPG, PNG, WEBP, HEIC (tarayıcı desteğine göre) ve popüler video formatlarını kabul eder. Çıktı olarak PNG, JPG veya WEBP formatında indirebilirsiniz.</p></div>
            <div className="bg-white/[0.03] p-5 rounded-2xl border border-white/5"><h3 className="text-white font-bold text-xs uppercase tracking-wider mb-2 flex items-center gap-2"><Download size={14} className="text-orange-400"/> İndirme çalışmıyor?</h3><p className="text-gray-400 text-xs leading-relaxed">Eğer indirme başlamazsa tarayıcınızın "Pop-up engelleyicisini" kontrol edin veya sayfayı yenileyip (F5) tekrar deneyin. Tek tek indirmek için parçanın üzerindeki ok işaretine basmanız yeterlidir.</p></div>
         </div>
@@ -412,13 +412,13 @@ const App = () => {
               onClick={triggerNewUpload}
               className="bg-white text-black px-4 md:px-6 py-2 md:py-2.5 rounded-xl text-xs md:text-sm font-black flex items-center gap-2 hover:bg-gray-200 transition-all active:scale-95 shadow-lg border border-white/10 whitespace-nowrap"
             >
-               <Upload size={16} /> Yeni Yükleme
+               <Upload size={16} /> <span className="whitespace-nowrap">Yeni Yükleme</span>
             </button>
             <button 
               onClick={() => splitSlides.forEach((s, i) => setTimeout(() => downloadFile(s.dataUrl, `slide_${i+1}`), i * 300))} 
               className="bg-white text-black px-4 md:px-6 py-2 md:py-2.5 rounded-xl text-xs md:text-sm font-black flex items-center gap-2 hover:bg-gray-200 transition-all active:scale-95 shadow-[0_0_30px_rgba(255,255,255,0.2)] whitespace-nowrap"
             >
-               <DownloadCloud size={16} /> Tümünü İndir
+               <DownloadCloud size={16} /> <span className="whitespace-nowrap">Tümünü İndir</span>
             </button>
           </>
         )}
@@ -445,16 +445,54 @@ const App = () => {
   );
 
   const HowToModal = () => (
-    <div className="fixed inset-0 z-[90] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-300">
-      <div className="bg-[#0f0f0f] border border-white/10 rounded-3xl max-w-lg w-full p-8 relative shadow-2xl overflow-y-auto max-h-[90vh]">
-        <button onClick={() => setShowHowTo(false)} className="absolute top-6 right-6 text-gray-500 hover:text-white transition-colors"><X size={24} /></button>
-        <h2 className="text-2xl font-black text-white uppercase tracking-tighter mb-8 text-center">Nasıl Kullanılır?</h2>
-        <div className="space-y-6">
-          <div className="flex items-start gap-4"><div className="w-10 h-10 bg-white text-black rounded-full flex items-center justify-center font-bold text-lg shrink-0">1</div><div><h3 className="text-white font-bold mb-1">Görsel Seç</h3><p className="text-gray-400 text-xs leading-relaxed">4'lü, 6'lı veya 10'lu dump fotoğraflarını yükle.</p></div></div>
-          <div className="flex items-start gap-4"><div className="w-10 h-10 bg-white text-black rounded-full flex items-center justify-center font-bold text-lg shrink-0">2</div><div><h3 className="text-white font-bold mb-1">Ayarları Düzenle</h3><p className="text-gray-400 text-xs leading-relaxed">Parça sayısını seç, AI veya Ultra HD modunu aç.</p></div></div>
-          <div className="flex items-start gap-4"><div className="w-10 h-10 bg-white text-black rounded-full flex items-center justify-center font-bold text-lg shrink-0">3</div><div><h3 className="text-white font-bold mb-1">İndir ve Paylaş</h3><p className="text-gray-400 text-xs leading-relaxed">Hepsini birden veya tek tek indir.</p></div></div>
+    <div className="fixed inset-0 z-[90] bg-black/90 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300">
+      <div className="bg-[#0f0f0f] border border-white/10 rounded-[40px] max-w-lg w-full p-8 relative shadow-2xl overflow-y-auto max-h-[85vh] custom-scrollbar">
+        <button onClick={() => setShowHowTo(false)} className="absolute top-6 right-6 text-gray-500 hover:text-white transition-colors p-2 hover:bg-white/10 rounded-full"><X size={24} /></button>
+        
+        <div className="text-center mb-10">
+            <h2 className="text-3xl font-black text-white uppercase tracking-tighter italic">NASIL ÇALIŞIR?</h2>
+            <p className="text-gray-500 text-xs font-bold uppercase tracking-widest mt-2">HIZLI BAŞLANGIÇ REHBERİ</p>
         </div>
-        <button onClick={() => setShowHowTo(false)} className="w-full bg-white/10 text-white font-bold py-3 rounded-xl mt-8 hover:bg-white hover:text-black transition-all uppercase tracking-widest text-xs">Anladım, Kapat</button>
+
+        <div className="relative space-y-8 px-4">
+            {/* Connecting Line */}
+            <div className="absolute left-8 top-4 bottom-4 w-0.5 bg-gradient-to-b from-blue-500 via-purple-500 to-green-500 opacity-30 rounded-full"></div>
+
+            {/* ADIM 1 */}
+            <div className="relative flex items-start gap-6 group">
+                <div className="relative z-10 w-16 h-16 bg-[#0f0f0f] border-4 border-blue-500/20 rounded-2xl flex items-center justify-center shadow-[0_0_20px_rgba(59,130,246,0.3)] group-hover:scale-110 transition-transform duration-300 shrink-0">
+                    <Upload size={24} className="text-blue-400" strokeWidth={2.5} />
+                </div>
+                <div className="pt-2">
+                    <h3 className="text-white font-black text-lg uppercase tracking-wide mb-1 group-hover:text-blue-400 transition-colors">1. Yükle</h3>
+                    <p className="text-gray-400 text-xs leading-relaxed font-medium">Galerinden yüksek kaliteli fotoğrafını veya videonu seç.</p>
+                </div>
+            </div>
+
+            {/* ADIM 2 */}
+            <div className="relative flex items-start gap-6 group">
+                <div className="relative z-10 w-16 h-16 bg-[#0f0f0f] border-4 border-purple-500/20 rounded-2xl flex items-center justify-center shadow-[0_0_20px_rgba(168,85,247,0.3)] group-hover:scale-110 transition-transform duration-300 shrink-0">
+                    <Settings size={24} className="text-purple-400" strokeWidth={2.5} />
+                </div>
+                <div className="pt-2">
+                    <h3 className="text-white font-black text-lg uppercase tracking-wide mb-1 group-hover:text-purple-400 transition-colors">2. Düzenle</h3>
+                    <p className="text-gray-400 text-xs leading-relaxed font-medium">Parça sayısını seç, <strong>AI Enhance</strong> ile renkleri canlandır.</p>
+                </div>
+            </div>
+
+            {/* ADIM 3 */}
+            <div className="relative flex items-start gap-6 group">
+                <div className="relative z-10 w-16 h-16 bg-[#0f0f0f] border-4 border-green-500/20 rounded-2xl flex items-center justify-center shadow-[0_0_20px_rgba(34,197,94,0.3)] group-hover:scale-110 transition-transform duration-300 shrink-0">
+                    <DownloadCloud size={24} className="text-green-400" strokeWidth={2.5} />
+                </div>
+                <div className="pt-2">
+                    <h3 className="text-white font-black text-lg uppercase tracking-wide mb-1 group-hover:text-green-400 transition-colors">3. Paylaş</h3>
+                    <p className="text-gray-400 text-xs leading-relaxed font-medium">Sonuçları <strong>Ultra HD</strong> kalitede indir ve Instagram'da paylaş!</p>
+                </div>
+            </div>
+        </div>
+
+        <button onClick={() => setShowHowTo(false)} className="w-full bg-white text-black font-black py-4 rounded-2xl mt-12 hover:bg-gray-200 transition-all uppercase tracking-widest text-xs shadow-xl active:scale-95">Anladım, Başlayalım</button>
       </div>
     </div>
   );
@@ -482,6 +520,13 @@ const App = () => {
             <div className="bg-white/5 p-4 rounded-2xl border border-white/5 flex items-center gap-4"><div className="w-12 h-12 bg-green-500/20 rounded-xl flex items-center justify-center text-green-400 shrink-0"><Lock size={24} /></div><div><h3 className="font-bold text-white text-sm">İstemci Taraflı</h3><p className="text-[10px] text-gray-500">Fotoğrafların sunucuya yüklenmez.</p></div></div>
             <div className="bg-white/5 p-4 rounded-2xl border border-white/5 flex items-center gap-4"><div className="w-12 h-12 bg-yellow-500/20 rounded-xl flex items-center justify-center text-yellow-400 shrink-0"><Grid size={24} /></div><div><h3 className="font-bold text-white text-sm">Esnek Izgara Sistemi</h3><p className="text-[10px] text-gray-500">Tüm parça seçeneklerini destekler.</p></div></div>
         </div>
+        <div className="mt-6 pt-6 border-t border-white/10 text-center">
+            <p className="text-[10px] text-gray-500 uppercase tracking-widest font-bold mb-1 flex items-center justify-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+              GNU GPLv2 • OPEN SOURCE
+            </p>
+            <p className="text-[9px] text-gray-600 leading-relaxed">Bu proje açık kaynak kodludur ve topluluk geliştirmesine açıktır.</p>
+        </div>
         <button onClick={() => setShowAbout(false)} className="w-full bg-white text-black font-black py-4 rounded-xl mt-8 hover:bg-gray-200 transition-all uppercase tracking-widest text-xs">Harika, Başlayalım!</button>
       </div>
     </div>
@@ -506,6 +551,25 @@ const App = () => {
            <p className="text-lg md:text-2xl font-black uppercase italic">Dosya Yükle</p>
         </button>
         <p className="text-gray-500 mt-6 text-[9px] md:text-[10px] font-bold uppercase tracking-widest opacity-60">Fotoğraflar tarayıcında işlenir, sunucuya yüklenmez.</p>
+        
+        {/* OPEN SOURCE BADGES */}
+        <div className="mt-8 flex flex-wrap justify-center gap-4 animate-in slide-in-from-bottom-5 fade-in duration-700 delay-200">
+           <a href="https://github.com/irmaakq/Dump-Splitter" target="_blank" rel="noreferrer" className="flex items-center gap-2 px-5 py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full transition-all group">
+              <Github size={14} className="text-white group-hover:scale-110 transition-transform" />
+              <div className="flex flex-col items-start">
+                 <span className="text-[8px] text-gray-500 font-bold uppercase tracking-wider leading-none mb-0.5">Project</span>
+                 <span className="text-[10px] text-white font-bold uppercase tracking-widest leading-none">Open Source</span>
+              </div>
+           </a>
+           <div className="flex items-center gap-2 px-5 py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full transition-all cursor-help" title="GNU General Public License v2.0">
+              <ShieldCheck size={14} className="text-green-500" />
+              <div className="flex flex-col items-start">
+                 <span className="text-[8px] text-gray-500 font-bold uppercase tracking-wider leading-none mb-0.5">License</span>
+                 <span className="text-[10px] text-white font-bold uppercase tracking-widest leading-none">GNU GPLv2</span>
+              </div>
+           </div>
+        </div>
+
         {showPrivacy && <PrivacyModal />}
         {showHowTo && <HowToModal />}
         {showAbout && <AboutModal />}
