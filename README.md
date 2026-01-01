@@ -65,6 +65,6 @@ cd dump-splitter
 npm install
 npm start
 
-## Lisans
+Lisans
 
-**Bu proje MIT Lisansı ile lisanslanmıştır.**
+Bu proje MIT Lisansı ile lisanslanmıştır.
