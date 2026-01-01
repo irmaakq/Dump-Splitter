@@ -67,4 +67,4 @@ npm start
 
 Lisans
 
-Bu proje MIT Lisansı ile lisanslanmıştır.
+Bu proje GPLv2 LICENCE ile lisanslanmıştır.
