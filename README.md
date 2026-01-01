@@ -1,93 +1,76 @@
-📸 Dump Splitter - Instagram Photo Dump Tool
+📸 Dump Splitter
 
-Dump Splitter, Instagram'daki popüler "Photo Dump" trendini profesyonel bir seviyeye taşıyan, tamamen tarayıcı tabanlı (Client-Side) ve gizlilik odaklı bir görsel düzenleme aracıdır.
+Instagram için Geliştirilmiş Photo Dump ve Kalite Artırma Aracı
 
-Bu araç sayesinde panoramik veya geniş fotoğraflarınızı, kaliteden ödün vermeden Instagram kaydırmalı post formatına uygun parçalara bölebilirsiniz.
+Dump Splitter, panoramik veya geniş fotoğraflarınızı Instagram'ın kaydırmalı post (carousel) formatına uygun, yüksek kaliteli parçalara ayıran profesyonel bir web aracıdır.
 
-🌟 Temel Özellikler
+🚀 Nasıl Kullanılır
 
-🔒 %100 Gizlilik: Fotoğraflarınız asla bir sunucuya yüklenmez. Tüm işlemler (bölme, işleme, indirme) kendi tarayıcınızın belleğinde gerçekleşir.
+Görsel Yükleyin
+Galerinizden yüksek çözünürlüklü bir fotoğraf veya video seçin.
 
-✂️ Akıllı Bölme (Smart Split): Görsellerinizi 1'den 10 parçaya kadar otomatik olarak eşit ızgaralara böler.
+Ayarları Yapılandırın
 
-✨ AI Enhance (Yapay Zeka): Soluk renkleri canlandırır, kontrastı dengeler ve fotoğrafa profesyonel bir dokunuş katar.
+Sol menüden (veya mobilde alttan) parça sayısını (1-10 arası) belirleyin.
 
-📐 Smart Crop & Drag: Görseli parmağınızla (veya mouse ile) sürükleyerek kadraja tam oturtabilirsiniz. Mobilde "pinch-to-zoom" (kıstırarak yakınlaştırma) desteği mevcuttur.
+Çıktı formatını (PNG, JPG, WEBP) seçin.
 
-🖼️ HD & Ultra HD: Görsel kalitesini korur, hatta "Ultra HD" modu ile 2x Upscale (çözünürlük artırma) yaparak pikselleşmeyi önler.
+İsteğe bağlı olarak AI Enhance veya Ultra HD gibi kalite modlarını aktif edin.
 
-📱 Tam Mobil Uyumluluk: Hem masaüstünde hem de mobilde (iOS/Android) kusursuz çalışan duyarlı (responsive) tasarım.
+Kadrajı Ayarlayın
+Görseli tuval üzerinde sürükleyerek veya mobilde iki parmakla yakınlaştırarak (pinch-to-zoom) en iyi açıyı yakalayın.
 
-🚀 Uygulama Nasıl Kullanılır?
+İndirin ve Paylaşın
+Hazırlanan parçaları tek tek veya "Tümünü İndir" butonuyla toplu olarak cihazınıza kaydedin.
 
-Yükle: Galerinden fotoğrafını veya videonu seç.
+✨ Temel Özellikler
 
-Ayarlar: Sol menüden (veya mobilde alttan) parça sayısını, formatı (PNG/JPG/WEBP) ve kalite modlarını seç.
+🔒 %100 Gizlilik: Verileriniz asla bir sunucuya gönderilmez. Tüm işlemler (bölme, upscale, crop) cihazınızın tarayıcısında gerçekleşir.
 
-Düzenle: Görseli sürükleyerek veya yakınlaştırarak en iyi açıyı yakala.
+✂️ Akıllı Bölme: Görselleri otomatik olarak eşit dikey parçalara böler.
 
-İndir: Parçaları tek tek veya toplu halde indirip paylaş!
+🤖 AI Enhance: Renkleri ve netliği yapay zeka algoritmalarıyla otomatik iyileştirir.
 
-💻 Geliştirici Kılavuzu (Bilgisayarda Çalıştırma)
+📱 Mobil Uyumlu: Dokunmatik ekranlar için optimize edilmiştir (Sürükle, Bırak, Büyüt).
 
-Bu projeyi kendi bilgisayarınıza indirip geliştirmek veya düzenlemek istiyorsanız şu adımları izleyin:
+⚡ HD & Ultra HD: 2x Upscale teknolojisi ile kalite kaybını önler.
 
-Gereksinimler
+❓ Sıkça Karşılaşılan Durumlar (Common Issues)
 
-Node.js (Bilgisayarınızda yüklü olmalı)
+Video yükleyebilir miyim?
 
-Kurulum Adımları
+Evet, video dosyalarını (MP4, MOV vb.) sisteme yükleyebilirsiniz. Ancak sistem videoları parça parça video olarak kesmez; videonun o anki karesini yüksek kaliteli bir fotoğraf olarak yakalar ve bunu parçalara ayırır.
 
-Projeyi Klonlayın (İndirin):
-Terminali açın ve şu komutu yazın (veya ZIP olarak indirip çıkarın):
+Fotoğraflarım bir sunucuya yükleniyor mu?
+
+Hayır. Uygulama tamamen "Client-Side" (İstemci Taraflı) çalışır. Yüklediğiniz dosyalar sadece tarayıcınızın geçici hafızasında işlenir ve sayfayı yenilediğinizde silinir.
+
+İndirme işlemi başlamıyor
+
+Eğer "Tümünü İndir" butonuna bastığınızda işlem başlamıyorsa, tarayıcınızın Pop-up engelleyicisini kontrol edin. Alternatif olarak parçaları tek tek üzerlerindeki indirme butonuna basarak indirebilirsiniz.
+
+💻 Geliştirici Kılavuzu
+
+Bu projeyi kendi bilgisayarınıza indirip geliştirmek istiyorsanız:
+
+Projeyi Klonlayın:
 
 git clone [https://github.com/KULLANICI_ADINIZ/dump-splitter.git](https://github.com/KULLANICI_ADINIZ/dump-splitter.git)
 cd dump-splitter
 
 
-Gerekli Paketleri Yükleyin:
+Paketleri Yükleyin:
 
 npm install
 
 
-Projeyi Başlatın:
+Başlatın:
 
 npm start
 
 
-Bu komut tarayıcınızı otomatik olarak açacak ve projeyi http://localhost:3000 adresinde çalıştıracaktır.
-
-🌐 Sitede Yayınlama (Deployment)
-
-Bu projeyi internette (www.siteadi.com gibi) herkesin kullanabileceği şekilde yayınlamak istiyorsanız, en kolay ve ücretsiz yöntemler şunlardır:
-
-Yöntem 1: Vercel veya Netlify (Önerilen)
-
-Bu platformlar GitHub projenizi otomatik olarak algılar ve saniyeler içinde yayınlar.
-
-GitHub deponuzu (repository) oluşturun ve kodları yükleyin.
-
-Vercel veya Netlify sitesine gidin ve üye olun.
-
-"New Project" (Yeni Proje) diyerek GitHub hesabınızı bağlayın.
-
-dump-splitter deponuzu seçin ve "Deploy" butonuna basın.
-
-Bitti! Size otomatik bir link verecekler.
-
-Yöntem 2: Manuel Build Alma
-
-Eğer projeyi kendi sunucunuza (Hosting) atmak istiyorsanız, "Build" (İnşa) almanız gerekir. Bu işlem kodları sıkıştırır ve sunucuya hazır hale getirir.
-
-Terminalde şu komutu çalıştırın:
-
-npm run build
-
-
-İşlem bittiğinde proje klasörünüzde build adında yeni bir klasör oluşacaktır.
-
-Bu build klasörünün içindeki dosyaları (index.html, static klasörü vb.) sunucunuza (FTP veya Panel üzerinden) yükleyin.
+Tarayıcınızda http://localhost:3000 adresine gidin.
 
 📄 Lisans
 
-Bu proje MIT Lisansı altında açık kaynak olarak sunulmaktadır. İstediğiniz gibi kullanabilir, değiştirebilir, ticari veya kişisel projelerinizde yer verebilirsiniz. Tek şart lisans dosyasını korumanızdır.
+Bu proje MIT Lisansı altında açık kaynak olarak sunulmaktadır.
