@@ -2,27 +2,56 @@
 <html lang="tr">
   <head>
     <meta charset="utf-8" />
-    <!-- Tarayıcı sekmesindeki ikon (Senin yüklediğin favicon.ico dosyasını çeker) -->
+    
+    <!-- Tarayıcı sekmesindeki ikon -->
     <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
     
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- Mobil uyumluluk ve zoom ayarları -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0" />
     
-    <!-- Tarayıcı çubuğu rengini sitenle uyumlu siyah (#050505) yaptık -->
+    <!-- Tarayıcı çubuğu rengi (Siyah tema ile uyumlu) -->
     <meta name="theme-color" content="#050505" />
     
-    <meta
-      name="description"
-      content="Instagram için profesyonel Dump Bölme ve Kalite Artırma Aracı"
-    />
+    <!-- Tailwind CSS (Senin eklediğin) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- 
+      ========================================
+      SOSYAL MEDYA ÖNİZLEME AYARLARI (YOUTUBE GİBİ GÖRÜNMEK İÇİN ŞART)
+      ========================================
+    -->
+    <title>Dump Splitter - Instagram Dump Aracı</title>
+    <meta name="title" content="Dump Splitter - Instagram Dump Aracı">
+    <meta name="description" content="Instagram için profesyonel Dump Bölme, Kalite Artırma ve Düzenleme Aracı. Fotoğraflarınızı bölün, netleştirin ve paylaşın. Tamamen ücretsiz ve güvenli.">
+    <meta name="keywords" content="instagram dump, photo splitter, instagram grid, foto bölücü, kalite artırma, ai enhance, dump splitter">
+    <meta name="author" content="Dump Splitter">
+
+    <!-- Open Graph / Facebook / Discord / WhatsApp (Büyük Kart) -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://dump-splitter.vercel.app/">
+    <meta property="og:title" content="Dump Splitter | Profesyonel Instagram Aracı">
+    <meta property="og:description" content="Fotoğraflarınızı bölün, kaliteyi artırın (Ultra HD) ve Instagram için mükemmel hale getirin. İndirme ve kurulum gerektirmez.">
     
+    <!-- 
+      DİKKAT: Aşağıdaki resim linki paylaşımlarda görünecek kapak fotoğrafıdır.
+      Kendi görselini 'public' klasörüne atıp linkini buraya yazarsan kendi foton çıkar.
+      Şimdilik havalı bir stok fotoğraf koydum.
+    -->
+    <meta property="og:image" content="https://images.unsplash.com/photo-1611162617474-5b21e879e113?q=80&w=1200&h=630&fit=crop">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+
+    <!-- Twitter (X) Kart Ayarları (Large Image = YouTube Gibi Büyük) -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://dump-splitter.vercel.app/">
+    <meta property="twitter:title" content="Dump Splitter | Instagram Dump & Kalite Artırma">
+    <meta property="twitter:description" content="Panoramik fotoğrafları bölün, bulanık fotoları netleştirin. Instagram için hepsi bir arada araç.">
+    <meta property="twitter:image" content="https://images.unsplash.com/photo-1611162617474-5b21e879e113?q=80&w=1200&h=630&fit=crop">
+
+    <!-- React Gereksinimleri -->
     <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
     <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
     
-    <!-- Tailwind CSS (Tasarımın siyah ve havalı görünmesi için ŞART) -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- GÜNCELLENDİ: Sitenin sekmede görünen ismi -->
-    <title>Dump Splitter</title>
   </head>
   <body>
     <noscript>Bu uygulamayı çalıştırmak için JavaScript'i etkinleştirmeniz gerekir.</noscript>
