@@ -256,7 +256,7 @@ const App = () => {
       }
       
       if (smartCrop) {
-        const cropMargin = 0.05; 
+        const cropMargin = 0.02; // GÜNCELLENDİ: %5 Yerine %2 (Daha hafif crop)
         const srcX = w * cropMargin;
         const srcY = h * cropMargin;
         const srcW = w * (1 - 2 * cropMargin);
