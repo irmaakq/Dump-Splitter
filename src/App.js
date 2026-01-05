@@ -187,6 +187,7 @@ const App = () => {
     const file = event.target.files[0];
     if (!file) return;
 
+    // Maksimum dosya sayısı kontrolü
     if (!shouldResetList.current && fileList.length >= 20) { 
       showToast("Maksimum 20 dosya eklenebilir.");
       return;
@@ -397,15 +398,12 @@ const App = () => {
 
   // --- COMPONENTLER ---
 
-  // Hamburger Menü İçeriği (Düzeltildi: Toggle ve Navigasyon Mantığı)
   const MobileMenu = () => {
     if (!isMobileMenuOpen) return null;
     return (
       <div className="fixed inset-0 z-[60] bg-black/95 backdrop-blur-xl flex flex-col items-center justify-center p-6 animate-in fade-in slide-in-from-top-10 duration-300">
-         {/* Menü içindeyken X butonu da menüyü kapatır */}
          <button onClick={() => setIsMobileMenuOpen(false)} className="absolute top-6 right-6 p-2 bg-white/10 rounded-full text-white"><X size={24} /></button>
          <div className="flex flex-col gap-6 text-center w-full max-w-sm">
-            {/* Linkler sadece ilgili modalı açar, sayfayı resetlemez */}
             <button onClick={() => { setIsMobileMenuOpen(false); setShowAbout(true); }} className="text-lg font-black text-white uppercase tracking-widest py-4 border-b border-white/10 hover:text-gray-300">DUMP SPLITTER NEDİR?</button>
             <button onClick={() => { setIsMobileMenuOpen(false); setShowHowTo(true); }} className="text-lg font-black text-white uppercase tracking-widest py-4 border-b border-white/10 hover:text-gray-300">Nasıl Kullanılır?</button>
             <button onClick={() => { setIsMobileMenuOpen(false); setShowFAQ(true); }} className="text-lg font-black text-white uppercase tracking-widest py-4 border-b border-white/10 hover:text-gray-300">Sıkça Sorulan Sorular</button>
@@ -418,7 +416,6 @@ const App = () => {
   const Header = ({ isEditor }) => (
     <header className={`fixed top-0 left-0 right-0 z-[70] px-4 md:px-8 py-4 flex items-center justify-between backdrop-blur-3xl transition-all ${isEditor ? 'bg-black/90 border-b border-white/5' : 'bg-transparent'}`}>
       <div className="flex items-center gap-3 md:gap-6 ml-0 md:ml-10">
-        {/* LOGO: Her zaman ana sayfaya atar ve sıfırlar */}
         <div 
           className="flex items-center gap-2 cursor-pointer group hover:opacity-80 transition-all" 
           onClick={handleGoHome}
@@ -449,9 +446,7 @@ const App = () => {
           </>
         )}
 
-        {/* MOBİL VE MASAÜSTÜ MENÜ (HAMBURGER MENÜLÜ - DÜZELTİLDİ) */}
         <div className="flex items-center justify-end">
-             {/* Sadece Mobilde Görünecek Hamburger Menü Butonu (Toggle) */}
              <button 
                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} 
                className="md:hidden p-3 bg-white/10 rounded-full text-white border border-white/10 active:scale-95 transition-all"
@@ -459,7 +454,6 @@ const App = () => {
                 {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
              </button>
 
-             {/* Sadece Masaüstünde Görünecek Butonlar */}
              <div className="hidden md:flex flex-wrap justify-end gap-3">
                  <button onClick={() => setShowAbout(true)} className="flex items-center gap-2 text-[10px] font-bold text-gray-500 hover:text-white transition-colors uppercase tracking-widest border border-white/10 px-4 py-2 rounded-full hover:bg-white/5 bg-black/20 backdrop-blur-sm"><Info size={12} /> DUMP SPLITTER NEDİR?</button>
                  <button onClick={() => setShowHowTo(true)} className="flex items-center gap-2 text-[10px] font-bold text-gray-500 hover:text-white transition-colors uppercase tracking-widest border border-white/10 px-4 py-2 rounded-full hover:bg-white/5 bg-black/20 backdrop-blur-sm"><HelpIcon size={12} /> Nasıl Kullanılır?</button>
@@ -470,8 +464,6 @@ const App = () => {
       </div>
     </header>
   );
-
-  // ... (Geri kalan render ve modallar aynen korunuyor) ...
 
   const FeatureInfoModal = () => {
     if (!featureInfo) return null;
@@ -486,6 +478,24 @@ const App = () => {
       </div>
     );
   };
+
+  const FAQModal = () => (
+    <div className="fixed inset-0 z-[90] bg-black/90 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300">
+      <div className="bg-[#0f0f0f] border border-white/10 rounded-3xl max-w-3xl w-full p-8 relative shadow-2xl overflow-y-auto max-h-[85vh] custom-scrollbar">
+        <button onClick={() => setShowFAQ(false)} className="absolute top-6 right-6 text-gray-500 hover:text-white transition-colors"><X size={24} /></button>
+        <h2 className="text-2xl font-black text-white uppercase tracking-tighter mb-8 text-center flex items-center justify-center gap-3"><MessageCircleQuestion size={28} className="text-blue-400" /> Sıkça Sorulan Sorular</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="bg-white/[0.03] p-5 rounded-2xl border border-white/5"><h3 className="text-white font-bold text-xs uppercase tracking-wider mb-2 flex items-center gap-2"><FileQuestion size={14} className="text-yellow-400"/> Video yükleyebilir miyim?</h3><p className="text-gray-400 text-xs leading-relaxed">Evet, video dosyalarını (MP4, MOV vb.) sisteme yükleyebilirsiniz. Ancak sistem videoları parça parça kesip video olarak vermez. Videonun o anki karesini <strong>yüksek kaliteli bir fotoğraf</strong> olarak yakalar ve bunu parçalara ayırır.</p></div>
+          <div className="bg-white/[0.03] p-5 rounded-2xl border border-white/5"><h3 className="text-white font-bold text-xs uppercase tracking-wider mb-2 flex items-center gap-2"><Lock size={14} className="text-green-400"/> Fotoğraflarım güvende mi?</h3><p className="text-gray-400 text-xs leading-relaxed">Kesinlikle. Sitemiz "Client-Side" (İstemci Taraflı) çalışır. Yüklediğiniz dosyalar sunucuya gönderilmez, sadece tarayıcınızın geçici hafızasında (RAM) işlenir. Sayfayı kapattığınız an her şey silinir.</p></div>
+          <div className="bg-white/[0.03] p-5 rounded-2xl border border-white/5"><h3 className="text-white font-bold text-xs uppercase tracking-wider mb-2 flex items-center gap-2"><Monitor size={14} className="text-purple-400"/> Hangi cihazlarda çalışır?</h3><p className="text-gray-400 text-xs leading-relaxed">Dump Splitter; iPhone, Android, Tablet ve Bilgisayar (PC/Mac) tarayıcılarında sorunsuz çalışır. Herhangi bir uygulama indirmenize gerek yoktur.</p></div>
+          <div className="bg-white/[0.03] p-5 rounded-2xl border border-white/5"><h3 className="text-white font-bold text-xs uppercase tracking-wider mb-2 flex items-center gap-2"><Check size={14} className="text-blue-400"/> Ücretli mi, Sınır var mı?</h3><p className="text-gray-400 text-xs leading-relaxed">Tamamen ücretsizdir. Üyelik veya kredi sistemi yoktur. Performansın düşmemesi için aynı anda en fazla 20 dosya yükleyebilirsiniz ancak işlem bitince listeyi temizleyip tekrar yükleyebilirsiniz.</p></div>
+           <div className="bg-white/[0.03] p-5 rounded-2xl border border-white/5"><h3 className="text-white font-bold text-xs uppercase tracking-wider mb-2 flex items-center gap-2"><ImageIcon size={14} className="text-pink-400"/> Hangi formatlar destekleniyor?</h3><p className="text-gray-400 text-xs leading-relaxed">Giriş olarak JPG, PNG, WEBP, HEIC (tarayıcı desteğine göre) ve popüler video formatlarını kabul eder. Çıktı olarak PNG, JPG veya WEBP formatında indirebilirsiniz.</p></div>
+           <div className="bg-white/[0.03] p-5 rounded-2xl border border-white/5"><h3 className="text-white font-bold text-xs uppercase tracking-wider mb-2 flex items-center gap-2"><Download size={14} className="text-orange-400"/> İndirme çalışmıyor?</h3><p className="text-gray-400 text-xs leading-relaxed">Eğer indirme başlamazsa tarayıcınızın "Pop-up engelleyicisini" kontrol edin veya sayfayı yenileyip (F5) tekrar deneyin. Tek tek indirmek için parçanın üzerindeki ok işaretine basmanız yeterlidir.</p></div>
+        </div>
+        <button onClick={() => setShowFAQ(false)} className="w-full bg-white/10 text-white font-bold py-4 rounded-xl mt-8 hover:bg-white hover:text-black transition-all uppercase tracking-widest text-xs">Tamamdır, Anladım</button>
+      </div>
+    </div>
+  );
 
   const PrivacyModal = () => (
     <div className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-xl flex items-center justify-center p-4 animate-in fade-in duration-500 overflow-y-auto">
@@ -676,6 +686,7 @@ const App = () => {
     );
   }
 
+  // ... (Geri kalan aynı)
   if (page === 'loading') {
     return (
       <div className="min-h-screen bg-[#050505] flex flex-col items-center justify-center text-white">
