@@ -65,6 +65,7 @@ const App = () => {
   const [notification, setNotification] = useState(null);
   const [aiLogs, setAiLogs] = useState([]);
   
+  // MODAL STATES
   const [showPrivacy, setShowPrivacy] = useState(false);
   const [showHowTo, setShowHowTo] = useState(false);
   const [showAbout, setShowAbout] = useState(false);
@@ -180,14 +181,13 @@ const App = () => {
     setFileList([]);
     setSplitSlides([]);
     setZoom(100);
-    setIsMobileMenuOpen(false); // Ana sayfaya dönerken menüyü kapat
+    setIsMobileMenuOpen(false);
   };
 
   const handleFileSelect = (event) => {
     const file = event.target.files[0];
     if (!file) return;
 
-    // Maksimum dosya sayısı kontrolü
     if (!shouldResetList.current && fileList.length >= 20) { 
       showToast("Maksimum 20 dosya eklenebilir.");
       return;
@@ -377,10 +377,8 @@ const App = () => {
 
   const handleDownloadAll = async () => {
     if (isDownloading) return;
-    
     setIsDownloading(true);
     showToast("İndirme işlemi başladı, lütfen bekleyin...");
-
     try {
       for (let i = 0; i < splitSlides.length; i++) {
         const s = splitSlides[i];
@@ -396,22 +394,26 @@ const App = () => {
     }
   };
 
-  // --- COMPONENTLER ---
-
-  const MobileMenu = () => {
-    if (!isMobileMenuOpen) return null;
+  const FeatureToggle = ({ featureKey, state, setState, shortDesc }) => {
+    const details = FEATURE_DETAILS[featureKey];
+    const Icon = details.icon;
+    
     return (
-      <div className="fixed inset-0 z-[60] bg-black/95 backdrop-blur-xl flex flex-col items-center justify-center p-6 animate-in fade-in slide-in-from-top-10 duration-300">
-         <button onClick={() => setIsMobileMenuOpen(false)} className="absolute top-6 right-6 p-2 bg-white/10 rounded-full text-white"><X size={24} /></button>
-         <div className="flex flex-col gap-6 text-center w-full max-w-sm">
-            <button onClick={() => { setIsMobileMenuOpen(false); setShowAbout(true); }} className="text-lg font-black text-white uppercase tracking-widest py-4 border-b border-white/10 hover:text-gray-300">DUMP SPLITTER NEDİR?</button>
-            <button onClick={() => { setIsMobileMenuOpen(false); setShowHowTo(true); }} className="text-lg font-black text-white uppercase tracking-widest py-4 border-b border-white/10 hover:text-gray-300">Nasıl Kullanılır?</button>
-            <button onClick={() => { setIsMobileMenuOpen(false); setShowFAQ(true); }} className="text-lg font-black text-white uppercase tracking-widest py-4 border-b border-white/10 hover:text-gray-300">Sıkça Sorulan Sorular</button>
-            <button onClick={() => { setIsMobileMenuOpen(false); setShowPrivacy(true); }} className="text-lg font-black text-white uppercase tracking-widest py-4 border-b border-white/10 hover:text-gray-300">Gizlilik</button>
-         </div>
+      <div className="group relative">
+        <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Icon size={16} className={details.color} />
+              <span className="text-[12px] font-black text-white uppercase tracking-tight">{details.title}</span>
+              <button onClick={() => setFeatureInfo(details)} className="opacity-0 group-hover:opacity-100 transition-opacity p-1 bg-white/10 rounded-full hover:bg-white/20 text-gray-400 hover:text-white" title="Detaylı Bilgi"><Info size={10} /></button>
+            </div>
+            <button onClick={() => setState(!state)} className={`w-9 h-5 rounded-full transition-all relative ${state ? details.color.replace('text-', 'bg-') : 'bg-white/10'}`}><div className={`absolute top-1 w-3 h-3 rounded-full transition-all ${state ? 'right-1 bg-black' : 'left-1 bg-white/30'}`} /></button>
+        </div>
+        <p className="text-[11px] text-gray-500 leading-relaxed font-bold uppercase mt-2">{shortDesc}</p>
       </div>
     );
   };
+
+  // --- MODALS & COMPONENTS ---
 
   const Header = ({ isEditor }) => (
     <header className={`fixed top-0 left-0 right-0 z-[70] px-4 md:px-8 py-4 flex items-center justify-between backdrop-blur-3xl transition-all ${isEditor ? 'bg-black/90 border-b border-white/5' : 'bg-transparent'}`}>
@@ -465,6 +467,21 @@ const App = () => {
     </header>
   );
 
+  const MobileMenu = () => {
+    if (!isMobileMenuOpen) return null;
+    return (
+      <div className="fixed inset-0 z-[60] bg-black/95 backdrop-blur-xl flex flex-col items-center justify-center p-6 animate-in fade-in slide-in-from-top-10 duration-300">
+         <button onClick={() => setIsMobileMenuOpen(false)} className="absolute top-6 right-6 p-2 bg-white/10 rounded-full text-white"><X size={24} /></button>
+         <div className="flex flex-col gap-6 text-center w-full max-w-sm">
+            <button onClick={() => { setIsMobileMenuOpen(false); setShowAbout(true); }} className="text-lg font-black text-white uppercase tracking-widest py-4 border-b border-white/10 hover:text-gray-300">DUMP SPLITTER NEDİR?</button>
+            <button onClick={() => { setIsMobileMenuOpen(false); setShowHowTo(true); }} className="text-lg font-black text-white uppercase tracking-widest py-4 border-b border-white/10 hover:text-gray-300">Nasıl Kullanılır?</button>
+            <button onClick={() => { setIsMobileMenuOpen(false); setShowFAQ(true); }} className="text-lg font-black text-white uppercase tracking-widest py-4 border-b border-white/10 hover:text-gray-300">Sıkça Sorulan Sorular</button>
+            <button onClick={() => { setIsMobileMenuOpen(false); setShowPrivacy(true); }} className="text-lg font-black text-white uppercase tracking-widest py-4 border-b border-white/10 hover:text-gray-300">Gizlilik</button>
+         </div>
+      </div>
+    );
+  };
+
   const FeatureInfoModal = () => {
     if (!featureInfo) return null;
     const Icon = featureInfo.icon;
@@ -479,25 +496,9 @@ const App = () => {
     );
   };
 
-  const FAQModal = () => (
-    <div className="fixed inset-0 z-[90] bg-black/90 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300">
-      <div className="bg-[#0f0f0f] border border-white/10 rounded-3xl max-w-3xl w-full p-8 relative shadow-2xl overflow-y-auto max-h-[85vh] custom-scrollbar">
-        <button onClick={() => setShowFAQ(false)} className="absolute top-6 right-6 text-gray-500 hover:text-white transition-colors"><X size={24} /></button>
-        <h2 className="text-2xl font-black text-white uppercase tracking-tighter mb-8 text-center flex items-center justify-center gap-3"><MessageCircleQuestion size={28} className="text-blue-400" /> Sıkça Sorulan Sorular</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-white/[0.03] p-5 rounded-2xl border border-white/5"><h3 className="text-white font-bold text-xs uppercase tracking-wider mb-2 flex items-center gap-2"><FileQuestion size={14} className="text-yellow-400"/> Video yükleyebilir miyim?</h3><p className="text-gray-400 text-xs leading-relaxed">Evet, video dosyalarını (MP4, MOV vb.) sisteme yükleyebilirsiniz. Ancak sistem videoları parça parça kesip video olarak vermez. Videonun o anki karesini <strong>yüksek kaliteli bir fotoğraf</strong> olarak yakalar ve bunu parçalara ayırır.</p></div>
-          <div className="bg-white/[0.03] p-5 rounded-2xl border border-white/5"><h3 className="text-white font-bold text-xs uppercase tracking-wider mb-2 flex items-center gap-2"><Lock size={14} className="text-green-400"/> Fotoğraflarım güvende mi?</h3><p className="text-gray-400 text-xs leading-relaxed">Kesinlikle. Sitemiz "Client-Side" (İstemci Taraflı) çalışır. Yüklediğiniz dosyalar sunucuya gönderilmez, sadece tarayıcınızın geçici hafızasında (RAM) işlenir. Sayfayı kapattığınız an her şey silinir.</p></div>
-          <div className="bg-white/[0.03] p-5 rounded-2xl border border-white/5"><h3 className="text-white font-bold text-xs uppercase tracking-wider mb-2 flex items-center gap-2"><Monitor size={14} className="text-purple-400"/> Hangi cihazlarda çalışır?</h3><p className="text-gray-400 text-xs leading-relaxed">Dump Splitter; iPhone, Android, Tablet ve Bilgisayar (PC/Mac) tarayıcılarında sorunsuz çalışır. Herhangi bir uygulama indirmenize gerek yoktur.</p></div>
-          <div className="bg-white/[0.03] p-5 rounded-2xl border border-white/5"><h3 className="text-white font-bold text-xs uppercase tracking-wider mb-2 flex items-center gap-2"><Check size={14} className="text-blue-400"/> Ücretli mi, Sınır var mı?</h3><p className="text-gray-400 text-xs leading-relaxed">Tamamen ücretsizdir. Üyelik veya kredi sistemi yoktur. Performansın düşmemesi için aynı anda en fazla 20 dosya yükleyebilirsiniz ancak işlem bitince listeyi temizleyip tekrar yükleyebilirsiniz.</p></div>
-           <div className="bg-white/[0.03] p-5 rounded-2xl border border-white/5"><h3 className="text-white font-bold text-xs uppercase tracking-wider mb-2 flex items-center gap-2"><ImageIcon size={14} className="text-pink-400"/> Hangi formatlar destekleniyor?</h3><p className="text-gray-400 text-xs leading-relaxed">Giriş olarak JPG, PNG, WEBP, HEIC (tarayıcı desteğine göre) ve popüler video formatlarını kabul eder. Çıktı olarak PNG, JPG veya WEBP formatında indirebilirsiniz.</p></div>
-           <div className="bg-white/[0.03] p-5 rounded-2xl border border-white/5"><h3 className="text-white font-bold text-xs uppercase tracking-wider mb-2 flex items-center gap-2"><Download size={14} className="text-orange-400"/> İndirme çalışmıyor?</h3><p className="text-gray-400 text-xs leading-relaxed">Eğer indirme başlamazsa tarayıcınızın "Pop-up engelleyicisini" kontrol edin veya sayfayı yenileyip (F5) tekrar deneyin. Tek tek indirmek için parçanın üzerindeki ok işaretine basmanız yeterlidir.</p></div>
-        </div>
-        <button onClick={() => setShowFAQ(false)} className="w-full bg-white/10 text-white font-bold py-4 rounded-xl mt-8 hover:bg-white hover:text-black transition-all uppercase tracking-widest text-xs">Tamamdır, Anladım</button>
-      </div>
-    </div>
-  );
-
-  const PrivacyModal = () => (
+  const PrivacyModal = () => {
+    if (!showPrivacy) return null;
+    return (
     <div className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-xl flex items-center justify-center p-4 animate-in fade-in duration-500 overflow-y-auto">
       <div className="bg-[#0f0f0f] border border-white/10 rounded-3xl max-w-3xl w-full p-6 md:p-10 relative shadow-2xl animate-in zoom-in-95 duration-300 my-auto">
         <div className="flex items-center gap-4 mb-8 border-b border-white/10 pb-6">
@@ -527,13 +528,16 @@ const App = () => {
                 <br className="hidden md:block"/>KVKK ve GDPR standartlarına uygun olarak tasarlanmıştır.
             </p>
             
-            <button onClick={handlePrivacyAccept} className="w-full bg-white text-black font-black py-4 rounded-xl hover:bg-gray-200 transition-all uppercase tracking-widest text-xs shadow-[0_0_40px_rgba(255,255,255,0.2)] hover:shadow-[0_0_60px_rgba(255,255,255,0.4)]">Güvenlik Protokollerini Onayla ve Devam Et</button>
+            <button onClick={() => setShowPrivacy(false)} className="w-full bg-white text-black font-black py-4 rounded-xl hover:bg-gray-200 transition-all uppercase tracking-widest text-xs shadow-[0_0_40px_rgba(255,255,255,0.2)] hover:shadow-[0_0_60px_rgba(255,255,255,0.4)]">Güvenlik Protokollerini Onayla ve Devam Et</button>
         </div>
       </div>
     </div>
-  );
+    );
+  };
 
-  const HowToModal = () => (
+  const HowToModal = () => {
+    if (!showHowTo) return null;
+    return (
     <div className="fixed inset-0 z-[90] bg-black/90 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300">
       <div className="bg-[#0f0f0f] border border-white/10 rounded-[40px] max-w-lg w-full p-8 relative shadow-2xl overflow-y-auto max-h-[85vh] custom-scrollbar">
         <button onClick={() => setShowHowTo(false)} className="absolute top-6 right-6 text-gray-500 hover:text-white transition-colors p-2 hover:bg-white/10 rounded-full"><X size={24} /></button>
@@ -584,9 +588,12 @@ const App = () => {
         <button onClick={() => setShowHowTo(false)} className="w-full bg-white text-black font-black py-4 rounded-2xl mt-12 hover:bg-gray-200 transition-all uppercase tracking-widest text-xs shadow-xl active:scale-95">Anladım, Başlayalım</button>
       </div>
     </div>
-  );
+    );
+  };
 
-  const AboutModal = () => (
+  const AboutModal = () => {
+    if (!showAbout) return null;
+    return (
     <div className="fixed inset-0 z-[90] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-300">
       <div className="bg-[#0f0f0f] border border-white/10 rounded-3xl max-w-2xl w-full p-8 md:p-10 relative shadow-2xl overflow-y-auto max-h-[90vh]">
         <button onClick={() => setShowAbout(false)} className="absolute top-6 right-6 text-gray-500 hover:text-white transition-colors"><X size={24} /></button>
@@ -619,89 +626,92 @@ const App = () => {
         <button onClick={() => setShowAbout(false)} className="w-full bg-white text-black font-black py-4 rounded-xl mt-8 hover:bg-gray-200 transition-all uppercase tracking-widest text-xs">Harika, Başlayalım!</button>
       </div>
     </div>
-  );
-
-  if (page === 'landing') {
-    return (
-      <div className="min-h-screen bg-[#050505] text-white flex flex-col items-center justify-center p-6 text-center relative overflow-x-hidden">
-        <input type="file" ref={fileInputRef} className="hidden" accept="image/*,video/*" onChange={handleFileSelect} />
-        <Header isEditor={false} />
-        <div className="absolute top-8 right-4 md:right-8 z-[80] flex flex-wrap justify-end gap-2 md:gap-3">
-             <button onClick={() => setIsMobileMenuOpen(true)} className="md:hidden p-3 bg-white/10 rounded-full text-white border border-white/10">
-                <Menu size={24} />
-             </button>
-
-             <div className="hidden md:flex flex-wrap justify-end gap-3">
-                 <button onClick={() => setShowAbout(true)} className="flex items-center gap-2 text-[10px] font-bold text-gray-500 hover:text-white transition-colors uppercase tracking-widest border border-white/10 px-4 py-2 rounded-full hover:bg-white/5 bg-black/20 backdrop-blur-sm"><Info size={12} /> DUMP SPLITTER NEDİR?</button>
-                 <button onClick={() => setShowHowTo(true)} className="flex items-center gap-2 text-[10px] font-bold text-gray-500 hover:text-white transition-colors uppercase tracking-widest border border-white/10 px-4 py-2 rounded-full hover:bg-white/5 bg-black/20 backdrop-blur-sm"><HelpIcon size={12} /> Nasıl Kullanılır?</button>
-                 <button onClick={() => setShowFAQ(true)} className="flex items-center gap-2 text-[10px] font-bold text-gray-500 hover:text-white transition-colors uppercase tracking-widest border border-white/10 px-4 py-2 rounded-full hover:bg-white/5 bg-black/20 backdrop-blur-sm"><MessageCircleQuestion size={12} /> SSS</button>
-                 <button onClick={() => setShowPrivacy(true)} className="flex items-center gap-2 text-[10px] font-bold text-gray-500 hover:text-white transition-colors uppercase tracking-widest border border-white/10 px-4 py-2 rounded-full hover:bg-white/5 bg-black/20 backdrop-blur-sm"><ShieldCheck size={12} /> Gizlilik</button>
-             </div>
-        </div>
-        
-        {/* MOBİL MENÜ OVERLAY */}
-        <MobileMenu />
-
-        <div className="absolute top-0 -z-10 w-full h-full bg-gradient-to-b from-blue-900/10 via-transparent to-transparent" />
-        <h1 className="text-5xl md:text-9xl font-black tracking-tighter mb-4 md:mb-8 leading-normal pt-32 md:pt-48 pb-4 md:pb-6 italic uppercase">DUMP <br /> SPLITTER</h1>
-        <p className="text-gray-400 max-w-xl mb-8 md:mb-12 font-medium tracking-tight uppercase text-[10px] md:text-xs tracking-[0.2em] px-4">Instagram için profesyonel Dump Bölme ve Kalite Artırma Aracı</p>
-        
-        {/* MADDE 1: Sürükle-Bırak Alanı */}
-        <div 
-          onClick={triggerFileInput}
-          onDragOver={handleDragOver}
-          onDrop={handleDrop}
-          className="w-full max-w-xl aspect-video bg-[#0c0c0c] border-2 border-dashed border-white/10 rounded-[32px] md:rounded-[48px] flex flex-col items-center justify-center group hover:border-white/30 transition-all p-8 md:p-12 shadow-2xl relative overflow-hidden mx-4 cursor-pointer"
-        >
-           <div className="w-16 h-16 md:w-20 md:h-20 bg-white text-black rounded-3xl flex items-center justify-center mb-6 md:mb-8 shadow-2xl group-hover:scale-110 transition-transform pointer-events-none"><Upload size={28} className="md:w-9 md:h-9" /></div>
-           <p className="text-lg md:text-2xl font-black uppercase italic pointer-events-none">Dosya Yükle</p>
-           <p className="text-gray-500 text-[10px] mt-2 font-bold uppercase tracking-widest opacity-60 pointer-events-none hidden md:block">veya sürükleyip bırakın</p>
-        </div>
-        
-        <p className="text-gray-500 mt-6 text-[9px] md:text-[10px] font-bold uppercase tracking-widest opacity-60">Fotoğraflar tarayıcında işlenir, sunucuya yüklenmez.</p>
-        
-        {/* OPEN SOURCE BADGES */}
-        <div className="mt-8 flex flex-wrap justify-center gap-4 animate-in slide-in-from-bottom-5 fade-in duration-700 delay-200">
-           <a href="https://github.com/irmaakq/Dump-Splitter" target="_blank" rel="noreferrer" className="flex items-center gap-2 px-5 py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full transition-all group">
-              <Github size={14} className="text-white group-hover:scale-110 transition-transform" />
-              <div className="flex flex-col items-start">
-                 <span className="text-[8px] text-gray-500 font-bold uppercase tracking-wider leading-none mb-0.5">Project</span>
-                 <span className="text-[10px] text-white font-bold uppercase tracking-widest leading-none">Open Source</span>
-              </div>
-           </a>
-           <div className="flex items-center gap-2 px-5 py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full transition-all cursor-help" title="GNU General Public License v2.0">
-              <ShieldCheck size={14} className="text-green-500" />
-              <div className="flex flex-col items-start">
-                 <span className="text-[8px] text-gray-500 font-bold uppercase tracking-wider leading-none mb-0.5">License</span>
-                 <span className="text-[10px] text-white font-bold uppercase tracking-widest leading-none">GNU GPLv2</span>
-              </div>
-           </div>
-        </div>
-
-        {showPrivacy && <PrivacyModal />}
-        {showHowTo && <HowToModal />}
-        {showAbout && <AboutModal />}
-        {showFAQ && <FAQModal />}
-      </div>
     );
-  }
+  };
 
-  // ... (Geri kalan aynı)
-  if (page === 'loading') {
+  const FAQModal = () => {
+    if (!showFAQ) return null;
     return (
-      <div className="min-h-screen bg-[#050505] flex flex-col items-center justify-center text-white">
-        <div className="w-16 h-16 md:w-20 md:h-20 border-4 border-white/5 border-t-white rounded-[32px] animate-spin mb-8 md:mb-10 shadow-2xl" />
-        <h2 className="text-xl md:text-2xl font-black uppercase italic tracking-widest animate-pulse tracking-tighter">İşleniyor</h2>
+    <div className="fixed inset-0 z-[90] bg-black/90 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300">
+      <div className="bg-[#0f0f0f] border border-white/10 rounded-3xl max-w-3xl w-full p-8 relative shadow-2xl overflow-y-auto max-h-[85vh] custom-scrollbar">
+        <button onClick={() => setShowFAQ(false)} className="absolute top-6 right-6 text-gray-500 hover:text-white transition-colors"><X size={24} /></button>
+        <h2 className="text-2xl font-black text-white uppercase tracking-tighter mb-8 text-center flex items-center justify-center gap-3"><MessageCircleQuestion size={28} className="text-blue-400" /> Sıkça Sorulan Sorular</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="bg-white/[0.03] p-5 rounded-2xl border border-white/5"><h3 className="text-white font-bold text-xs uppercase tracking-wider mb-2 flex items-center gap-2"><FileQuestion size={14} className="text-yellow-400"/> Video yükleyebilir miyim?</h3><p className="text-gray-400 text-xs leading-relaxed">Evet, video dosyalarını (MP4, MOV vb.) sisteme yükleyebilirsiniz. Ancak sistem videoları parça parça kesip video olarak vermez. Videonun o anki karesini <strong>yüksek kaliteli bir fotoğraf</strong> olarak yakalar ve bunu parçalara ayırır.</p></div>
+          <div className="bg-white/[0.03] p-5 rounded-2xl border border-white/5"><h3 className="text-white font-bold text-xs uppercase tracking-wider mb-2 flex items-center gap-2"><Lock size={14} className="text-green-400"/> Fotoğraflarım güvende mi?</h3><p className="text-gray-400 text-xs leading-relaxed">Kesinlikle. Sitemiz "Client-Side" (İstemci Taraflı) çalışır. Yüklediğiniz dosyalar sunucuya gönderilmez, sadece tarayıcınızın geçici hafızasında (RAM) işlenir. Sayfayı kapattığınız an her şey silinir.</p></div>
+          <div className="bg-white/[0.03] p-5 rounded-2xl border border-white/5"><h3 className="text-white font-bold text-xs uppercase tracking-wider mb-2 flex items-center gap-2"><Monitor size={14} className="text-purple-400"/> Hangi cihazlarda çalışır?</h3><p className="text-gray-400 text-xs leading-relaxed">Dump Splitter; iPhone, Android, Tablet ve Bilgisayar (PC/Mac) tarayıcılarında sorunsuz çalışır. Herhangi bir uygulama indirmenize gerek yoktur.</p></div>
+          <div className="bg-white/[0.03] p-5 rounded-2xl border border-white/5"><h3 className="text-white font-bold text-xs uppercase tracking-wider mb-2 flex items-center gap-2"><Check size={14} className="text-blue-400"/> Ücretli mi, Sınır var mı?</h3><p className="text-gray-400 text-xs leading-relaxed">Tamamen ücretsizdir. Üyelik veya kredi sistemi yoktur. Performansın düşmemesi için aynı anda en fazla 20 dosya yükleyebilirsiniz ancak işlem bitince listeyi temizleyip tekrar yükleyebilirsiniz.</p></div>
+           <div className="bg-white/[0.03] p-5 rounded-2xl border border-white/5"><h3 className="text-white font-bold text-xs uppercase tracking-wider mb-2 flex items-center gap-2"><ImageIcon size={14} className="text-pink-400"/> Hangi formatlar destekleniyor?</h3><p className="text-gray-400 text-xs leading-relaxed">Giriş olarak JPG, PNG, WEBP, HEIC (tarayıcı desteğine göre) ve popüler video formatlarını kabul eder. Çıktı olarak PNG, JPG veya WEBP formatında indirebilirsiniz.</p></div>
+           <div className="bg-white/[0.03] p-5 rounded-2xl border border-white/5"><h3 className="text-white font-bold text-xs uppercase tracking-wider mb-2 flex items-center gap-2"><Download size={14} className="text-orange-400"/> İndirme çalışmıyor?</h3><p className="text-gray-400 text-xs leading-relaxed">Eğer indirme başlamazsa tarayıcınızın "Pop-up engelleyicisini" kontrol edin veya sayfayı yenileyip (F5) tekrar deneyin. Tek tek indirmek için parçanın üzerindeki ok işaretine basmanız yeterlidir.</p></div>
+        </div>
+        <button onClick={() => setShowFAQ(false)} className="w-full bg-white/10 text-white font-bold py-4 rounded-xl mt-8 hover:bg-white hover:text-black transition-all uppercase tracking-widest text-xs">Tamamdır, Anladım</button>
       </div>
+    </div>
     );
-  }
+  };
 
+  // RENDER - TEK ÇATI (SPA)
   return (
     <div className="h-screen bg-[#050505] text-white flex flex-col overflow-hidden">
       <input type="file" ref={fileInputRef} className="hidden" accept="image/*,video/*" onChange={handleFileSelect} />
-      <Header isEditor={true} />
+      
+      {/* 1. Global Header (Her zaman görünür, Tek Hamburger) */}
+      <Header isEditor={page === 'editor'} />
+      
+      {/* 2. Global Modals (Her yerden erişilebilir) */}
+      <MobileMenu />
+      <PrivacyModal />
+      <HowToModal />
+      <AboutModal />
+      <FAQModal />
       <FeatureInfoModal />
-      <main className="flex-1 pt-16 lg:pt-20 flex flex-col lg:flex-row overflow-hidden relative">
+
+      {/* 3. Sayfa İçeriği (Condition ile değişir) */}
+      {page === 'loading' ? (
+        <div className="min-h-screen bg-[#050505] flex flex-col items-center justify-center text-white">
+          <div className="w-16 h-16 md:w-20 md:h-20 border-4 border-white/5 border-t-white rounded-[32px] animate-spin mb-8 md:mb-10 shadow-2xl" />
+          <h2 className="text-xl md:text-2xl font-black uppercase italic tracking-widest animate-pulse tracking-tighter">İşleniyor</h2>
+        </div>
+      ) : page === 'landing' ? (
+        // LANDING VIEW
+        <div className="flex-1 flex flex-col items-center justify-center p-6 text-center relative overflow-x-hidden pt-32">
+          <div className="absolute top-0 -z-10 w-full h-full bg-gradient-to-b from-blue-900/10 via-transparent to-transparent" />
+          <h1 className="text-5xl md:text-9xl font-black tracking-tighter mb-4 md:mb-8 leading-normal italic uppercase">DUMP <br /> SPLITTER</h1>
+          <p className="text-gray-400 max-w-xl mb-8 md:mb-12 font-medium tracking-tight uppercase text-[10px] md:text-xs tracking-[0.2em] px-4">Instagram için profesyonel Dump Bölme ve Kalite Artırma Aracı</p>
+          
+          <div 
+            onClick={triggerFileInput}
+            onDragOver={handleDragOver}
+            onDrop={handleDrop}
+            className="w-full max-w-xl aspect-video bg-[#0c0c0c] border-2 border-dashed border-white/10 rounded-[32px] md:rounded-[48px] flex flex-col items-center justify-center group hover:border-white/30 transition-all p-8 md:p-12 shadow-2xl relative overflow-hidden mx-4 cursor-pointer"
+          >
+             <div className="w-16 h-16 md:w-20 md:h-20 bg-white text-black rounded-3xl flex items-center justify-center mb-6 md:mb-8 shadow-2xl group-hover:scale-110 transition-transform pointer-events-none"><Upload size={28} className="md:w-9 md:h-9" /></div>
+             <p className="text-lg md:text-2xl font-black uppercase italic pointer-events-none">Dosya Yükle</p>
+             <p className="text-gray-500 text-[10px] mt-2 font-bold uppercase tracking-widest opacity-60 pointer-events-none hidden md:block">veya sürükleyip bırakın</p>
+          </div>
+          
+          <p className="text-gray-500 mt-6 text-[9px] md:text-[10px] font-bold uppercase tracking-widest opacity-60">Fotoğraflar tarayıcında işlenir, sunucuya yüklenmez.</p>
+
+          <div className="mt-8 flex flex-wrap justify-center gap-4 animate-in slide-in-from-bottom-5 fade-in duration-700 delay-200">
+             <a href="https://github.com/irmaakq/Dump-Splitter" target="_blank" rel="noreferrer" className="flex items-center gap-2 px-5 py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full transition-all group">
+                <Github size={14} className="text-white group-hover:scale-110 transition-transform" />
+                <div className="flex flex-col items-start">
+                   <span className="text-[8px] text-gray-500 font-bold uppercase tracking-wider leading-none mb-0.5">Project</span>
+                   <span className="text-[10px] text-white font-bold uppercase tracking-widest leading-none">Open Source</span>
+                </div>
+             </a>
+             <div className="flex items-center gap-2 px-5 py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full transition-all cursor-help" title="GNU General Public License v2.0">
+                <ShieldCheck size={14} className="text-green-500" />
+                <div className="flex flex-col items-start">
+                   <span className="text-[8px] text-gray-500 font-bold uppercase tracking-wider leading-none mb-0.5">License</span>
+                   <span className="text-[10px] text-white font-bold uppercase tracking-widest leading-none">GNU GPLv2</span>
+                </div>
+             </div>
+          </div>
+        </div>
+      ) : (
+        // EDITOR VIEW (Ana Uygulama)
+        <main className="flex-1 pt-20 flex flex-col lg:flex-row overflow-hidden relative">
           <aside className="w-full lg:w-[320px] h-auto lg:h-full bg-[#0a0a0a] border-r border-white/5 flex flex-col order-2 lg:order-1 z-20 shrink-0">
              <div className="flex-1 lg:overflow-y-auto custom-scrollbar p-6 space-y-6 lg:space-y-8">
               <div className="space-y-6">
@@ -873,6 +883,7 @@ const App = () => {
                )}
             </div>
           </section>
+
           <aside className="w-full lg:w-[100px] h-auto lg:h-full border-t lg:border-t-0 lg:border-l border-white/5 bg-[#0a0a0a] flex flex-row lg:flex-col shadow-2xl z-20 overflow-x-auto lg:overflow-y-auto custom-scrollbar p-4 space-x-4 lg:space-x-0 lg:space-y-6 order-3 items-center lg:items-center">
             {fileList.length === 0 && <div className="text-[10px] text-gray-600 font-bold uppercase tracking-widest whitespace-nowrap lg:whitespace-normal text-center w-full">GEÇMİŞ BOŞ</div>}
             {fileList.map((file, idx) => (
@@ -887,6 +898,8 @@ const App = () => {
             </div>
         </aside>
       </main>
+      )}
+
       {notification && (<div className="fixed bottom-36 left-1/2 -translate-x-1/2 bg-white text-black px-12 py-5 rounded-[30px] font-black shadow-[0_30px_100px_rgba(0,0,0,0.5)] z-[200] flex items-center gap-4 animate-in slide-in-from-bottom-5 fade-in duration-300"><CheckCircle2 size={20} className="text-green-500 shadow-xl" /><span className="uppercase tracking-widest text-[10px] font-black">{notification}</span></div>)}
       <style>{`
         * { scrollbar-width: none; -ms-overflow-style: none; }
