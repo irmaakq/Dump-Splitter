@@ -449,6 +449,7 @@ const App = () => {
         )}
 
         <div className="flex items-center justify-end">
+             {/* MOBIL MENU BUTONU */}
              <button 
                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} 
                className="md:hidden p-3 bg-white/10 rounded-full text-white border border-white/10 active:scale-95 transition-all"
@@ -456,12 +457,15 @@ const App = () => {
                 {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
              </button>
 
-             <div className="hidden md:flex flex-wrap justify-end gap-3">
-                 <button onClick={() => setShowAbout(true)} className="flex items-center gap-2 text-[10px] font-bold text-gray-500 hover:text-white transition-colors uppercase tracking-widest border border-white/10 px-4 py-2 rounded-full hover:bg-white/5 bg-black/20 backdrop-blur-sm"><Info size={12} /> DUMP SPLITTER NEDİR?</button>
-                 <button onClick={() => setShowHowTo(true)} className="flex items-center gap-2 text-[10px] font-bold text-gray-500 hover:text-white transition-colors uppercase tracking-widest border border-white/10 px-4 py-2 rounded-full hover:bg-white/5 bg-black/20 backdrop-blur-sm"><HelpIcon size={12} /> Nasıl Kullanılır?</button>
-                 <button onClick={() => setShowFAQ(true)} className="flex items-center gap-2 text-[10px] font-bold text-gray-500 hover:text-white transition-colors uppercase tracking-widest border border-white/10 px-4 py-2 rounded-full hover:bg-white/5 bg-black/20 backdrop-blur-sm"><MessageCircleQuestion size={12} /> SSS</button>
-                 <button onClick={() => setShowPrivacy(true)} className="flex items-center gap-2 text-[10px] font-bold text-gray-500 hover:text-white transition-colors uppercase tracking-widest border border-white/10 px-4 py-2 rounded-full hover:bg-white/5 bg-black/20 backdrop-blur-sm"><ShieldCheck size={12} /> Gizlilik</button>
-             </div>
+             {/* MASAÜSTÜ MENÜSÜ - SADECE !isEditor DURUMUNDA GÖRÜNSÜN */}
+             {!isEditor && (
+               <div className="hidden md:flex flex-wrap justify-end gap-3">
+                   <button onClick={() => setShowAbout(true)} className="flex items-center gap-2 text-[10px] font-bold text-gray-500 hover:text-white transition-colors uppercase tracking-widest border border-white/10 px-4 py-2 rounded-full hover:bg-white/5 bg-black/20 backdrop-blur-sm"><Info size={12} /> DUMP SPLITTER NEDİR?</button>
+                   <button onClick={() => setShowHowTo(true)} className="flex items-center gap-2 text-[10px] font-bold text-gray-500 hover:text-white transition-colors uppercase tracking-widest border border-white/10 px-4 py-2 rounded-full hover:bg-white/5 bg-black/20 backdrop-blur-sm"><HelpIcon size={12} /> Nasıl Kullanılır?</button>
+                   <button onClick={() => setShowFAQ(true)} className="flex items-center gap-2 text-[10px] font-bold text-gray-500 hover:text-white transition-colors uppercase tracking-widest border border-white/10 px-4 py-2 rounded-full hover:bg-white/5 bg-black/20 backdrop-blur-sm"><MessageCircleQuestion size={12} /> SSS</button>
+                   <button onClick={() => setShowPrivacy(true)} className="flex items-center gap-2 text-[10px] font-bold text-gray-500 hover:text-white transition-colors uppercase tracking-widest border border-white/10 px-4 py-2 rounded-full hover:bg-white/5 bg-black/20 backdrop-blur-sm"><ShieldCheck size={12} /> Gizlilik</button>
+               </div>
+             )}
         </div>
       </div>
     </header>
@@ -673,8 +677,8 @@ const App = () => {
           <h2 className="text-xl md:text-2xl font-black uppercase italic tracking-widest animate-pulse tracking-tighter">İşleniyor</h2>
         </div>
       ) : page === 'landing' ? (
-        // LANDING VIEW
-        <div className="flex-1 flex flex-col items-center justify-center p-6 text-center relative overflow-x-hidden pt-32">
+        // LANDING VIEW (Sadece Hero ve Upload butonu, Header/Menu YOK)
+        <div className="flex-1 flex flex-col items-center justify-center p-6 text-center relative overflow-x-hidden pt-24 lg:pt-28">
           <div className="absolute top-0 -z-10 w-full h-full bg-gradient-to-b from-blue-900/10 via-transparent to-transparent" />
           <h1 className="text-5xl md:text-9xl font-black tracking-tighter mb-4 md:mb-8 leading-normal italic uppercase">DUMP <br /> SPLITTER</h1>
           <p className="text-gray-400 max-w-xl mb-8 md:mb-12 font-medium tracking-tight uppercase text-[10px] md:text-xs tracking-[0.2em] px-4">Instagram için profesyonel Dump Bölme ve Kalite Artırma Aracı</p>
@@ -683,11 +687,13 @@ const App = () => {
             onClick={triggerFileInput}
             onDragOver={handleDragOver}
             onDrop={handleDrop}
-            className="w-full max-w-xl aspect-video bg-[#0c0c0c] border-2 border-dashed border-white/10 rounded-[32px] md:rounded-[48px] flex flex-col items-center justify-center group hover:border-white/30 transition-all p-8 md:p-12 shadow-2xl relative overflow-hidden mx-4 cursor-pointer"
+            className="w-full max-w-xl bg-[#0c0c0c] border-2 border-dashed border-white/10 rounded-[32px] md:rounded-[48px] flex flex-col items-center justify-center group hover:border-white/30 transition-all cursor-pointer mx-4 p-12 md:p-16"
           >
-             <div className="w-16 h-16 md:w-20 md:h-20 bg-white text-black rounded-3xl flex items-center justify-center mb-6 md:mb-8 shadow-2xl group-hover:scale-110 transition-transform pointer-events-none"><Upload size={28} className="md:w-9 md:h-9" /></div>
-             <p className="text-lg md:text-2xl font-black uppercase italic pointer-events-none">Dosya Yükle</p>
-             <p className="text-gray-500 text-[10px] mt-2 font-bold uppercase tracking-widest opacity-60 pointer-events-none hidden md:block">veya sürükleyip bırakın</p>
+             <div className="w-16 h-16 md:w-20 md:h-20 bg-white text-black rounded-3xl flex items-center justify-center mb-6 shadow-2xl group-hover:scale-110 transition-transform pointer-events-none">
+                <Upload size={28} className="md:w-9 md:h-9" />
+             </div>
+             <p className="text-lg md:text-2xl font-black uppercase italic pointer-events-none text-center">Dosya Yükle</p>
+             <p className="text-gray-500 text-[10px] md:text-xs mt-3 font-bold uppercase tracking-widest opacity-60 pointer-events-none text-center">Dosyayı buraya sürükle veya tıklayarak yükle</p>
           </div>
           
           <p className="text-gray-500 mt-6 text-[9px] md:text-[10px] font-bold uppercase tracking-widest opacity-60">Fotoğraflar tarayıcında işlenir, sunucuya yüklenmez.</p>
@@ -748,8 +754,10 @@ const App = () => {
             </div>
           </aside>
 
+          {/* Canvas ve Geçmiş (Aynı) */}
           <section className="flex-1 bg-[#050505] p-2 md:p-6 flex flex-col items-center relative order-1 lg:order-2 min-h-[50vh] lg:min-h-0">
-             <div className="relative w-full h-full max-w-[95vw] bg-black rounded-[32px] md:rounded-[56px] overflow-hidden border border-white/10 shadow-[0_0_150px_rgba(0,0,0,1)] flex items-center justify-center group/canvas my-auto">
+             {/* ... Canvas içeriği (Mevcut kodun aynısı) ... */}
+              <div className="relative w-full h-full max-w-[95vw] bg-black rounded-[32px] md:rounded-[56px] overflow-hidden border border-white/10 shadow-[0_0_150px_rgba(0,0,0,1)] flex items-center justify-center group/canvas my-auto">
                 {uploadedFile ? (
                   <div className="w-full h-full p-4 md:p-12 flex flex-col overflow-y-auto custom-scrollbar bg-black/40">
                     <div className={`w-full ${splitCount === 1 ? 'max-w-none px-2 md:px-4' : 'max-w-6xl'} mx-auto space-y-8 md:space-y-16 pb-32 md:pb-40 flex flex-col items-center`}>
@@ -837,7 +845,8 @@ const App = () => {
                             )}
                         </div>
                     </div>
-                    {splitSlides.length > 0 && (
+                    {/* Zoom Menüsü (Dock) */}
+                     {splitSlides.length > 0 && (
                       <div 
                         onPointerDown={handleDockPointerDown}
                         onPointerMove={handleDockPointerMove}
