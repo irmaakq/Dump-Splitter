@@ -6,7 +6,7 @@ import {
   Zap, CheckCircle2,
   Grid, DownloadCloud, FileImage, 
   ShieldCheck, Cpu, Activity, Target, Lock, ServerOff, HelpCircle as HelpIcon, Info, MessageCircleQuestion, FileQuestion, ZoomIn, Maximize,
-  Download, Eye, Shield, Github, Settings, ChevronRight, Loader2 // Loader2 eklendi
+  Download, Eye, Shield, Github, Settings, ChevronRight, Loader2, Menu // Menu ikonu eklendi
 } from 'lucide-react';
 
 // --- ICONS (Custom) ---
@@ -70,6 +70,9 @@ const App = () => {
   const [showAbout, setShowAbout] = useState(false);
   const [showFAQ, setShowFAQ] = useState(false); 
   const [featureInfo, setFeatureInfo] = useState(null); 
+  
+  // Mobil Menü State'i
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const [splitCount, setSplitCount] = useState(4); 
   const [downloadFormat, setDownloadFormat] = useState('png'); 
@@ -79,7 +82,7 @@ const App = () => {
   const [smartCrop, setSmartCrop] = useState(false);
   const [ultraHdMode, setUltraHdMode] = useState(false);
   
-  // MADDE 2: İndirme işlemi kontrolü için state
+  // İndirme işlemi kontrolü için state
   const [isDownloading, setIsDownloading] = useState(false);
 
   // ZOOM & BOYUTLAR
@@ -217,7 +220,7 @@ const App = () => {
     event.target.value = null; 
   };
 
-  // MADDE 1: Sürükle Bırak İşleyicileri
+  // Sürükle Bırak İşleyicileri
   const handleDragOver = (e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -228,14 +231,12 @@ const App = () => {
     e.stopPropagation();
     
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      // Mevcut handleFileSelect fonksiyonuna uygun bir event yapısı oluşturuyoruz
       const mockEvent = {
         target: {
           files: e.dataTransfer.files
         }
       };
       
-      // Eğer yeni yükleme modundaysak (Editor içinden)
       if (page === 'editor') {
          shouldResetList.current = true;
       } else {
@@ -326,20 +327,16 @@ const App = () => {
           partCanvas.height = pH;
           const pCtx = partCanvas.getContext('2d');
           
-          // MADDE 3: Dengeli Kalite Ayarı
-          // Kullanıcı bir ayar yapmasa bile yüksek kaliteyi varsayılan yaptık
           pCtx.imageSmoothingEnabled = true;
-          pCtx.imageSmoothingQuality = 'high'; // Varsayılan olarak her zaman yüksek kalite
+          pCtx.imageSmoothingQuality = 'high'; 
           
           pCtx.drawImage(sourceCanvas, c * pW, r * pH, pW, pH, 0, 0, pW, pH);
           
           const mimeType = `image/${downloadFormat === 'jpg' ? 'jpeg' : downloadFormat}`;
           
-          // MADDE 3: Kalite Oranı Dengesi
-          // Hiçbir mod seçili değilse 0.95 (Çok Yüksek ama Dengeli)
           let quality = 0.95; 
-          if (hdMode) quality = 1.0; // HD seçiliyse Maksimum
-          if (optimizeMode) quality = 0.80; // Optimize seçiliyse biraz sıkıştır
+          if (hdMode) quality = 1.0; 
+          if (optimizeMode) quality = 0.80; 
 
           parts.push({
             id: parts.length + 1,
@@ -379,9 +376,8 @@ const App = () => {
     }
   };
 
-  // MADDE 2: Sıralı ve Kontrollü İndirme Fonksiyonu
   const handleDownloadAll = async () => {
-    if (isDownloading) return; // Zaten indiriyorsa tekrar başlatma (Tekrarı önler)
+    if (isDownloading) return;
     
     setIsDownloading(true);
     showToast("İndirme işlemi başladı, lütfen bekleyin...");
@@ -389,11 +385,7 @@ const App = () => {
     try {
       for (let i = 0; i < splitSlides.length; i++) {
         const s = splitSlides[i];
-        // Sıralı indirme için await kullanılmıyor (tarayıcı indirmesi asenkrondur)
-        // ama setTimeout ile araya mesafe koyarak sırayı garantiye alıyoruz.
         downloadFile(s.dataUrl, `dump_part_${s.id}`);
-        
-        // Tarayıcının nefes alması ve sıranın karışmaması için bekleme
         await new Promise(resolve => setTimeout(resolve, 800)); 
       }
       showToast("Tüm parçalar indirildi.");
@@ -401,7 +393,7 @@ const App = () => {
       console.error("Toplu indirme hatası:", error);
       showToast("İndirme sırasında bir hata oluştu.");
     } finally {
-      setIsDownloading(false); // İşlem bitince kilidi aç
+      setIsDownloading(false);
     }
   };
 
@@ -424,9 +416,24 @@ const App = () => {
     );
   };
 
-  // ... (Diğer Modallar aynı kalıyor: FeatureInfoModal, FAQModal, Header, PrivacyModal, HowToModal, AboutModal) ...
-  // Kodun geri kalanı mevcut yapıya sadık kalmıştır, sadece yukarıdaki 3 maddeyi etkileyen yerler değiştirilmiştir.
-  
+  // --- COMPONENTLER (MOBİL MENÜ EKLENDİ) ---
+
+  // Hamburger Menü İçeriği
+  const MobileMenu = () => {
+    if (!isMobileMenuOpen) return null;
+    return (
+      <div className="fixed inset-0 z-[60] bg-black/95 backdrop-blur-xl flex flex-col items-center justify-center p-6 animate-in fade-in slide-in-from-top-10 duration-300">
+         <button onClick={() => setIsMobileMenuOpen(false)} className="absolute top-6 right-6 p-2 bg-white/10 rounded-full text-white"><X size={24} /></button>
+         <div className="flex flex-col gap-6 text-center w-full max-w-sm">
+            <button onClick={() => { setIsMobileMenuOpen(false); setShowAbout(true); }} className="text-lg font-black text-white uppercase tracking-widest py-4 border-b border-white/10 hover:text-gray-300">DUMP SPLITTER NEDİR?</button>
+            <button onClick={() => { setIsMobileMenuOpen(false); setShowHowTo(true); }} className="text-lg font-black text-white uppercase tracking-widest py-4 border-b border-white/10 hover:text-gray-300">Nasıl Kullanılır?</button>
+            <button onClick={() => { setIsMobileMenuOpen(false); setShowFAQ(true); }} className="text-lg font-black text-white uppercase tracking-widest py-4 border-b border-white/10 hover:text-gray-300">Sıkça Sorulan Sorular</button>
+            <button onClick={() => { setIsMobileMenuOpen(false); setShowPrivacy(true); }} className="text-lg font-black text-white uppercase tracking-widest py-4 border-b border-white/10 hover:text-gray-300">Gizlilik</button>
+         </div>
+      </div>
+    );
+  };
+
   const FeatureInfoModal = () => {
     if (!featureInfo) return null;
     const Icon = featureInfo.icon;
@@ -461,14 +468,14 @@ const App = () => {
 
   const Header = ({ isEditor }) => (
     <header className={`fixed top-0 left-0 right-0 z-[70] px-4 md:px-8 py-4 flex items-center justify-between backdrop-blur-3xl transition-all ${isEditor ? 'bg-black/90 border-b border-white/5' : 'bg-transparent'}`}>
-      <div className="flex items-center gap-3 md:gap-6 ml-2 md:ml-10">
+      <div className="flex items-center gap-3 md:gap-6 ml-0 md:ml-10">
         <div 
           className="flex items-center gap-2 cursor-pointer group hover:opacity-80 transition-all" 
           onClick={handleGoHome}
           title="Ana Menüye Dön"
         >
           <div className="w-8 h-8 md:w-10 md:h-10 bg-white text-black rounded-xl flex items-center justify-center font-black italic shadow-2xl transition-all text-xl md:text-2xl tracking-tighter group-hover:scale-105">D</div>
-          <span className="text-xl md:text-2xl font-black tracking-tighter uppercase hidden sm:block italic">Dump Splitter</span>
+          <span className="text-lg md:text-2xl font-black tracking-tighter uppercase block italic">Dump Splitter</span>
         </div>
       </div>
       <div className="flex items-center gap-2 md:gap-4">
@@ -480,7 +487,6 @@ const App = () => {
             >
                <Upload size={16} /> <span className="whitespace-nowrap">Yeni Yükleme</span>
             </button>
-            {/* MADDE 2: handleDownloadAll bağlandı, loading durumunda disable */}
             <button 
               onClick={handleDownloadAll} 
               disabled={isDownloading}
@@ -495,7 +501,6 @@ const App = () => {
     </header>
   );
 
-  // ... (PrivacyModal, HowToModal, AboutModal aynen korunuyor) ...
   const PrivacyModal = () => (
     <div className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-xl flex items-center justify-center p-4 animate-in fade-in duration-500 overflow-y-auto">
       <div className="bg-[#0f0f0f] border border-white/10 rounded-3xl max-w-3xl w-full p-6 md:p-10 relative shadow-2xl animate-in zoom-in-95 duration-300 my-auto">
@@ -625,17 +630,31 @@ const App = () => {
       <div className="min-h-screen bg-[#050505] text-white flex flex-col items-center justify-center p-6 text-center relative overflow-x-hidden">
         <input type="file" ref={fileInputRef} className="hidden" accept="image/*,video/*" onChange={handleFileSelect} />
         <Header isEditor={false} />
-        <div className="absolute top-8 right-4 md:right-8 z-[80] flex flex-wrap justify-end gap-2 md:gap-3">
-             <button onClick={() => setShowAbout(true)} className="flex items-center gap-2 text-[8px] md:text-[10px] font-bold text-gray-500 hover:text-white transition-colors uppercase tracking-widest border border-white/10 px-3 py-2 md:px-4 md:py-2 rounded-full hover:bg-white/5 bg-black/20 backdrop-blur-sm"><Info size={12} /> DUMP SPLITTER NEDİR?</button>
-             <button onClick={() => setShowHowTo(true)} className="flex items-center gap-2 text-[8px] md:text-[10px] font-bold text-gray-500 hover:text-white transition-colors uppercase tracking-widest border border-white/10 px-3 py-2 md:px-4 md:py-2 rounded-full hover:bg-white/5 bg-black/20 backdrop-blur-sm"><HelpIcon size={12} /> Nasıl Kullanılır?</button>
-             <button onClick={() => setShowFAQ(true)} className="flex items-center gap-2 text-[8px] md:text-[10px] font-bold text-gray-500 hover:text-white transition-colors uppercase tracking-widest border border-white/10 px-3 py-2 md:px-4 md:py-2 rounded-full hover:bg-white/5 bg-black/20 backdrop-blur-sm"><MessageCircleQuestion size={12} /> SSS</button>
-            <button onClick={() => setShowPrivacy(true)} className="flex items-center gap-2 text-[8px] md:text-[10px] font-bold text-gray-500 hover:text-white transition-colors uppercase tracking-widest border border-white/10 px-3 py-2 md:px-4 md:py-2 rounded-full hover:bg-white/5 bg-black/20 backdrop-blur-sm"><ShieldCheck size={12} /> Gizlilik</button>
+        
+        {/* MOBİL VE MASAÜSTÜ MENÜ (HAMBURGER MENÜLÜ) */}
+        <div className="absolute top-8 right-4 md:right-8 z-[80] flex items-center justify-end">
+             {/* Sadece Mobilde Görünecek Hamburger Menü Butonu */}
+             <button onClick={() => setIsMobileMenuOpen(true)} className="md:hidden p-3 bg-white/10 rounded-full text-white border border-white/10">
+                <Menu size={24} />
+             </button>
+
+             {/* Sadece Masaüstünde Görünecek Butonlar */}
+             <div className="hidden md:flex flex-wrap justify-end gap-3">
+                 <button onClick={() => setShowAbout(true)} className="flex items-center gap-2 text-[10px] font-bold text-gray-500 hover:text-white transition-colors uppercase tracking-widest border border-white/10 px-4 py-2 rounded-full hover:bg-white/5 bg-black/20 backdrop-blur-sm"><Info size={12} /> DUMP SPLITTER NEDİR?</button>
+                 <button onClick={() => setShowHowTo(true)} className="flex items-center gap-2 text-[10px] font-bold text-gray-500 hover:text-white transition-colors uppercase tracking-widest border border-white/10 px-4 py-2 rounded-full hover:bg-white/5 bg-black/20 backdrop-blur-sm"><HelpIcon size={12} /> Nasıl Kullanılır?</button>
+                 <button onClick={() => setShowFAQ(true)} className="flex items-center gap-2 text-[10px] font-bold text-gray-500 hover:text-white transition-colors uppercase tracking-widest border border-white/10 px-4 py-2 rounded-full hover:bg-white/5 bg-black/20 backdrop-blur-sm"><MessageCircleQuestion size={12} /> SSS</button>
+                 <button onClick={() => setShowPrivacy(true)} className="flex items-center gap-2 text-[10px] font-bold text-gray-500 hover:text-white transition-colors uppercase tracking-widest border border-white/10 px-4 py-2 rounded-full hover:bg-white/5 bg-black/20 backdrop-blur-sm"><ShieldCheck size={12} /> Gizlilik</button>
+             </div>
         </div>
+        
+        {/* MOBİL MENÜ OVERLAY */}
+        <MobileMenu />
+
         <div className="absolute top-0 -z-10 w-full h-full bg-gradient-to-b from-blue-900/10 via-transparent to-transparent" />
         <h1 className="text-5xl md:text-9xl font-black tracking-tighter mb-4 md:mb-8 leading-normal pt-32 md:pt-48 pb-4 md:pb-6 italic uppercase">DUMP <br /> SPLITTER</h1>
         <p className="text-gray-400 max-w-xl mb-8 md:mb-12 font-medium tracking-tight uppercase text-[10px] md:text-xs tracking-[0.2em] px-4">Instagram için profesyonel Dump Bölme ve Kalite Artırma Aracı</p>
         
-        {/* MADDE 1: Sürükle-Bırak Alanı (Div'e çevrildi ve eventler eklendi) */}
+        {/* MADDE 1: Sürükle-Bırak Alanı */}
         <div 
           onClick={triggerFileInput}
           onDragOver={handleDragOver}
@@ -675,8 +694,7 @@ const App = () => {
     );
   }
 
-  // ... (Diğer render blokları aynı kalıyor) ...
-
+  // ... (Geri kalan aynı)
   if (page === 'loading') {
     return (
       <div className="min-h-screen bg-[#050505] flex flex-col items-center justify-center text-white">
@@ -688,14 +706,11 @@ const App = () => {
 
   return (
     <div className="h-screen bg-[#050505] text-white flex flex-col overflow-hidden">
-      {/* ... (Main content same as before, imports already updated at top) ... */}
       <input type="file" ref={fileInputRef} className="hidden" accept="image/*,video/*" onChange={handleFileSelect} />
       <Header isEditor={true} />
       <FeatureInfoModal />
       <main className="flex-1 pt-16 lg:pt-20 flex flex-col lg:flex-row overflow-hidden relative">
-          {/* ... (Panels same as provided in previous full code block) ... */}
           <aside className="w-full lg:w-[320px] h-auto lg:h-full bg-[#0a0a0a] border-r border-white/5 flex flex-col order-2 lg:order-1 z-20 shrink-0">
-            {/* ... Settings Panel Content ... */}
              <div className="flex-1 lg:overflow-y-auto custom-scrollbar p-6 space-y-6 lg:space-y-8">
               <div className="space-y-6">
                   <div className="p-5 bg-white/[0.03] border border-white/10 rounded-[28px] space-y-5 shadow-inner">
