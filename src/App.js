@@ -418,31 +418,30 @@ const App = () => {
 
   const Header = ({ isEditor }) => (
     <header className={`fixed top-0 left-0 right-0 z-[70] px-4 md:px-8 py-4 flex items-center justify-between backdrop-blur-3xl transition-all ${isEditor ? 'bg-black/90 border-b border-white/5' : 'bg-transparent'}`}>
-     <div className="flex items-center gap-2 md:gap-4 ml-0 md:ml-10">
+      <div className="flex items-center gap-3 md:gap-6 ml-0 md:ml-10">
         <div 
-  className="flex items-center gap-2 md:gap-3 cursor-pointer group hover:opacity-80 transition-all"
-  onClick={handleGoHome}
-  title="Ana Menüye Dön">
-  <div className="w-7 h-7 md:w-10 md:h-10 bg-white text-black rounded-xl flex items-center justify-center font-black italic shadow-2xl transition-transform group-hover:scale-105 text-base md:text-2xl tracking-tight">
-    D
-  </div>
-  <span className="hidden md:block text-base md:text-2xl font-black uppercase italic tracking-tight leading-none">
-  Dump Splitter
-</span>
-</div>
+          className="flex items-center gap-2 cursor-pointer group hover:opacity-80 transition-all" 
+          onClick={handleGoHome}
+          title="Ana Menüye Dön"
+        >
+          <div className="w-8 h-8 md:w-10 md:h-10 bg-white text-black rounded-xl flex items-center justify-center font-black italic shadow-2xl transition-all text-xl md:text-2xl tracking-tighter group-hover:scale-105">D</div>
+          <span className="text-lg md:text-2xl font-black tracking-tighter uppercase block italic">Dump Splitter</span>
+        </div>
+      </div>
+      
       <div className="flex items-center gap-2 md:gap-4">
         {isEditor && (
           <>
             <button 
               onClick={triggerNewUpload}
-              className="bg-white text-black px-3 md:px-6 py-2 md:py-2.5 rounded-xl text-xs md:text-sm font-black flex items-center gap-2 hover:bg-gray-200 transition-all active:scale-95 shadow-lg border border-white/10 whitespace-nowrap justify-center"
+              className="bg-white text-black px-4 md:px-6 py-2 md:py-2.5 rounded-xl text-xs md:text-sm font-black flex items-center gap-2 hover:bg-gray-200 transition-all active:scale-95 shadow-lg border border-white/10 whitespace-nowrap"
             >
                <Upload size={16} /> <span className="whitespace-nowrap">Yeni Yükleme</span>
             </button>
             <button 
               onClick={handleDownloadAll} 
               disabled={isDownloading}
-              className={`bg-white text-black px-3 md:px-6 py-2 md:py-2.5 rounded-xl text-xs md:text-sm font-black flex items-center gap-2 hover:bg-gray-200 transition-all active:scale-95 shadow-[0_0_30px_rgba(255,255,255,0.2)] whitespace-nowrap justify-center ${isDownloading ? 'opacity-50 cursor-not-allowed' : ''}`}
+              className={`bg-white text-black px-4 md:px-6 py-2 md:py-2.5 rounded-xl text-xs md:text-sm font-black flex items-center gap-2 hover:bg-gray-200 transition-all active:scale-95 shadow-[0_0_30px_rgba(255,255,255,0.2)] whitespace-nowrap ${isDownloading ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
                {isDownloading ? <Loader2 size={16} className="animate-spin" /> : <DownloadCloud size={16} />} 
                <span className="whitespace-nowrap">{isDownloading ? 'İndiriliyor...' : 'Tümünü İndir'}</span>
@@ -477,7 +476,6 @@ const App = () => {
     </header>
   );
 
-  // ... (Modallar aynı) ...
   const MobileMenu = () => {
     if (!isMobileMenuOpen) return null;
     return (
@@ -523,6 +521,7 @@ const App = () => {
           <div className="bg-white/[0.03] p-5 rounded-2xl border border-white/5 hover:border-white/10 transition-colors"><h3 className="text-white font-bold mb-3 flex items-center gap-3"><Shield size={18} className="text-yellow-400"/><span className="uppercase tracking-tight text-xs">Sıfır İz Politikası</span></h3><p className="text-gray-400 leading-relaxed text-xs">Kişisel verileriniz, IP adresiniz veya kullanım alışkanlıklarınız hiçbir üçüncü taraf ile paylaşılmaz. Uygulama tamamen anonimdir.</p></div>
         </div>
         
+        {/* ADDED: OPEN SOURCE MENTION - Clickable Button Style */}
         <div className="mt-8 pt-6 border-t border-white/10 flex flex-col items-center gap-4 text-center">
             <a href="https://github.com/irmaakq/Dump-Splitter" target="_blank" rel="noreferrer" className="flex items-center gap-3 bg-white/5 hover:bg-white/10 px-5 py-3 rounded-2xl border border-white/10 transition-all group w-full md:w-auto justify-center">
                 <Github size={20} className="text-white group-hover:scale-110 transition-transform" />
@@ -558,8 +557,10 @@ const App = () => {
         </div>
 
         <div className="relative space-y-8 px-4">
+            {/* Connecting Line */}
             <div className="absolute left-8 top-4 bottom-4 w-0.5 bg-gradient-to-b from-blue-500 via-purple-500 to-green-500 opacity-30 rounded-full"></div>
 
+            {/* ADIM 1 */}
             <div className="relative flex items-start gap-6 group">
                 <div className="relative z-10 w-16 h-16 bg-[#0f0f0f] border-4 border-blue-500/20 rounded-2xl flex items-center justify-center shadow-[0_0_20px_rgba(59,130,246,0.3)] group-hover:scale-110 transition-transform duration-300 shrink-0">
                     <Upload size={24} className="text-blue-400" strokeWidth={2.5} />
@@ -570,6 +571,7 @@ const App = () => {
                 </div>
             </div>
 
+            {/* ADIM 2 */}
             <div className="relative flex items-start gap-6 group">
                 <div className="relative z-10 w-16 h-16 bg-[#0f0f0f] border-4 border-purple-500/20 rounded-2xl flex items-center justify-center shadow-[0_0_20px_rgba(168,85,247,0.3)] group-hover:scale-110 transition-transform duration-300 shrink-0">
                     <Settings size={24} className="text-purple-400" strokeWidth={2.5} />
@@ -580,6 +582,7 @@ const App = () => {
                 </div>
             </div>
 
+            {/* ADIM 3 */}
             <div className="relative flex items-start gap-6 group">
                 <div className="relative z-10 w-16 h-16 bg-[#0f0f0f] border-4 border-green-500/20 rounded-2xl flex items-center justify-center shadow-[0_0_20px_rgba(34,197,94,0.3)] group-hover:scale-110 transition-transform duration-300 shrink-0">
                     <DownloadCloud size={24} className="text-green-400" strokeWidth={2.5} />
@@ -658,7 +661,7 @@ const App = () => {
 
   // RENDER - TEK ÇATI (SPA)
   return (
-    <div className="min-h-screen bg-[#050505] text-white flex flex-col overflow-x-hidden overflow-y-auto lg:overflow-hidden">
+    <div className="h-screen bg-[#050505] text-white flex flex-col overflow-hidden">
       <input type="file" ref={fileInputRef} className="hidden" accept="image/*,video/*" multiple onChange={handleFileSelect} />
       
       {/* 1. Global Header (Her zaman görünür, Tek Hamburger) */}
@@ -679,8 +682,8 @@ const App = () => {
           <h2 className="text-xl md:text-2xl font-black uppercase italic tracking-widest animate-pulse tracking-tighter">İşleniyor</h2>
         </div>
       ) : page === 'landing' ? (
-        // LANDING VIEW (Sadece Hero ve Upload butonu, Header/Menu YOK)
-        <div className="flex-1 flex flex-col items-center justify-center p-6 text-center relative overflow-x-hidden overflow-y-visible pt-48 lg:pt-64">
+        // LANDING VIEW
+        <div className="flex-1 flex flex-col items-center justify-center p-6 text-center relative overflow-x-hidden pt-48 lg:pt-64">
           <div className="absolute top-0 -z-10 w-full h-full bg-gradient-to-b from-blue-900/10 via-transparent to-transparent" />
           <h1 className="text-5xl md:text-9xl font-black tracking-tighter mb-4 md:mb-8 leading-normal italic uppercase">DUMP <br /> SPLITTER</h1>
           <p className="text-gray-400 max-w-xl mb-8 md:mb-12 font-medium tracking-tight uppercase text-[10px] md:text-xs tracking-[0.2em] px-4">Instagram için profesyonel Dump Bölme ve Kalite Artırma Aracı</p>
@@ -719,8 +722,9 @@ const App = () => {
         </div>
       ) : (
         // EDITOR VIEW (Ana Uygulama)
-        <main className="flex-1 pt-20 flex flex-col lg:flex-row overflow-visible lg:overflow-hidden relative">
+        <main className="flex-1 pt-20 flex flex-col lg:flex-row overflow-hidden relative">
           <aside className="w-full lg:w-[320px] h-auto lg:h-full bg-[#0a0a0a] border-r border-white/5 flex flex-col order-2 lg:order-1 z-20 shrink-0">
+             {/* Ayarlar Paneli İçeriği Aynı... */}
              <div className="flex-1 lg:overflow-y-auto custom-scrollbar p-6 space-y-6 lg:space-y-8">
               <div className="space-y-6">
                   <div className="p-5 bg-white/[0.03] border border-white/10 rounded-[28px] space-y-5 shadow-inner">
@@ -751,7 +755,6 @@ const App = () => {
             <div className="p-6 lg:p-8 border-t border-white/5 hidden lg:block">
                <button onClick={() => processSplit(uploadedFile, fileType === 'video')} disabled={isProcessing || !uploadedFile} className={`w-full py-4 lg:py-5 rounded-[24px] font-black text-xs transition-all shadow-2xl ${isProcessing || !uploadedFile ? 'bg-white/5 text-gray-600' : 'bg-white text-black hover:bg-gray-200 active:scale-95 uppercase tracking-widest'}`}>{isProcessing ? 'İŞLENİYOR...' : 'YENİDEN BÖL'}</button>
             </div>
-            {/* Mobilde "Yeniden Böl" butonu ayarların altına eklendi */}
             <div className="p-6 lg:hidden border-t border-white/5 pb-8">
                <button onClick={() => processSplit(uploadedFile, fileType === 'video')} disabled={isProcessing || !uploadedFile} className={`w-full py-4 rounded-[24px] font-black text-xs transition-all shadow-2xl ${isProcessing || !uploadedFile ? 'bg-white/5 text-gray-600' : 'bg-white text-black hover:bg-gray-200 active:scale-95 uppercase tracking-widest'}`}>{isProcessing ? 'İŞLENİYOR...' : 'YENİDEN BÖL'}</button>
             </div>
@@ -923,6 +926,3 @@ const App = () => {
 };
 
 export default App;
-
-
-
