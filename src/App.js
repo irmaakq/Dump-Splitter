@@ -439,12 +439,12 @@ const App = () => {
                <Upload size={16} /> <span className="whitespace-nowrap">Yeni Yükleme</span>
             </button>
             <button 
-              onClick={handleDownloadAll} 
-              disabled={isDownloading}
-              className={`bg-white text-black px-4 md:px-6 py-2 md:py-2.5 rounded-xl text-xs md:text-sm font-black flex items-center gap-2 hover:bg-gray-200 transition-all active:scale-95 shadow-[0_0_30px_rgba(255,255,255,0.2)] whitespace-nowrap ${isDownloading ? 'opacity-50 cursor-not-allowed' : ''}`}
-            >
+  onClick={handleDownloadAll} 
+  disabled={isDownloading}
+  className={`bg-white text-black px-3 md:px-6 py-2 md:py-2.5 rounded-xl text-xs md:text-sm font-black flex items-center gap-2 hover:bg-gray-200 transition-all active:scale-95 shadow-[0_0_30px_rgba(255,255,255,0.2)] md:whitespace-nowrap ${isDownloading ? 'opacity-50 cursor-not-allowed' : ''}`}
+>
                {isDownloading ? <Loader2 size={16} className="animate-spin" /> : <DownloadCloud size={16} />} 
-               <span className="whitespace-nowrap">{isDownloading ? 'İndiriliyor...' : 'Tümünü İndir'}</span>
+              <span className="md:whitespace-nowrap">{isDownloading ? 'İndiriliyor...' : 'Tümünü İndir'}</span>
             </button>
           </>
         )}
@@ -927,6 +927,7 @@ const App = () => {
 };
 
 export default App;
+
 
 
 
