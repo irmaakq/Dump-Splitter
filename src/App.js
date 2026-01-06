@@ -185,40 +185,71 @@ const App = () => {
   };
 
   const handleFileSelect = (event) => {
-    const file = event.target.files[0];
-    if (!file) return;
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
 
-    // Maksimum dosya sayısı kontrolü
-    if (!shouldResetList.current && fileList.length >= 20) { 
-      showToast("Maksimum 20 dosya eklenebilir.");
-      return;
+    // Mevcut dosya sayısı (eğer reset ise 0)
+    let currentCount = shouldResetList.current ? 0 : fileList.length;
+    let limitExceeded = false;
+    const newFilesToAdd = [];
+
+    // Dosyaları döngüye alarak işle
+    for (let i = 0; i < files.length; i++) {
+        if (currentCount >= 20) {
+            limitExceeded = true;
+            break; // 20'yi aşarsa döngüyü kır
+        }
+
+        const file = files[i];
+        const url = URL.createObjectURL(file);
+        activeUrlsRef.current.push(url);
+
+        const type = file.type.startsWith('video/') ? 'video' : 'image';
+        const newFileObj = { url, type, id: Date.now() + Math.random() + i }; // Unique ID
+        
+        newFilesToAdd.push(newFileObj);
+        currentCount++;
     }
 
-    const url = URL.createObjectURL(file);
-    activeUrlsRef.current.push(url);
-
-    const type = file.type.startsWith('video/') ? 'video' : 'image';
-    const newFileObj = { url, type, id: Date.now() + Math.random() }; 
-    
-    if (shouldResetList.current) {
-      setFileList([newFileObj]);
-      shouldResetList.current = false;
-    } else {
-      setFileList(prev => [...prev, newFileObj]);
+    if (limitExceeded) {
+        showToast("Maksimum 20 dosya sınırına ulaşıldı.");
     }
 
-    setUploadedFile(url);
-    setFileType(type);
-    setSplitSlides([]);
-    setIsProcessing(false); 
-    setSplitCount(4);
-    
-    setPage('loading');
-    setTimeout(() => {
-      setPage('editor');
-    }, 800);
-    
-    event.target.value = null; 
+    if (newFilesToAdd.length > 0) {
+        if (shouldResetList.current) {
+            setFileList(newFilesToAdd);
+            shouldResetList.current = false;
+            
+            // İlk dosyayı otomatik aç
+            setUploadedFile(newFilesToAdd[0].url);
+            setFileType(newFilesToAdd[0].type);
+            setSplitSlides([]);
+            setIsProcessing(false);
+            setSplitCount(4);
+            
+            setPage('loading');
+            setTimeout(() => {
+                setPage('editor');
+            }, 800);
+        } else {
+            setFileList(prev => [...prev, ...newFilesToAdd]);
+            // Eğer Landing sayfasındaysa veya hiç dosya yüklenmemişse ilkini aç
+            if (page === 'landing' || !uploadedFile) {
+                setUploadedFile(newFilesToAdd[0].url);
+                setFileType(newFilesToAdd[0].type);
+                setSplitSlides([]);
+                setIsProcessing(false);
+                setSplitCount(4);
+                
+                setPage('loading');
+                setTimeout(() => {
+                    setPage('editor');
+                }, 800);
+            }
+        }
+    }
+
+    event.target.value = null; // Input'u temizle
   };
 
   const handleDragOver = (e) => {
@@ -230,7 +261,7 @@ const App = () => {
     e.preventDefault();
     e.stopPropagation();
     
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
       const mockEvent = {
         target: {
           files: e.dataTransfer.files
