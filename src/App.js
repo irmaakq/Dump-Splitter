@@ -441,10 +441,10 @@ const App = () => {
             <button 
   onClick={handleDownloadAll} 
   disabled={isDownloading}
-  className={`bg-white text-black px-3 md:px-6 py-2 md:py-2.5 rounded-xl text-xs md:text-sm font-black flex items-center gap-2 hover:bg-gray-200 transition-all active:scale-95 shadow-[0_0_30px_rgba(255,255,255,0.2)] md:whitespace-nowrap ${isDownloading ? 'opacity-50 cursor-not-allowed' : ''}`}
+  className={`bg-white text-black px-4 md:px-6 py-2 md:py-2.5 rounded-xl text-xs md:text-sm font-black flex items-center gap-2 hover:bg-gray-200 transition-all active:scale-95 shadow-[0_0_30px_rgba(255,255,255,0.2)] whitespace-nowrap ${isDownloading ? 'opacity-50 cursor-not-allowed' : ''}`}
 >
                {isDownloading ? <Loader2 size={16} className="animate-spin" /> : <DownloadCloud size={16} />} 
-              <span className="md:whitespace-nowrap">{isDownloading ? 'İndiriliyor...' : 'Tümünü İndir'}</span>
+              <span className="whitespace-nowrap">{isDownloading ? 'İndiriliyor...' : 'Tümünü İndir'}</span>
             </button>
           </>
         )}
@@ -482,10 +482,12 @@ const App = () => {
       <div className="fixed inset-0 z-[60] bg-black/95 backdrop-blur-xl flex flex-col items-center justify-center p-6 animate-in fade-in slide-in-from-top-10 duration-300">
          <button onClick={() => setIsMobileMenuOpen(false)} className="absolute top-6 right-6 p-2 bg-white/10 rounded-full text-white"><X size={24} /></button>
          <div className="flex flex-col gap-6 text-center w-full max-w-sm">
-            <button onClick={() => { setIsMobileMenuOpen(false); setShowAbout(true); }} className="text-lg font-black text-white uppercase tracking-widest py-4 border-b border-white/10 hover:text-gray-300">DUMP SPLITTER NEDİR?</button>
-            <button onClick={() => { setIsMobileMenuOpen(false); setShowHowTo(true); }} className="text-lg font-black text-white uppercase tracking-widest py-4 border-b border-white/10 hover:text-gray-300">Nasıl Kullanılır?</button>
-            <button onClick={() => { setIsMobileMenuOpen(false); setShowFAQ(true); }} className="text-lg font-black text-white uppercase tracking-widest py-4 border-b border-white/10 hover:text-gray-300">Sıkça Sorulan Sorular</button>
-            <button onClick={() => { setIsMobileMenuOpen(false); setShowPrivacy(true); }} className="text-lg font-black text-white uppercase tracking-widest py-4 border-b border-white/10 hover:text-gray-300">Gizlilik</button>
+            {/* MOBIL MENU GÜNCELLEMESİ: Menü butonlarına tıklanınca artık mobil menü kapanmıyor (setIsMobileMenuOpen(false) kaldırıldı).
+                Böylece modal kapandığında kullanıcı hala menüyü görüyor. */}
+            <button onClick={() => { setShowAbout(true); }} className="text-lg font-black text-white uppercase tracking-widest py-4 border-b border-white/10 hover:text-gray-300">DUMP SPLITTER NEDİR?</button>
+            <button onClick={() => { setShowHowTo(true); }} className="text-lg font-black text-white uppercase tracking-widest py-4 border-b border-white/10 hover:text-gray-300">Nasıl Kullanılır?</button>
+            <button onClick={() => { setShowFAQ(true); }} className="text-lg font-black text-white uppercase tracking-widest py-4 border-b border-white/10 hover:text-gray-300">Sıkça Sorulan Sorular</button>
+            <button onClick={() => { setShowPrivacy(true); }} className="text-lg font-black text-white uppercase tracking-widest py-4 border-b border-white/10 hover:text-gray-300">Gizlilik</button>
          </div>
       </div>
     );
@@ -612,7 +614,7 @@ const App = () => {
             <div className="bg-white/5 p-4 rounded-xl border-l-2 border-white/20">
                 <h4 className="text-white font-bold mb-2 text-xs uppercase tracking-wider">Nasıl Çalışır?</h4>
                 <ol className="list-decimal list-inside space-y-1 text-xs">
-                    <li>Fotoğraflarınızı sisteme yüklersiniz.</li>
+                    <li>Fotoğraflarınızı sisteme yükersiniz.</li>
                     <li>Sistem, fotoğrafları otomatik olarak böler.</li>
                     <li>Yapay zeka desteği ile renkler ve netlik optimize edilir.</li>
                     <li>Sonuçları tek tek veya toplu olarak indirirsiniz.</li>
@@ -764,124 +766,108 @@ const App = () => {
           {/* Canvas ve Geçmiş (Aynı) */}
           <section className="flex-1 bg-[#050505] p-2 md:p-6 flex flex-col items-center relative order-1 lg:order-2 min-h-[50vh] lg:min-h-0">
              {/* ... Canvas içeriği (Mevcut kodun aynısı) ... */}
-              <div className="relative w-full h-full max-w-[95vw] bg-black rounded-[32px] md:rounded-[56px] overflow-hidden border border-white/10 shadow-[0_0_150px_rgba(0,0,0,0.5)] flex items-center justify-center group/canvas my-auto">
-                {uploadedFile ? (
-                  <div className="w-full h-full p-4 md:p-12 flex flex-col overflow-y-auto custom-scrollbar bg-black/40">
-                    <div className={`w-full ${splitCount === 1 ? 'max-w-none px-2 md:px-4' : 'max-w-6xl'} mx-auto space-y-8 md:space-y-16 pb-32 md:pb-40 flex flex-col items-center`}>
-                        <div className="text-center mt-4"><h3 className="text-2xl md:text-4xl font-black uppercase tracking-tighter italic">Bölünen Parçalar</h3></div>
-                        <div className={`grid gap-6 md:gap-12 w-full justify-items-center ${splitCount === 1 ? 'grid-cols-1' : (splitCount % 2 !== 0 || splitCount === 2 ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2')}`}>
-                            {splitSlides.length > 0 ? splitSlides.map((s) => (
-                                <div key={`${uploadedFile}-${s.id}`} style={{ aspectRatio: s.aspectRatio, transform: `scale(${zoom / 100})`, transformOrigin: 'center center', transition: 'transform 0.2s' }} className="relative w-full max-w-[500px] h-auto max-h-[50vh] md:max-h-[70vh] bg-white/5 group hover:scale-[1.01] transition-all flex items-center justify-center snap-center rounded-2xl md:rounded-3xl overflow-hidden shadow-2xl">
-                                    <img 
-                                      src={s.dataUrl} 
-                                      className="w-full h-full object-contain drop-shadow-2xl rounded-2xl md:rounded-3xl cursor-move touch-none" 
-                                      alt="Slide" 
-                                      draggable="false"
-                                      onMouseDown={(e) => {
-                                        e.preventDefault();
-                                        const img = e.target;
-                                        const style = window.getComputedStyle(img);
-                                        const matrix = new DOMMatrix(style.transform);
-                                        const currentX = matrix.m41;
-                                        const currentY = matrix.m42;
-                                        const startX = e.clientX;
-                                        const startY = e.clientY;
-                                        const handleMouseMove = (moveEvent) => {
-                                          const dx = moveEvent.clientX - startX;
-                                          const dy = moveEvent.clientY - startY;
-                                          img.style.transform = `translate(${currentX + dx}px, ${currentY + dy}px)`;
-                                        };
-                                        const handleMouseUp = () => {
-                                          window.removeEventListener('mousemove', handleMouseMove);
-                                          window.removeEventListener('mouseup', handleMouseUp);
-                                        };
-                                        window.addEventListener('mousemove', handleMouseMove);
-                                        window.addEventListener('mouseup', handleMouseUp);
-                                      }}
-                                      onTouchStart={(e) => {
-                                        const img = e.target;
-                                        if (e.touches.length === 2) {
-                                          e.preventDefault();
-                                          const dist = Math.hypot(e.touches[0].pageX - e.touches[1].pageX, e.touches[0].pageY - e.touches[1].pageY);
-                                          const initialZoom = zoom;
-                                          const handlePinchMove = (moveEvent) => {
-                                            if (moveEvent.touches.length === 2) {
+             <div className="relative w-full h-full max-w-[95vw] bg-black rounded-[32px] md:rounded-[56px] overflow-hidden border border-white/10 shadow-[0_0_150px_rgba(0,0,0,0.5)] flex items-center justify-center group/canvas my-auto">
+               {uploadedFile ? (
+                 <div className="w-full h-full p-4 md:p-12 flex flex-col overflow-y-auto custom-scrollbar bg-black/40">
+                   <div className={`w-full ${splitCount === 1 ? 'max-w-none px-2 md:px-4' : 'max-w-6xl'} mx-auto space-y-8 md:space-y-16 pb-32 md:pb-40 flex flex-col items-center`}>
+                       <div className="text-center mt-4"><h3 className="text-2xl md:text-4xl font-black uppercase tracking-tighter italic">Bölünen Parçalar</h3></div>
+                       <div className={`grid gap-6 md:gap-12 w-full justify-items-center ${splitCount === 1 ? 'grid-cols-1' : (splitCount % 2 !== 0 || splitCount === 2 ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2')}`}>
+                           {splitSlides.length > 0 ? splitSlides.map((s) => (
+                               <div key={`${uploadedFile}-${s.id}`} style={{ aspectRatio: s.aspectRatio, transform: `scale(${zoom / 100})`, transformOrigin: 'center center', transition: 'transform 0.2s' }} className="relative w-full max-w-[500px] h-auto max-h-[50vh] md:max-h-[70vh] bg-white/5 group hover:scale-[1.01] transition-all flex items-center justify-center snap-center rounded-2xl md:rounded-3xl overflow-hidden shadow-2xl">
+                                   <img 
+                                     src={s.dataUrl} 
+                                     className="w-full h-full object-contain drop-shadow-2xl rounded-2xl md:rounded-3xl cursor-move touch-none" 
+                                     alt="Slide" 
+                                     draggable="false"
+                                     onMouseDown={(e) => {
+                                       e.preventDefault();
+                                       const img = e.target;
+                                       const style = window.getComputedStyle(img);
+                                       const matrix = new DOMMatrix(style.transform);
+                                       const currentX = matrix.m41;
+                                       const currentY = matrix.m42;
+                                       const startX = e.clientX;
+                                       const startY = e.clientY;
+                                       const handleMouseMove = (moveEvent) => {
+                                         const dx = moveEvent.clientX - startX;
+                                         const dy = moveEvent.clientY - startY;
+                                         img.style.transform = `translate(${currentX + dx}px, ${currentY + dy}px)`;
+                                       };
+                                       const handleMouseUp = () => {
+                                         window.removeEventListener('mousemove', handleMouseMove);
+                                         window.removeEventListener('mouseup', handleMouseUp);
+                                       };
+                                       window.addEventListener('mousemove', handleMouseMove);
+                                       window.addEventListener('mouseup', handleMouseUp);
+                                     }}
+                                     onTouchStart={(e) => {
+                                       const img = e.target;
+                                       if (e.touches.length === 2) {
+                                         e.preventDefault();
+                                         const dist = Math.hypot(e.touches[0].pageX - e.touches[1].pageX, e.touches[0].pageY - e.touches[1].pageY);
+                                         const initialZoom = zoom;
+                                         const handlePinchMove = (moveEvent) => {
+                                           if (moveEvent.touches.length === 2) {
                                                const newDist = Math.hypot(moveEvent.touches[0].pageX - moveEvent.touches[1].pageX, moveEvent.touches[0].pageY - moveEvent.touches[1].pageY);
                                               const newZoom = initialZoom * (newDist / dist);
                                               setZoom(Math.max(10, Math.min(200, newZoom)));
-                                            }
-                                          };
-                                          const handlePinchEnd = () => {
-                                            window.removeEventListener('touchmove', handlePinchMove);
-                                            window.removeEventListener('touchend', handlePinchEnd);
-                                          };
-                                          window.addEventListener('touchmove', handlePinchMove, { passive: false });
-                                          window.addEventListener('touchend', handlePinchEnd);
-                                          return;
-                                        }
-                                        if(e.touches.length !== 1) return;
-                                        const style = window.getComputedStyle(img);
-                                        const matrix = new DOMMatrix(style.transform);
-                                        const currentX = matrix.m41;
-                                        const currentY = matrix.m42;
-                                        const startX = e.touches[0].clientX;
-                                        const startY = e.touches[0].clientY;
-                                        const handleTouchMove = (moveEvent) => {
-                                          if (moveEvent.touches.length === 1) {
-                                            moveEvent.preventDefault(); 
-                                            const dx = moveEvent.touches[0].clientX - startX;
-                                            const dy = moveEvent.touches[0].clientY - startY;
-                                            img.style.transform = `translate(${currentX + dx}px, ${currentY + dy}px)`;
-                                          }
-                                        };
-                                        const handleTouchEnd = () => {
-                                          window.removeEventListener('touchmove', handleTouchMove);
-                                          window.removeEventListener('touchend', handleTouchEnd);
-                                        };
-                                        window.addEventListener('touchmove', handleTouchMove, { passive: false });
-                                        window.addEventListener('touchend', handleTouchEnd);
-                                      }}
-                                    />
-                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center z-50 pointer-events-none rounded-2xl md:rounded-3xl">
+                                           }
+                                         };
+                                         const handlePinchEnd = () => {
+                                           window.removeEventListener('touchmove', handlePinchMove);
+                                           window.removeEventListener('touchend', handlePinchEnd);
+                                         };
+                                         window.addEventListener('touchmove', handlePinchMove, { passive: false });
+                                         window.addEventListener('touchend', handlePinchEnd);
+                                         return;
+                                       }
+                                       if(e.touches.length !== 1) return;
+                                       // MOBİL DÜZENLEME: Tek parmakla sürükleme/kaydırma iptal edildi.
+                                       // PC'deki gibi sürükleme burada yapılmayacak.
+                                       // Sadece yukarıdaki 'if (e.touches.length === 2)' bloğu ile zoom çalışır.
+                                       return; 
+                                     }}
+                                   />
+                                   <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center z-50 pointer-events-none rounded-2xl md:rounded-3xl">
                                        <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); e.nativeEvent.stopImmediatePropagation(); downloadFile(s.dataUrl, `part_${s.id}`); }} className="bg-white text-black w-12 h-12 md:w-14 md:h-14 rounded-full flex items-center justify-center hover:scale-110 active:scale-95 transition-all shadow-[0_0_50px_rgba(255,255,255,0.4)] cursor-pointer pointer-events-auto" title="Bu parçayı indir"><DownloadCloud size={24} strokeWidth={2.5} /></button>
                                        <div className="absolute top-4 left-4 text-white font-bold bg-black/50 px-3 py-1 rounded-full text-[10px] border border-white/20">PARÇA {s.id}</div>
-                                    </div>
-                                </div>
-                            )) : (
-                                <div className="w-full text-center py-40 opacity-10 italic text-xl md:text-2xl font-black uppercase tracking-widest">Medya Analiz Ediliyor...</div>
-                            )}
-                        </div>
-                    </div>
-                    {splitSlides.length > 0 && (
-                      <div 
-                        onPointerDown={handleDockPointerDown}
-                        onPointerMove={handleDockPointerMove}
-                        onPointerUp={handleDockPointerUp}
-                        style={{ 
-                          left: '50%', 
-                          bottom: '20px', 
-                          transform: `translate(calc(-50% + ${dockPos.x}px), ${dockPos.y}px)`,
-                          cursor: isDraggingDock ? 'grabbing' : 'grab',
-                          touchAction: 'none' 
-                        }}
-                        className="absolute bg-black/90 backdrop-blur-xl border border-white/10 rounded-full px-4 py-2 md:px-6 md:py-3 flex items-center justify-center gap-4 md:gap-6 shadow-[0_20px_50px_rgba(0,0,0,0.5)] z-50 animate-in slide-in-from-bottom-5 w-[90%] max-w-sm md:w-auto md:max-w-[90vw] select-none"
-                      >
-                        <div className="flex flex-col items-start gap-1 border-r border-white/10 pr-4 md:pr-6 min-w-[80px] md:min-w-[140px] shrink-0 pointer-events-none">
-                            <span className="text-[8px] md:text-[10px] font-black text-gray-500 uppercase tracking-wider">Çözünürlük</span>
-                            <div className="flex items-center gap-1 md:gap-2 text-xs md:text-base font-black text-white italic">
-                              <span>{mediaDimensions.width}</span>
-                              <span className="text-gray-600 text-[10px] md:text-xs">×</span>
-                              <span>{mediaDimensions.height}</span>
-                            </div>
-                        </div>
-                        <div className="flex items-center gap-2 md:gap-4 pl-2 justify-end shrink-0 flex-1">
-                          <button onClick={() => setZoom(prev => Math.max(10, prev - 10))} onPointerDown={(e) => e.stopPropagation()} className="text-gray-500 hover:text-white transition-colors shrink-0 p-2"><Minus size={14} /></button>
-                          <div className="flex items-center gap-2 group/zoom"><span className="text-[10px] md:text-xs font-black text-white/50 w-8 text-center group-hover/zoom:text-white transition-colors shrink-0">{Math.round(zoom)}%</span></div>
-                          <button onClick={() => setZoom(prev => Math.min(200, prev + 10))} onPointerDown={(e) => e.stopPropagation()} className="text-gray-500 hover:text-white transition-colors shrink-0 p-2"><Plus size={14} /></button>
-                          <button onClick={() => setZoom(100)} onPointerDown={(e) => e.stopPropagation()} className="w-8 h-8 md:w-9 md:h-9 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center transition-all text-gray-400 hover:text-white ml-1 border border-white/5 shrink-0" title="Sıfırla"><Maximize size={12} /></button>
-                        </div>
-                      </div>
-                    )}
+                                   </div>
+                               </div>
+                           )) : (
+                               <div className="w-full text-center py-40 opacity-10 italic text-xl md:text-2xl font-black uppercase tracking-widest">Medya Analiz Ediliyor...</div>
+                           )}
+                       </div>
+                   </div>
+                   {splitSlides.length > 0 && (
+                     <div 
+                       onPointerDown={handleDockPointerDown}
+                       onPointerMove={handleDockPointerMove}
+                       onPointerUp={handleDockPointerUp}
+                       style={{ 
+                         left: '50%', 
+                         bottom: '20px', 
+                         transform: `translate(calc(-50% + ${dockPos.x}px), ${dockPos.y}px)`,
+                         cursor: isDraggingDock ? 'grabbing' : 'grab',
+                         touchAction: 'none' 
+                       }}
+                       className="absolute bg-black/90 backdrop-blur-xl border border-white/10 rounded-full px-4 py-2 md:px-6 md:py-3 flex items-center justify-center gap-4 md:gap-6 shadow-[0_20px_50px_rgba(0,0,0,0.5)] z-50 animate-in slide-in-from-bottom-5 w-[90%] max-w-sm md:w-auto md:max-w-[90vw] select-none"
+                     >
+                       <div className="flex flex-col items-start gap-1 border-r border-white/10 pr-4 md:pr-6 min-w-[80px] md:min-w-[140px] shrink-0 pointer-events-none">
+                           <span className="text-[8px] md:text-[10px] font-black text-gray-500 uppercase tracking-wider">Çözünürlük</span>
+                           <div className="flex items-center gap-1 md:gap-2 text-xs md:text-base font-black text-white italic">
+                             <span>{mediaDimensions.width}</span>
+                             <span className="text-gray-600 text-[10px] md:text-xs">×</span>
+                             <span>{mediaDimensions.height}</span>
+                           </div>
+                       </div>
+                       <div className="flex items-center gap-2 md:gap-4 pl-2 justify-end shrink-0 flex-1">
+                         <button onClick={() => setZoom(prev => Math.max(10, prev - 10))} onPointerDown={(e) => e.stopPropagation()} className="text-gray-500 hover:text-white transition-colors shrink-0 p-2"><Minus size={14} /></button>
+                         <div className="flex items-center gap-2 group/zoom"><span className="text-[10px] md:text-xs font-black text-white/50 w-8 text-center group-hover/zoom:text-white transition-colors shrink-0">{Math.round(zoom)}%</span></div>
+                         <button onClick={() => setZoom(prev => Math.min(200, prev + 10))} onPointerDown={(e) => e.stopPropagation()} className="text-gray-500 hover:text-white transition-colors shrink-0 p-2"><Plus size={14} /></button>
+                         <button onClick={() => setZoom(100)} onPointerDown={(e) => e.stopPropagation()} className="w-8 h-8 md:w-9 md:h-9 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center transition-all text-gray-400 hover:text-white ml-1 border border-white/5 shrink-0" title="Sıfırla"><Maximize size={12} /></button>
+                       </div>
+                     </div>
+                   )}
                  </div>
                ) : (
                  <div className="text-center p-10 md:p-20 flex flex-col items-center">
@@ -927,7 +913,3 @@ const App = () => {
 };
 
 export default App;
-
-
-
-
