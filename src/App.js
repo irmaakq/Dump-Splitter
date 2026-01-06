@@ -185,52 +185,38 @@ const App = () => {
   };
 
   const handleFileSelect = (event) => {
-    const files = event.target.files;
-    if (!files || files.length === 0) return;
-
-    // FileList'i Array'e çeviriyoruz
-    const filesArray = Array.from(files);
+    const file = event.target.files[0];
+    if (!file) return;
 
     // Maksimum dosya sayısı kontrolü
-    if (!shouldResetList.current && (fileList.length + filesArray.length) > 20) { 
+    if (!shouldResetList.current && fileList.length >= 20) { 
       showToast("Maksimum 20 dosya eklenebilir.");
       return;
     }
 
-    const newFiles = filesArray.map(file => {
-      const url = URL.createObjectURL(file);
-      activeUrlsRef.current.push(url);
-      return { 
-        url, 
-        type: file.type.startsWith('video/') ? 'video' : 'image', 
-        id: Date.now() + Math.random() 
-      };
-    });
+    const url = URL.createObjectURL(file);
+    activeUrlsRef.current.push(url);
+
+    const type = file.type.startsWith('video/') ? 'video' : 'image';
+    const newFileObj = { url, type, id: Date.now() + Math.random() }; 
     
     if (shouldResetList.current) {
-      setFileList(newFiles);
+      setFileList([newFileObj]);
       shouldResetList.current = false;
     } else {
-      setFileList(prev => [...prev, ...newFiles]);
+      setFileList(prev => [...prev, newFileObj]);
     }
 
-    // İlk dosyayı işleme al
-    if (newFiles.length > 0) {
-      const firstFile = newFiles[0];
-      // Eğer şu an bir dosya yüklü değilse veya reset modundaysak ilkini aç
-      if (!uploadedFile || page === 'landing') {
-          setUploadedFile(firstFile.url);
-          setFileType(firstFile.type);
-          setSplitSlides([]);
-          setIsProcessing(false); 
-          setSplitCount(4);
-          
-          setPage('loading');
-          setTimeout(() => {
-            setPage('editor');
-          }, 800);
-      }
-    }
+    setUploadedFile(url);
+    setFileType(type);
+    setSplitSlides([]);
+    setIsProcessing(false); 
+    setSplitCount(4);
+    
+    setPage('loading');
+    setTimeout(() => {
+      setPage('editor');
+    }, 800);
     
     event.target.value = null; 
   };
@@ -244,7 +230,7 @@ const App = () => {
     e.preventDefault();
     e.stopPropagation();
     
-    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
       const mockEvent = {
         target: {
           files: e.dataTransfer.files
@@ -448,14 +434,14 @@ const App = () => {
           <>
             <button 
               onClick={triggerNewUpload}
-              className="bg-white text-black px-4 md:px-6 py-2 md:py-2.5 rounded-xl text-xs md:text-sm font-black flex items-center gap-2 hover:bg-gray-200 transition-all active:scale-95 shadow-lg border border-white/10 whitespace-nowrap"
+              className="bg-white text-black px-4 md:px-6 py-2 md:py-2.5 rounded-xl text-xs md:text-sm font-black flex items-center gap-2 hover:bg-gray-200 transition-all active:scale-95 shadow-lg border border-white/10 whitespace-nowrap justify-center"
             >
                <Upload size={16} /> <span className="whitespace-nowrap">Yeni Yükleme</span>
             </button>
             <button 
               onClick={handleDownloadAll} 
               disabled={isDownloading}
-              className={`bg-white text-black px-4 md:px-6 py-2 md:py-2.5 rounded-xl text-xs md:text-sm font-black flex items-center gap-2 hover:bg-gray-200 transition-all active:scale-95 shadow-[0_0_30px_rgba(255,255,255,0.2)] whitespace-nowrap ${isDownloading ? 'opacity-50 cursor-not-allowed' : ''}`}
+              className={`bg-white text-black px-4 md:px-6 py-2 md:py-2.5 rounded-xl text-xs md:text-sm font-black flex items-center gap-2 hover:bg-gray-200 transition-all active:scale-95 shadow-[0_0_30px_rgba(255,255,255,0.2)] whitespace-nowrap justify-center ${isDownloading ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
                {isDownloading ? <Loader2 size={16} className="animate-spin" /> : <DownloadCloud size={16} />} 
                <span className="whitespace-nowrap">{isDownloading ? 'İndiriliyor...' : 'Tümünü İndir'}</span>
@@ -698,7 +684,7 @@ const App = () => {
           <h2 className="text-xl md:text-2xl font-black uppercase italic tracking-widest animate-pulse tracking-tighter">İşleniyor</h2>
         </div>
       ) : page === 'landing' ? (
-        // LANDING VIEW (Sadece Hero ve Upload butonu, Header/Menu YOK)
+        // LANDING VIEW
         <div className="flex-1 flex flex-col items-center justify-center p-6 text-center relative overflow-x-hidden pt-48 lg:pt-64">
           <div className="absolute top-0 -z-10 w-full h-full bg-gradient-to-b from-blue-900/10 via-transparent to-transparent" />
           <h1 className="text-5xl md:text-9xl font-black tracking-tighter mb-4 md:mb-8 leading-normal italic uppercase">DUMP <br /> SPLITTER</h1>
@@ -740,7 +726,6 @@ const App = () => {
         // EDITOR VIEW (Ana Uygulama)
         <main className="flex-1 pt-20 flex flex-col lg:flex-row overflow-hidden relative">
           <aside className="w-full lg:w-[320px] h-auto lg:h-full bg-[#0a0a0a] border-r border-white/5 flex flex-col order-2 lg:order-1 z-20 shrink-0">
-             {/* Ayarlar Paneli İçeriği Aynı... */}
              <div className="flex-1 lg:overflow-y-auto custom-scrollbar p-6 space-y-6 lg:space-y-8">
               <div className="space-y-6">
                   <div className="p-5 bg-white/[0.03] border border-white/10 rounded-[28px] space-y-5 shadow-inner">
