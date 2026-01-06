@@ -449,7 +449,7 @@ const App = () => {
           </>
         )}
 
-        <div className="flex items-center justify-end">
+        <div className="flex items-center justify-center">
              {/* MOBIL MENU BUTONU - Sadece Landing sayfasında göster */}
              {!isEditor && (
                <button 
@@ -927,5 +927,6 @@ const App = () => {
 };
 
 export default App;
+
 
 
