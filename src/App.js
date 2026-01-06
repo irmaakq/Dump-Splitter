@@ -418,16 +418,20 @@ const App = () => {
 
   const Header = ({ isEditor }) => (
     <header className={`fixed top-0 left-0 right-0 z-[70] px-4 md:px-8 py-4 flex items-center justify-between backdrop-blur-3xl transition-all ${isEditor ? 'bg-black/90 border-b border-white/5' : 'bg-transparent'}`}>
-      <div className="flex items-center gap-3 md:gap-6 ml-0 md:ml-10">
+     <div className="flex items-center gap-2 md:gap-4 ml-0 md:ml-10">
         <div 
-          className="flex items-center gap-2 cursor-pointer group hover:opacity-80 transition-all" 
-          onClick={handleGoHome}
-          title="Ana Menüye Dön"
-        >
-          <div className="w-8 h-8 md:w-10 md:h-10 bg-white text-black rounded-xl flex items-center justify-center font-black italic shadow-2xl transition-all text-xl md:text-2xl tracking-tighter group-hover:scale-105">D</div>
-          <span className="text-lg md:text-2xl font-black tracking-tighter uppercase block italic">Dump Splitter</span>
-        </div>
-      </div>
+  className="flex items-center gap-2 md:gap-3 cursor-pointer group hover:opacity-80 transition-all"
+  onClick={handleGoHome}
+  title="Ana Menüye Dön">
+  <div className="w-7 h-7 md:w-10 md:h-10 bg-white text-black rounded-xl flex items-center justify-center font-black italic shadow-2xl transition-transform group-hover:scale-105 text-base md:text-2xl tracking-tight">
+    D
+  </div>
+  <span className="text-base md:text-2xl font-black uppercase italic tracking-tight leading-none">
+    Dump Splitter
+  </span>
+</div>
+
+
       
       <div className="flex items-center gap-2 md:gap-4">
         {isEditor && (
@@ -922,4 +926,5 @@ const App = () => {
 };
 
 export default App;
+
 
