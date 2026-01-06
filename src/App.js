@@ -85,7 +85,6 @@ const App = () => {
   
   // İndirme işlemi kontrolü
   const [isDownloading, setIsDownloading] = useState(false);
-  const isCancelledRef = useRef(false); // İptal referansı
 
   // ZOOM & BOYUTLAR
   const [zoom, setZoom] = useState(100);
@@ -189,6 +188,7 @@ const App = () => {
     const files = event.target.files;
     if (!files || files.length === 0) return;
 
+    // FileList'i Array'e çeviriyoruz
     const filesArray = Array.from(files);
 
     // Maksimum dosya sayısı kontrolü
@@ -214,19 +214,22 @@ const App = () => {
       setFileList(prev => [...prev, ...newFiles]);
     }
 
-    // İlk dosyayı seçili hale getir ve işle
+    // İlk dosyayı işleme al
     if (newFiles.length > 0) {
       const firstFile = newFiles[0];
-      setUploadedFile(firstFile.url);
-      setFileType(firstFile.type);
-      setSplitSlides([]);
-      setIsProcessing(false); 
-      setSplitCount(4);
-      
-      setPage('loading');
-      setTimeout(() => {
-        setPage('editor');
-      }, 800);
+      // Eğer şu an bir dosya yüklü değilse veya reset modundaysak ilkini aç
+      if (!uploadedFile || page === 'landing') {
+          setUploadedFile(firstFile.url);
+          setFileType(firstFile.type);
+          setSplitSlides([]);
+          setIsProcessing(false); 
+          setSplitCount(4);
+          
+          setPage('loading');
+          setTimeout(() => {
+            setPage('editor');
+          }, 800);
+      }
     }
     
     event.target.value = null; 
@@ -388,36 +391,21 @@ const App = () => {
   };
 
   const handleDownloadAll = async () => {
-    if (isDownloading) {
-      // Eğer zaten indiriyorsa, işlemi iptal et
-      isCancelledRef.current = true;
-      showToast("İndirme iptal edildi.");
-      return;
-    }
-    
+    if (isDownloading) return;
     setIsDownloading(true);
-    isCancelledRef.current = false;
     showToast("İndirme işlemi başladı, lütfen bekleyin...");
-    
     try {
       for (let i = 0; i < splitSlides.length; i++) {
-        // İptal bayrağını kontrol et
-        if (isCancelledRef.current) break;
-
         const s = splitSlides[i];
         downloadFile(s.dataUrl, `dump_part_${s.id}`);
         await new Promise(resolve => setTimeout(resolve, 800)); 
       }
-      
-      if (!isCancelledRef.current) {
-        showToast("Tüm parçalar indirildi.");
-      }
+      showToast("Tüm parçalar indirildi.");
     } catch (error) {
       console.error("Toplu indirme hatası:", error);
       showToast("İndirme sırasında bir hata oluştu.");
     } finally {
       setIsDownloading(false);
-      isCancelledRef.current = false;
     }
   };
 
@@ -466,10 +454,11 @@ const App = () => {
             </button>
             <button 
               onClick={handleDownloadAll} 
-              className={`bg-white text-black px-4 md:px-6 py-2 md:py-2.5 rounded-xl text-xs md:text-sm font-black flex items-center gap-2 hover:bg-gray-200 transition-all active:scale-95 shadow-[0_0_30px_rgba(255,255,255,0.2)] whitespace-nowrap ${isDownloading ? 'opacity-90' : ''}`}
+              disabled={isDownloading}
+              className={`bg-white text-black px-4 md:px-6 py-2 md:py-2.5 rounded-xl text-xs md:text-sm font-black flex items-center gap-2 hover:bg-gray-200 transition-all active:scale-95 shadow-[0_0_30px_rgba(255,255,255,0.2)] whitespace-nowrap ${isDownloading ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
-               {isDownloading ? <X size={16} /> : <DownloadCloud size={16} />} 
-               <span className="whitespace-nowrap">{isDownloading ? 'İptal Et' : 'Tümünü İndir'}</span>
+               {isDownloading ? <Loader2 size={16} className="animate-spin" /> : <DownloadCloud size={16} />} 
+               <span className="whitespace-nowrap">{isDownloading ? 'İndiriliyor...' : 'Tümünü İndir'}</span>
             </button>
           </>
         )}
@@ -501,7 +490,7 @@ const App = () => {
     </header>
   );
 
-  // ... (Modallar aynı) ...
+  // ... (Geri kalan MobileMenu, Modallar ve Render aynı kalıyor) ...
 
   const MobileMenu = () => {
     if (!isMobileMenuOpen) return null;
@@ -517,7 +506,7 @@ const App = () => {
       </div>
     );
   };
-  
+
   const FeatureInfoModal = () => {
     if (!featureInfo) return null;
     const Icon = featureInfo.icon;
@@ -548,6 +537,7 @@ const App = () => {
           <div className="bg-white/[0.03] p-5 rounded-2xl border border-white/5 hover:border-white/10 transition-colors"><h3 className="text-white font-bold mb-3 flex items-center gap-3"><Shield size={18} className="text-yellow-400"/><span className="uppercase tracking-tight text-xs">Sıfır İz Politikası</span></h3><p className="text-gray-400 leading-relaxed text-xs">Kişisel verileriniz, IP adresiniz veya kullanım alışkanlıklarınız hiçbir üçüncü taraf ile paylaşılmaz. Uygulama tamamen anonimdir.</p></div>
         </div>
         
+        {/* ADDED: OPEN SOURCE MENTION - Clickable Button Style */}
         <div className="mt-8 pt-6 border-t border-white/10 flex flex-col items-center gap-4 text-center">
             <a href="https://github.com/irmaakq/Dump-Splitter" target="_blank" rel="noreferrer" className="flex items-center gap-3 bg-white/5 hover:bg-white/10 px-5 py-3 rounded-2xl border border-white/10 transition-all group w-full md:w-auto justify-center">
                 <Github size={20} className="text-white group-hover:scale-110 transition-transform" />
@@ -583,8 +573,10 @@ const App = () => {
         </div>
 
         <div className="relative space-y-8 px-4">
+            {/* Connecting Line */}
             <div className="absolute left-8 top-4 bottom-4 w-0.5 bg-gradient-to-b from-blue-500 via-purple-500 to-green-500 opacity-30 rounded-full"></div>
 
+            {/* ADIM 1 */}
             <div className="relative flex items-start gap-6 group">
                 <div className="relative z-10 w-16 h-16 bg-[#0f0f0f] border-4 border-blue-500/20 rounded-2xl flex items-center justify-center shadow-[0_0_20px_rgba(59,130,246,0.3)] group-hover:scale-110 transition-transform duration-300 shrink-0">
                     <Upload size={24} className="text-blue-400" strokeWidth={2.5} />
@@ -595,6 +587,7 @@ const App = () => {
                 </div>
             </div>
 
+            {/* ADIM 2 */}
             <div className="relative flex items-start gap-6 group">
                 <div className="relative z-10 w-16 h-16 bg-[#0f0f0f] border-4 border-purple-500/20 rounded-2xl flex items-center justify-center shadow-[0_0_20px_rgba(168,85,247,0.3)] group-hover:scale-110 transition-transform duration-300 shrink-0">
                     <Settings size={24} className="text-purple-400" strokeWidth={2.5} />
@@ -605,6 +598,7 @@ const App = () => {
                 </div>
             </div>
 
+            {/* ADIM 3 */}
             <div className="relative flex items-start gap-6 group">
                 <div className="relative z-10 w-16 h-16 bg-[#0f0f0f] border-4 border-green-500/20 rounded-2xl flex items-center justify-center shadow-[0_0_20px_rgba(34,197,94,0.3)] group-hover:scale-110 transition-transform duration-300 shrink-0">
                     <DownloadCloud size={24} className="text-green-400" strokeWidth={2.5} />
@@ -684,7 +678,7 @@ const App = () => {
   // RENDER - TEK ÇATI (SPA)
   return (
     <div className="h-screen bg-[#050505] text-white flex flex-col overflow-hidden">
-      <input type="file" ref={fileInputRef} className="hidden" accept="image/*,video/*" onChange={handleFileSelect} />
+      <input type="file" ref={fileInputRef} className="hidden" accept="image/*,video/*" multiple onChange={handleFileSelect} />
       
       {/* 1. Global Header (Her zaman görünür, Tek Hamburger) */}
       <Header isEditor={page === 'editor'} />
