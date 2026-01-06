@@ -657,7 +657,7 @@ const App = () => {
 
   // RENDER - TEK ÇATI (SPA)
   return (
-    <div className="h-screen bg-[#050505] text-white flex flex-col overflow-hidden">
+    <div className="min-h-screen bg-[#050505] text-white flex flex-col overflow-x-hidden overflow-y-auto lg:overflow-hidden">
       <input type="file" ref={fileInputRef} className="hidden" accept="image/*,video/*" multiple onChange={handleFileSelect} />
       
       {/* 1. Global Header (Her zaman görünür, Tek Hamburger) */}
@@ -679,7 +679,7 @@ const App = () => {
         </div>
       ) : page === 'landing' ? (
         // LANDING VIEW (Sadece Hero ve Upload butonu, Header/Menu YOK)
-        <div className="flex-1 flex flex-col items-center justify-center p-6 text-center relative overflow-x-hidden pt-48 lg:pt-64">
+        <div className="flex-1 flex flex-col items-center justify-center p-6 text-center relative overflow-x-hidden overflow-y-visible pt-48 lg:pt-64">
           <div className="absolute top-0 -z-10 w-full h-full bg-gradient-to-b from-blue-900/10 via-transparent to-transparent" />
           <h1 className="text-5xl md:text-9xl font-black tracking-tighter mb-4 md:mb-8 leading-normal italic uppercase">DUMP <br /> SPLITTER</h1>
           <p className="text-gray-400 max-w-xl mb-8 md:mb-12 font-medium tracking-tight uppercase text-[10px] md:text-xs tracking-[0.2em] px-4">Instagram için profesyonel Dump Bölme ve Kalite Artırma Aracı</p>
@@ -718,7 +718,7 @@ const App = () => {
         </div>
       ) : (
         // EDITOR VIEW (Ana Uygulama)
-        <main className="flex-1 pt-20 flex flex-col lg:flex-row overflow-hidden relative">
+        <main className="flex-1 pt-20 flex flex-col lg:flex-row overflow-visible lg:overflow-hidden relative">
           <aside className="w-full lg:w-[320px] h-auto lg:h-full bg-[#0a0a0a] border-r border-white/5 flex flex-col order-2 lg:order-1 z-20 shrink-0">
              <div className="flex-1 lg:overflow-y-auto custom-scrollbar p-6 space-y-6 lg:space-y-8">
               <div className="space-y-6">
@@ -922,3 +922,4 @@ const App = () => {
 };
 
 export default App;
+
