@@ -95,6 +95,10 @@ const App = () => {
   const [isDraggingDock, setIsDraggingDock] = useState(false);
   const dragStartRef = useRef({ x: 0, y: 0 });
 
+  // --- FEEDBACK CONTROL REF ---
+  // Silme veya geçiş sırasında loader/toast göstermemek için flag
+  const skipFeedbackRef = useRef(false);
+
   const handleDockPointerDown = (e) => {
     if (e.target.closest('button') || e.target.closest('input')) return;
     setIsDraggingDock(true);
@@ -201,20 +205,20 @@ const App = () => {
 
     if (newList.length > 0) {
         // Eğer listede eleman kaldıysa, bir öncekine veya ilkine geç
-        // Mantık: Silinen son elemansa bir öncekini seç, değilse aynı indextekini (yani bir sonrakini) seç
         let nextIndex = currentIndex; 
         if (nextIndex >= newList.length) {
             nextIndex = newList.length - 1;
         }
         
+        // SİLME İŞLEMİNDE SESSİZ GEÇİŞ
+        skipFeedbackRef.current = true;
+
         const nextFile = newList[nextIndex];
         setUploadedFile(nextFile.url);
         setFileType(nextFile.type);
-        setIsProcessing(false);
-        setSplitSlides([]);
-        setSplitCount(4);
-        setPage('loading');
-        setTimeout(() => setPage('editor'), 600);
+        
+        // Loader'a yönlendirme kodu TAMAMEN KALDIRILDI
+        // Anlık geçiş sağlanıyor.
         showToast("Dosya silindi.");
     } else {
         // Liste boşaldıysa ana sayfaya dön
@@ -274,6 +278,9 @@ const App = () => {
     }
 
     if (newFilesToAdd.length > 0) {
+        // YENİ YÜKLEMEDE FEEDBACK GÖSTERİLSİN (Varsayılan davranış)
+        skipFeedbackRef.current = false; 
+
         if (shouldResetList.current) {
             setFileList(newFilesToAdd);
             shouldResetList.current = false;
@@ -345,13 +352,20 @@ const App = () => {
   const processSplit = (sourceUrl, isVideo) => {
     if (!sourceUrl) return;
 
-    setIsProcessing(true);
-    setAiLogs([]);
-    setSplitSlides([]);
+    // REF DEĞERİNİ YAKALA VE HEMEN SIFIRLA (Bir sonraki işlem için)
+    const isSilent = skipFeedbackRef.current;
+    // skipFeedbackRef.current = false; // Reset'i burada yapmıyoruz, çünkü async işlemler var.
 
-    SPLITTER_STATUS_MSGS.forEach((msg, i) => {
-      setTimeout(() => setAiLogs(prev => [...prev.slice(-3), msg]), i * 350);
-    });
+    // SESSİZ MOD DEĞİLSE İŞLEME ANİMASYONUNU BAŞLAT
+    if (!isSilent) {
+        setIsProcessing(true);
+        setAiLogs([]);
+        setSplitSlides([]);
+
+        SPLITTER_STATUS_MSGS.forEach((msg, i) => {
+          setTimeout(() => setAiLogs(prev => [...prev.slice(-3), msg]), i * 350);
+        });
+    }
 
     const mediaElement = isVideo ? document.createElement('video') : new Image();
     mediaElement.crossOrigin = "anonymous";
@@ -437,8 +451,15 @@ const App = () => {
       }
 
       setSplitSlides(parts);
-      setIsProcessing(false);
-      showToast(`${parts.length} parça hazır.`);
+      
+      // SESSİZ MOD DEĞİLSE TOAST GÖSTER VE İŞLEMEYİ KAPAT
+      if (!isSilent) {
+          setIsProcessing(false);
+          showToast(`${parts.length} parça hazır.`);
+      } 
+      
+      // İşlem bitti, flag'i varsayılana döndür (Gelecek manuel işlemler için)
+      skipFeedbackRef.current = false;
     };
 
     if (isVideo) {
@@ -982,7 +1003,20 @@ const App = () => {
           <aside className="w-full lg:w-[100px] h-auto lg:h-full border-t lg:border-t-0 lg:border-l border-white/5 bg-[#0a0a0a] flex flex-row lg:flex-col shadow-2xl z-20 overflow-x-auto lg:overflow-y-auto custom-scrollbar p-4 space-x-4 lg:space-x-0 lg:space-y-6 order-3 items-center lg:items-center">
             {fileList.length === 0 && <div className="text-[10px] text-gray-600 font-bold uppercase tracking-widest whitespace-nowrap lg:whitespace-normal text-center w-full">GEÇMİŞ BOŞ</div>}
             {fileList.map((file, idx) => (
-              <div key={file.id} onClick={() => { if (uploadedFile === file.url) return; setIsProcessing(false); setUploadedFile(file.url); setFileType(file.type); setSplitCount(4); setSplitSlides([]); setPage('loading'); setTimeout(() => setPage('editor'), 600); }} className={`relative group rounded-[16px] lg:rounded-[20px] overflow-hidden aspect-square h-16 lg:h-auto lg:w-full border-2 shadow-xl cursor-pointer transition-all shrink-0 ${uploadedFile === file.url ? 'border-white ring-2 ring-white/20' : 'border-white/10 opacity-60 hover:opacity-100'}`}>
+              <div 
+                key={file.id} 
+                onClick={() => { 
+                    if (uploadedFile === file.url) return; 
+                    // TIKLAYINCA SESSİZ GEÇİŞ
+                    skipFeedbackRef.current = true;
+                    setUploadedFile(file.url); 
+                    setFileType(file.type); 
+                    setSplitCount(4); 
+                    setSplitSlides([]); 
+                    // Loader göstermeden devam et
+                }} 
+                className={`relative group rounded-[16px] lg:rounded-[20px] overflow-hidden aspect-square h-16 lg:h-auto lg:w-full border-2 shadow-xl cursor-pointer transition-all shrink-0 ${uploadedFile === file.url ? 'border-white ring-2 ring-white/20' : 'border-white/10 opacity-60 hover:opacity-100'}`}
+              >
                   {file.type === 'video' ? <video src={file.url} className="w-full h-full object-cover" /> : <img src={file.url} className="w-full h-full object-cover" alt="Thumb" />}
                   {/* Fotoğraf üzerindeki X butonu kaldırıldı. */}
               </div>
