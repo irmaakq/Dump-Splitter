@@ -417,7 +417,7 @@ const App = () => {
   // --- MODALS & COMPONENTS ---
 
   const Header = ({ isEditor }) => (
-    <header className={`fixed top-0 left-0 right-0 z-[70] px-4 md:px-8 py-4 flex items-center justify-between backdrop-blur-3xl transition-all ${isEditor ? 'bg-black/90 border-b border-white/5' : 'bg-transparent'}`}>
+    <header className={`fixed top-0 left-0 right-0 z-[70] px-4 md:px-8 py-2 md:py-4 flex items-center justify-between backdrop-blur-3xl transition-all ${isEditor ? 'bg-black/90 border-b border-white/5' : 'bg-transparent'}`}>
       <div className="flex items-center gap-3 md:gap-6 ml-0 md:ml-10">
         <div 
           className="flex items-center gap-2 cursor-pointer group hover:opacity-80 transition-all" 
@@ -661,7 +661,7 @@ const App = () => {
 
   // RENDER - TEK ÇATI (SPA)
   return (
-    <div className="h-screen bg-[#050505] text-white flex flex-col overflow-hidden">
+<div className="min-h-screen bg-[#050505] text-white flex flex-col overflow-x-hidden">
       <input type="file" ref={fileInputRef} className="hidden" accept="image/*,video/*" multiple onChange={handleFileSelect} />
       
       {/* 1. Global Header (Her zaman görünür, Tek Hamburger) */}
@@ -722,7 +722,7 @@ const App = () => {
         </div>
       ) : (
         // EDITOR VIEW (Ana Uygulama)
-        <main className="flex-1 pt-20 flex flex-col lg:flex-row overflow-hidden relative">
+        <main className="flex-1 pt-16 md:pt-20 flex flex-col lg:flex-row overflow-hidden relative">
           <aside className="w-full lg:w-[320px] h-auto lg:h-full bg-[#0a0a0a] border-r border-white/5 flex flex-col order-2 lg:order-1 z-20 shrink-0">
              {/* Ayarlar Paneli İçeriği Aynı... */}
              <div className="flex-1 lg:overflow-y-auto custom-scrollbar p-6 space-y-6 lg:space-y-8">
@@ -927,3 +927,4 @@ const App = () => {
 };
 
 export default App;
+
