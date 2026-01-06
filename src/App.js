@@ -424,12 +424,14 @@ const App = () => {
           onClick={handleGoHome}
           title="Ana Menüye Dön"
         >
-          <div className="w-8 h-8 md:w-10 md:h-10 bg-white text-black rounded-xl flex items-center justify-center font-black italic shadow-2xl transition-all text-xl md:text-2xl tracking-tighter group-hover:scale-105">D</div>
-          <span className="text-lg md:text-2xl font-black tracking-tighter uppercase block italic">Dump Splitter</span>
+          {/* LOGO DÜZENLEMESİ: w-10 h-10 yapıldı ve shrink-0 eklendi, böylece mobilde ezilmeyecek */}
+          <div className="w-10 h-10 md:w-10 md:h-10 bg-white text-black rounded-xl flex flex-shrink-0 items-center justify-center font-black italic shadow-2xl transition-all text-xl md:text-2xl tracking-tighter group-hover:scale-105">D</div>
+          {/* YAZI DÜZENLEMESİ: Sadece md ve üzeri ekranlarda (PC) görünecek */}
+          <span className="hidden md:block text-lg md:text-2xl font-black tracking-tighter uppercase italic">Dump Splitter</span>
         </div>
       </div>
       
-      <div className="flex items-center gap-2 md:gap-4 justify-center md:justify-end">
+      <div className="flex items-center gap-2 md:gap-4 justify-end">
         {isEditor && (
           <>
             <button 
@@ -441,7 +443,8 @@ const App = () => {
             <button 
   onClick={handleDownloadAll} 
   disabled={isDownloading}
-  className={`bg-white text-black px-4 md:px-6 py-2 md:py-2.5 rounded-xl text-xs md:text-sm font-black flex items-center gap-2 hover:bg-gray-200 transition-all active:scale-95 shadow-[0_0_30px_rgba(255,255,255,0.2)] whitespace-nowrap ${isDownloading ? 'opacity-50 cursor-not-allowed' : ''}`}
+  // BUTON DÜZENLEMESİ: px-4 ile diğer butonla eşitlendi ve mr-2 ile sağ boşluk bırakıldı
+  className={`bg-white text-black px-4 md:px-6 py-2 md:py-2.5 mr-2 md:mr-0 rounded-xl text-xs md:text-sm font-black flex items-center gap-2 hover:bg-gray-200 transition-all active:scale-95 shadow-[0_0_30px_rgba(255,255,255,0.2)] whitespace-nowrap ${isDownloading ? 'opacity-50 cursor-not-allowed' : ''}`}
 >
                {isDownloading ? <Loader2 size={16} className="animate-spin" /> : <DownloadCloud size={16} />} 
               <span className="whitespace-nowrap">{isDownloading ? 'İndiriliyor...' : 'Tümünü İndir'}</span>
@@ -482,8 +485,7 @@ const App = () => {
       <div className="fixed inset-0 z-[60] bg-black/95 backdrop-blur-xl flex flex-col items-center justify-center p-6 animate-in fade-in slide-in-from-top-10 duration-300">
          <button onClick={() => setIsMobileMenuOpen(false)} className="absolute top-6 right-6 p-2 bg-white/10 rounded-full text-white"><X size={24} /></button>
          <div className="flex flex-col gap-6 text-center w-full max-w-sm">
-            {/* MOBIL MENU GÜNCELLEMESİ: Menü butonlarına tıklanınca artık mobil menü kapanmıyor (setIsMobileMenuOpen(false) kaldırıldı).
-                Böylece modal kapandığında kullanıcı hala menüyü görüyor. */}
+            {/* MOBIL MENU GÜNCELLEMESİ: Menü butonlarına tıklanınca artık mobil menü kapanmıyor */}
             <button onClick={() => { setShowAbout(true); }} className="text-lg font-black text-white uppercase tracking-widest py-4 border-b border-white/10 hover:text-gray-300">DUMP SPLITTER NEDİR?</button>
             <button onClick={() => { setShowHowTo(true); }} className="text-lg font-black text-white uppercase tracking-widest py-4 border-b border-white/10 hover:text-gray-300">Nasıl Kullanılır?</button>
             <button onClick={() => { setShowFAQ(true); }} className="text-lg font-black text-white uppercase tracking-widest py-4 border-b border-white/10 hover:text-gray-300">Sıkça Sorulan Sorular</button>
@@ -724,7 +726,9 @@ const App = () => {
         </div>
       ) : (
         // EDITOR VIEW (Ana Uygulama)
-        <main className="flex-1 pt-16 md:pt-20 flex flex-col lg:flex-row overflow-hidden relative">
+        // SCROLL DÜZENLEMESİ: overflow-hidden yerine overflow-y-auto eklendi (mobil için).
+        // lg:overflow-hidden ile masaüstünde scroll engellendi (canvas scroll'u kullanılsın diye).
+        <main className="flex-1 pt-16 md:pt-20 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden relative">
           <aside className="w-full lg:w-[320px] h-auto lg:h-full bg-[#0a0a0a] border-r border-white/5 flex flex-col order-2 lg:order-1 z-20 shrink-0">
              {/* Ayarlar Paneli İçeriği Aynı... */}
              <div className="flex-1 lg:overflow-y-auto custom-scrollbar p-6 space-y-6 lg:space-y-8">
@@ -776,7 +780,8 @@ const App = () => {
                                <div key={`${uploadedFile}-${s.id}`} style={{ aspectRatio: s.aspectRatio, transform: `scale(${zoom / 100})`, transformOrigin: 'center center', transition: 'transform 0.2s' }} className="relative w-full max-w-[500px] h-auto max-h-[50vh] md:max-h-[70vh] bg-white/5 group hover:scale-[1.01] transition-all flex items-center justify-center snap-center rounded-2xl md:rounded-3xl overflow-hidden shadow-2xl">
                                    <img 
                                      src={s.dataUrl} 
-                                     className="w-full h-full object-contain drop-shadow-2xl rounded-2xl md:rounded-3xl cursor-move touch-none" 
+                                     // TOUCH-NONE KALDIRILDI: Mobilde scroll yapılabilmesi için.
+                                     className="w-full h-full object-contain drop-shadow-2xl rounded-2xl md:rounded-3xl cursor-move" 
                                      alt="Slide" 
                                      draggable="false"
                                      onMouseDown={(e) => {
