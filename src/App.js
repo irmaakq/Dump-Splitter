@@ -429,7 +429,7 @@ const App = () => {
         </div>
       </div>
       
-      <div className="flex items-center gap-2 md:gap-4">
+      <div className="flex items-center gap-2 md:gap-4 justify-center md:justify-end">
         {isEditor && (
           <>
             <button 
@@ -927,4 +927,5 @@ const App = () => {
 };
 
 export default App;
+
 
