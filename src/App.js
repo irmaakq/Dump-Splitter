@@ -85,6 +85,7 @@ const App = () => {
   
   // İndirme işlemi kontrolü
   const [isDownloading, setIsDownloading] = useState(false);
+  const isCancelledRef = useRef(false); // İptal referansı
 
   // ZOOM & BOYUTLAR
   const [zoom, setZoom] = useState(100);
@@ -185,37 +186,48 @@ const App = () => {
   };
 
   const handleFileSelect = (event) => {
-    const file = event.target.files[0];
-    if (!file) return;
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
 
-    if (!shouldResetList.current && fileList.length >= 20) { 
+    const filesArray = Array.from(files);
+
+    // Maksimum dosya sayısı kontrolü
+    if (!shouldResetList.current && (fileList.length + filesArray.length) > 20) { 
       showToast("Maksimum 20 dosya eklenebilir.");
       return;
     }
 
-    const url = URL.createObjectURL(file);
-    activeUrlsRef.current.push(url);
-
-    const type = file.type.startsWith('video/') ? 'video' : 'image';
-    const newFileObj = { url, type, id: Date.now() + Math.random() }; 
+    const newFiles = filesArray.map(file => {
+      const url = URL.createObjectURL(file);
+      activeUrlsRef.current.push(url);
+      return { 
+        url, 
+        type: file.type.startsWith('video/') ? 'video' : 'image', 
+        id: Date.now() + Math.random() 
+      };
+    });
     
     if (shouldResetList.current) {
-      setFileList([newFileObj]);
+      setFileList(newFiles);
       shouldResetList.current = false;
     } else {
-      setFileList(prev => [...prev, newFileObj]);
+      setFileList(prev => [...prev, ...newFiles]);
     }
 
-    setUploadedFile(url);
-    setFileType(type);
-    setSplitSlides([]);
-    setIsProcessing(false); 
-    setSplitCount(4);
-    
-    setPage('loading');
-    setTimeout(() => {
-      setPage('editor');
-    }, 800);
+    // İlk dosyayı seçili hale getir ve işle
+    if (newFiles.length > 0) {
+      const firstFile = newFiles[0];
+      setUploadedFile(firstFile.url);
+      setFileType(firstFile.type);
+      setSplitSlides([]);
+      setIsProcessing(false); 
+      setSplitCount(4);
+      
+      setPage('loading');
+      setTimeout(() => {
+        setPage('editor');
+      }, 800);
+    }
     
     event.target.value = null; 
   };
@@ -229,7 +241,7 @@ const App = () => {
     e.preventDefault();
     e.stopPropagation();
     
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
       const mockEvent = {
         target: {
           files: e.dataTransfer.files
@@ -376,21 +388,36 @@ const App = () => {
   };
 
   const handleDownloadAll = async () => {
-    if (isDownloading) return;
+    if (isDownloading) {
+      // Eğer zaten indiriyorsa, işlemi iptal et
+      isCancelledRef.current = true;
+      showToast("İndirme iptal edildi.");
+      return;
+    }
+    
     setIsDownloading(true);
+    isCancelledRef.current = false;
     showToast("İndirme işlemi başladı, lütfen bekleyin...");
+    
     try {
       for (let i = 0; i < splitSlides.length; i++) {
+        // İptal bayrağını kontrol et
+        if (isCancelledRef.current) break;
+
         const s = splitSlides[i];
         downloadFile(s.dataUrl, `dump_part_${s.id}`);
         await new Promise(resolve => setTimeout(resolve, 800)); 
       }
-      showToast("Tüm parçalar indirildi.");
+      
+      if (!isCancelledRef.current) {
+        showToast("Tüm parçalar indirildi.");
+      }
     } catch (error) {
       console.error("Toplu indirme hatası:", error);
       showToast("İndirme sırasında bir hata oluştu.");
     } finally {
       setIsDownloading(false);
+      isCancelledRef.current = false;
     }
   };
 
@@ -439,40 +466,42 @@ const App = () => {
             </button>
             <button 
               onClick={handleDownloadAll} 
-              disabled={isDownloading}
-              className={`bg-white text-black px-4 md:px-6 py-2 md:py-2.5 rounded-xl text-xs md:text-sm font-black flex items-center gap-2 hover:bg-gray-200 transition-all active:scale-95 shadow-[0_0_30px_rgba(255,255,255,0.2)] whitespace-nowrap ${isDownloading ? 'opacity-50 cursor-not-allowed' : ''}`}
+              className={`bg-white text-black px-4 md:px-6 py-2 md:py-2.5 rounded-xl text-xs md:text-sm font-black flex items-center gap-2 hover:bg-gray-200 transition-all active:scale-95 shadow-[0_0_30px_rgba(255,255,255,0.2)] whitespace-nowrap ${isDownloading ? 'opacity-90' : ''}`}
             >
-               {isDownloading ? <Loader2 size={16} className="animate-spin" /> : <DownloadCloud size={16} />} 
-               <span className="whitespace-nowrap">{isDownloading ? 'İndiriliyor...' : 'Tümünü İndir'}</span>
+               {isDownloading ? <X size={16} /> : <DownloadCloud size={16} />} 
+               <span className="whitespace-nowrap">{isDownloading ? 'İptal Et' : 'Tümünü İndir'}</span>
             </button>
           </>
         )}
 
-        {/* MENÜLER SADECE LANDING SAYFASINDA GÖRÜNSÜN */}
-        {!isEditor && (
         <div className="flex items-center justify-end">
-             {/* MOBIL MENU BUTONU */}
-             <button 
-               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} 
-               className="md:hidden p-3 bg-white/10 rounded-full text-white border border-white/10 active:scale-95 transition-all"
-             >
-                {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-             </button>
+             {/* MOBIL MENU BUTONU - Sadece Landing sayfasında göster */}
+             {!isEditor && (
+               <button 
+                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} 
+                 className="md:hidden p-3 bg-white/10 rounded-full text-white border border-white/10 active:scale-95 transition-all"
+               >
+                  {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+               </button>
+             )}
 
              {/* MASAÜSTÜ MENÜSÜ */}
              <div className="hidden md:flex flex-wrap justify-end gap-3">
-                 <button onClick={() => setShowAbout(true)} className="flex items-center gap-2 text-[10px] font-bold text-gray-500 hover:text-white transition-colors uppercase tracking-widest border border-white/10 px-4 py-2 rounded-full hover:bg-white/5 bg-black/20 backdrop-blur-sm"><Info size={12} /> DUMP SPLITTER NEDİR?</button>
-                 <button onClick={() => setShowHowTo(true)} className="flex items-center gap-2 text-[10px] font-bold text-gray-500 hover:text-white transition-colors uppercase tracking-widest border border-white/10 px-4 py-2 rounded-full hover:bg-white/5 bg-black/20 backdrop-blur-sm"><HelpIcon size={12} /> Nasıl Kullanılır?</button>
-                 <button onClick={() => setShowFAQ(true)} className="flex items-center gap-2 text-[10px] font-bold text-gray-500 hover:text-white transition-colors uppercase tracking-widest border border-white/10 px-4 py-2 rounded-full hover:bg-white/5 bg-black/20 backdrop-blur-sm"><MessageCircleQuestion size={12} /> SSS</button>
-                 <button onClick={() => setShowPrivacy(true)} className="flex items-center gap-2 text-[10px] font-bold text-gray-500 hover:text-white transition-colors uppercase tracking-widest border border-white/10 px-4 py-2 rounded-full hover:bg-white/5 bg-black/20 backdrop-blur-sm"><ShieldCheck size={12} /> Gizlilik</button>
+                 {!isEditor && (
+                   <>
+                     <button onClick={() => setShowAbout(true)} className="flex items-center gap-2 text-[10px] font-bold text-gray-500 hover:text-white transition-colors uppercase tracking-widest border border-white/10 px-4 py-2 rounded-full hover:bg-white/5 bg-black/20 backdrop-blur-sm"><Info size={12} /> DUMP SPLITTER NEDİR?</button>
+                     <button onClick={() => setShowHowTo(true)} className="flex items-center gap-2 text-[10px] font-bold text-gray-500 hover:text-white transition-colors uppercase tracking-widest border border-white/10 px-4 py-2 rounded-full hover:bg-white/5 bg-black/20 backdrop-blur-sm"><HelpIcon size={12} /> Nasıl Kullanılır?</button>
+                     <button onClick={() => setShowFAQ(true)} className="flex items-center gap-2 text-[10px] font-bold text-gray-500 hover:text-white transition-colors uppercase tracking-widest border border-white/10 px-4 py-2 rounded-full hover:bg-white/5 bg-black/20 backdrop-blur-sm"><MessageCircleQuestion size={12} /> SSS</button>
+                     <button onClick={() => setShowPrivacy(true)} className="flex items-center gap-2 text-[10px] font-bold text-gray-500 hover:text-white transition-colors uppercase tracking-widest border border-white/10 px-4 py-2 rounded-full hover:bg-white/5 bg-black/20 backdrop-blur-sm"><ShieldCheck size={12} /> Gizlilik</button>
+                   </>
+                 )}
              </div>
         </div>
-        )}
       </div>
     </header>
   );
 
-  // ... (Geri kalan MobileMenu, Modallar ve Render aynı kalıyor) ...
+  // ... (Modallar aynı) ...
 
   const MobileMenu = () => {
     if (!isMobileMenuOpen) return null;
@@ -488,7 +517,7 @@ const App = () => {
       </div>
     );
   };
-
+  
   const FeatureInfoModal = () => {
     if (!featureInfo) return null;
     const Icon = featureInfo.icon;
@@ -554,10 +583,8 @@ const App = () => {
         </div>
 
         <div className="relative space-y-8 px-4">
-            {/* Connecting Line */}
             <div className="absolute left-8 top-4 bottom-4 w-0.5 bg-gradient-to-b from-blue-500 via-purple-500 to-green-500 opacity-30 rounded-full"></div>
 
-            {/* ADIM 1 */}
             <div className="relative flex items-start gap-6 group">
                 <div className="relative z-10 w-16 h-16 bg-[#0f0f0f] border-4 border-blue-500/20 rounded-2xl flex items-center justify-center shadow-[0_0_20px_rgba(59,130,246,0.3)] group-hover:scale-110 transition-transform duration-300 shrink-0">
                     <Upload size={24} className="text-blue-400" strokeWidth={2.5} />
@@ -568,7 +595,6 @@ const App = () => {
                 </div>
             </div>
 
-            {/* ADIM 2 */}
             <div className="relative flex items-start gap-6 group">
                 <div className="relative z-10 w-16 h-16 bg-[#0f0f0f] border-4 border-purple-500/20 rounded-2xl flex items-center justify-center shadow-[0_0_20px_rgba(168,85,247,0.3)] group-hover:scale-110 transition-transform duration-300 shrink-0">
                     <Settings size={24} className="text-purple-400" strokeWidth={2.5} />
@@ -579,7 +605,6 @@ const App = () => {
                 </div>
             </div>
 
-            {/* ADIM 3 */}
             <div className="relative flex items-start gap-6 group">
                 <div className="relative z-10 w-16 h-16 bg-[#0f0f0f] border-4 border-green-500/20 rounded-2xl flex items-center justify-center shadow-[0_0_20px_rgba(34,197,94,0.3)] group-hover:scale-110 transition-transform duration-300 shrink-0">
                     <DownloadCloud size={24} className="text-green-400" strokeWidth={2.5} />
@@ -752,6 +777,7 @@ const App = () => {
             <div className="p-6 lg:p-8 border-t border-white/5 hidden lg:block">
                <button onClick={() => processSplit(uploadedFile, fileType === 'video')} disabled={isProcessing || !uploadedFile} className={`w-full py-4 lg:py-5 rounded-[24px] font-black text-xs transition-all shadow-2xl ${isProcessing || !uploadedFile ? 'bg-white/5 text-gray-600' : 'bg-white text-black hover:bg-gray-200 active:scale-95 uppercase tracking-widest'}`}>{isProcessing ? 'İŞLENİYOR...' : 'YENİDEN BÖL'}</button>
             </div>
+            {/* Mobilde "Yeniden Böl" butonu ayarların altına eklendi */}
             <div className="p-6 lg:hidden border-t border-white/5 pb-8">
                <button onClick={() => processSplit(uploadedFile, fileType === 'video')} disabled={isProcessing || !uploadedFile} className={`w-full py-4 rounded-[24px] font-black text-xs transition-all shadow-2xl ${isProcessing || !uploadedFile ? 'bg-white/5 text-gray-600' : 'bg-white text-black hover:bg-gray-200 active:scale-95 uppercase tracking-widest'}`}>{isProcessing ? 'İŞLENİYOR...' : 'YENİDEN BÖL'}</button>
             </div>
