@@ -6,7 +6,7 @@ import {
   Zap, CheckCircle2,
   Grid, DownloadCloud, FileImage, 
   ShieldCheck, Cpu, Activity, Target, Lock, ServerOff, HelpCircle as HelpIcon, Info, MessageCircleQuestion, FileQuestion, ZoomIn, Maximize,
-  Download, Eye, Shield, Github, Settings, ChevronRight, Loader2, Menu
+  Download, Eye, Shield, Github, Settings, ChevronRight, Loader2, Menu, Trash2, RefreshCcw
 } from 'lucide-react';
 
 // --- ICONS (Custom) ---
@@ -182,6 +182,64 @@ const App = () => {
     setSplitSlides([]);
     setZoom(100);
     setIsMobileMenuOpen(false);
+  };
+
+  // --- YENİ EKLENEN BUTON FONKSİYONLARI ---
+
+  // 1. SİL (Tekil): Seçili olanı siler
+  const handleDeleteCurrent = (e) => {
+    e.stopPropagation();
+    if (!uploadedFile || fileList.length === 0) return;
+
+    // Şu anki dosyanın indexini bul
+    const currentIndex = fileList.findIndex(f => f.url === uploadedFile);
+    if (currentIndex === -1) return;
+
+    // Listeden çıkar
+    const newList = fileList.filter((_, i) => i !== currentIndex);
+    setFileList(newList);
+
+    if (newList.length > 0) {
+        // Eğer listede eleman kaldıysa, bir öncekine veya ilkine geç
+        // Mantık: Silinen son elemansa bir öncekini seç, değilse aynı indextekini (yani bir sonrakini) seç
+        let nextIndex = currentIndex; 
+        if (nextIndex >= newList.length) {
+            nextIndex = newList.length - 1;
+        }
+        
+        const nextFile = newList[nextIndex];
+        setUploadedFile(nextFile.url);
+        setFileType(nextFile.type);
+        setIsProcessing(false);
+        setSplitSlides([]);
+        setSplitCount(4);
+        setPage('loading');
+        setTimeout(() => setPage('editor'), 600);
+        showToast("Dosya silindi.");
+    } else {
+        // Liste boşaldıysa ana sayfaya dön
+        setUploadedFile(null);
+        setPage('landing');
+    }
+  };
+
+  // 2. SIFIRLA (Toplu): Aktif hariç hepsini siler
+  const handleResetList = (e) => {
+    e.stopPropagation(); 
+    if (!uploadedFile) {
+        setFileList([]);
+        return;
+    }
+    
+    // Aktif dosyayı bul
+    const currentFile = fileList.find(f => f.url === uploadedFile);
+    
+    if (currentFile) {
+        setFileList([currentFile]); // Sadece aktif dosyayı bırak
+        showToast("Liste temizlendi, aktif dosya korundu.");
+    } else {
+        setFileList([]); 
+    }
   };
 
   const handleFileSelect = (event) => {
@@ -926,12 +984,29 @@ const App = () => {
             {fileList.map((file, idx) => (
               <div key={file.id} onClick={() => { if (uploadedFile === file.url) return; setIsProcessing(false); setUploadedFile(file.url); setFileType(file.type); setSplitCount(4); setSplitSlides([]); setPage('loading'); setTimeout(() => setPage('editor'), 600); }} className={`relative group rounded-[16px] lg:rounded-[20px] overflow-hidden aspect-square h-16 lg:h-auto lg:w-full border-2 shadow-xl cursor-pointer transition-all shrink-0 ${uploadedFile === file.url ? 'border-white ring-2 ring-white/20' : 'border-white/10 opacity-60 hover:opacity-100'}`}>
                   {file.type === 'video' ? <video src={file.url} className="w-full h-full object-cover" /> : <img src={file.url} className="w-full h-full object-cover" alt="Thumb" />}
-                  <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"><button onClick={(e) => { e.stopPropagation(); const newList = fileList.filter((_, i) => i !== idx); setFileList(newList); if (uploadedFile === file.url) { if (newList.length > 0) { setUploadedFile(newList[0].url); setFileType(newList[0].type); setIsProcessing(false); setSplitSlides([]); setSplitCount(4); setPage('loading'); setTimeout(() => setPage('editor'), 600); } else { setUploadedFile(null); setPage('landing'); } } }} className="p-1.5 lg:p-2 bg-red-500/80 hover:bg-red-500 rounded-lg text-white scale-90 lg:scale-75 group-hover:scale-100 transition-all"><X size={14} /></button></div>
+                  {/* Fotoğraf üzerindeki X butonu kaldırıldı. */}
               </div>
             ))}
             <div className="flex lg:flex-col items-center gap-3 shrink-0">
               {fileList.length > 0 && (<span className="text-[9px] lg:text-[10px] font-black text-gray-500 uppercase tracking-widest">{fileList.length}/20</span>)}
+              
               {fileList.length < 20 && (<div onClick={triggerFileInput} className="h-16 w-16 lg:h-auto lg:w-full lg:aspect-square border-2 border-dashed border-white/10 rounded-[16px] lg:rounded-[20px] flex items-center justify-center text-gray-800 hover:text-white transition-all cursor-pointer shadow-inner"><Plus size={20} /></div>)}
+              
+              {/* SİL BUTONU - GÜNCELLENMİŞ TASARIM (YENİDEN BÖL TARZI - İKONSUZ SADE YAZI) */}
+              {/* SADECE 2 VEYA DAHA FAZLA FOTOĞRAF VARSA GÖSTERİLİR */}
+              {uploadedFile && fileList.length > 1 && (
+                <button onClick={handleDeleteCurrent} title="Seçili Olanı Sil" className="w-16 h-16 lg:w-full lg:h-auto lg:py-4 bg-white text-black rounded-[16px] lg:rounded-[24px] font-black text-[10px] lg:text-xs shadow-xl hover:bg-gray-200 transition-all active:scale-95 uppercase tracking-widest flex flex-col lg:flex-row items-center justify-center gap-1 lg:gap-2 shrink-0">
+                    <span>SİL</span>
+                </button>
+              )}
+
+              {/* SIFIRLA BUTONU - GÜNCELLENMİŞ TASARIM (YENİDEN BÖL TARZI - İKONSUZ SADE YAZI) */}
+              {/* SADECE 2 VEYA DAHA FAZLA FOTOĞRAF VARSA GÖSTERİLİR */}
+              {fileList.length > 1 && (
+                <button onClick={handleResetList} title="Diğerlerini Sil (Sıfırla)" className="w-16 h-16 lg:w-full lg:h-auto lg:py-4 bg-white text-black rounded-[16px] lg:rounded-[24px] font-black text-[10px] lg:text-xs shadow-xl hover:bg-gray-200 transition-all active:scale-95 uppercase tracking-normal flex flex-col lg:flex-row items-center justify-center gap-1 lg:gap-2 shrink-0">
+                    <span>SIFIRLA</span>
+                </button>
+              )}
             </div>
         </aside>
       </main>
