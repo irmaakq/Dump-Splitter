@@ -6,7 +6,7 @@ import {
   Zap, CheckCircle2,
   Grid, DownloadCloud, FileImage, 
   ShieldCheck, Cpu, Activity, Target, Lock, ServerOff, HelpCircle as HelpIcon, Info, MessageCircleQuestion, FileQuestion, ZoomIn, Maximize,
-  Download, Eye, Shield, Github, Settings, ChevronRight, Loader2, Menu, Trash2, RefreshCcw
+  Download, Eye, Shield, Github, Settings, ChevronRight, Loader2, Menu, Trash2, RefreshCcw, Archive
 } from 'lucide-react';
 
 // --- ICONS (Custom) ---
@@ -25,6 +25,17 @@ const SPLITTER_STATUS_MSGS = [
   "HD Piksel pürüzsüzleştirme aktif...",
   "Parçalar yüksek çözünürlükte paketleniyor."
 ];
+
+// VARSAYILAN AYARLAR (Her yeni fotoğraf bu ayarlarla başlar)
+const DEFAULT_SETTINGS = {
+    splitCount: 4,
+    downloadFormat: 'png',
+    autoEnhance: false,
+    hdMode: false,
+    optimizeMode: false,
+    smartCrop: false,
+    ultraHdMode: false
+};
 
 const FEATURE_DETAILS = {
   aiEnhance: {
@@ -65,6 +76,10 @@ const App = () => {
   const [notification, setNotification] = useState(null);
   const [aiLogs, setAiLogs] = useState([]);
   
+  // Batch Download State
+  const [isZipping, setIsZipping] = useState(false);
+  const [zipProgress, setZipProgress] = useState({ current: 0, total: 0 });
+  
   // MODAL STATES
   const [showPrivacy, setShowPrivacy] = useState(false);
   const [showHowTo, setShowHowTo] = useState(false);
@@ -75,13 +90,14 @@ const App = () => {
   // Mobil Menü State'i
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  const [splitCount, setSplitCount] = useState(4); 
-  const [downloadFormat, setDownloadFormat] = useState('png'); 
-  const [autoEnhance, setAutoEnhance] = useState(false); 
-  const [hdMode, setHdMode] = useState(false); 
-  const [optimizeMode, setOptimizeMode] = useState(false); 
-  const [smartCrop, setSmartCrop] = useState(false);
-  const [ultraHdMode, setUltraHdMode] = useState(false);
+  // --- AYARLAR (LOCAL STATE - SADECE AKTİF FOTOĞRAFI TEMSİL EDER) ---
+  const [splitCount, setSplitCount] = useState(DEFAULT_SETTINGS.splitCount); 
+  const [downloadFormat, setDownloadFormat] = useState(DEFAULT_SETTINGS.downloadFormat); 
+  const [autoEnhance, setAutoEnhance] = useState(DEFAULT_SETTINGS.autoEnhance); 
+  const [hdMode, setHdMode] = useState(DEFAULT_SETTINGS.hdMode); 
+  const [optimizeMode, setOptimizeMode] = useState(DEFAULT_SETTINGS.optimizeMode); 
+  const [smartCrop, setSmartCrop] = useState(DEFAULT_SETTINGS.smartCrop);
+  const [ultraHdMode, setUltraHdMode] = useState(DEFAULT_SETTINGS.ultraHdMode);
   
   // İndirme işlemi kontrolü
   const [isDownloading, setIsDownloading] = useState(false);
@@ -96,8 +112,17 @@ const App = () => {
   const dragStartRef = useRef({ x: 0, y: 0 });
 
   // --- FEEDBACK CONTROL REF ---
-  // Silme veya geçiş sırasında loader/toast göstermemek için flag
   const skipFeedbackRef = useRef(false);
+
+  // --- LOAD JSZIP DYNAMICALLY ---
+  useEffect(() => {
+    if (!window.JSZip) {
+      const script = document.createElement('script');
+      script.src = "https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js";
+      script.async = true;
+      document.body.appendChild(script);
+    }
+  }, []);
 
   const handleDockPointerDown = (e) => {
     if (e.target.closest('button') || e.target.closest('input')) return;
@@ -129,6 +154,7 @@ const App = () => {
     setIsDraggingDock(false);
   };
 
+  // DOSYA LİSTESİ: { url, type, id, settings: {...} }
   const [fileList, setFileList] = useState([]);
   const [uploadedFile, setUploadedFile] = useState(null);
   const [fileType, setFileType] = useState(null);
@@ -154,6 +180,95 @@ const App = () => {
   useEffect(() => {
     setZoom(100);
   }, [uploadedFile]);
+
+  // --- AYAR GÜNCELLEME YÖNETİCİSİ ---
+  const updateSetting = (key, value) => {
+    let stateKey = key;
+    
+    // Doğrudan anahtara göre işlem yap ve stateKey'i belirle
+    switch(key) {
+        case 'splitCount': 
+            setSplitCount(value); 
+            stateKey = 'splitCount';
+            break;
+        case 'downloadFormat': 
+            setDownloadFormat(value); 
+            stateKey = 'downloadFormat';
+            break;
+        
+        // Feature Keys Mappings
+        case 'aiEnhance': // UI Key
+            setAutoEnhance(value); 
+            stateKey = 'autoEnhance'; // State Key
+            break;
+        case 'hdMode': 
+            setHdMode(value); 
+            stateKey = 'hdMode';
+            break;
+        case 'optimize': // UI Key
+            setOptimizeMode(value); 
+            stateKey = 'optimizeMode'; // State Key
+            break;
+        case 'smartCrop': 
+            setSmartCrop(value); 
+            stateKey = 'smartCrop';
+            break;
+        case 'ultraHd': // UI Key
+            setUltraHdMode(value); 
+            stateKey = 'ultraHdMode'; // State Key
+            break;
+            
+        // Fallback for direct state keys if needed
+        case 'autoEnhance': setAutoEnhance(value); break;
+        case 'optimizeMode': setOptimizeMode(value); break;
+        case 'ultraHdMode': setUltraHdMode(value); break;
+    }
+
+    // 2. Dosya Listesindeki Ayarı Kaydet
+    if (uploadedFile) {
+        setFileList(prevList => prevList.map(item => {
+            if (item.url === uploadedFile) {
+                return { 
+                    ...item, 
+                    settings: { 
+                        ...item.settings, 
+                        [stateKey]: value 
+                    } 
+                };
+            }
+            return item;
+        }));
+    }
+    
+    // Sessiz modda işle (Loader çıkmasın)
+    skipFeedbackRef.current = true;
+  };
+
+  // --- DOSYA DEĞİŞTİRME YÖNETİCİSİ ---
+  const handleSwitchFile = (fileItem) => {
+      if (uploadedFile === fileItem.url) return;
+      
+      // Sessiz geçiş
+      skipFeedbackRef.current = true;
+
+      // 1. Dosyanın kayıtlı ayarlarını yükle
+      // Eğer yoksa DEFAULT_SETTINGS kullanılır (güvenlik için)
+      const s = fileItem.settings || DEFAULT_SETTINGS;
+      
+      setSplitCount(s.splitCount ?? DEFAULT_SETTINGS.splitCount);
+      setDownloadFormat(s.downloadFormat || DEFAULT_SETTINGS.downloadFormat);
+      setAutoEnhance(s.autoEnhance ?? DEFAULT_SETTINGS.autoEnhance);
+      setHdMode(s.hdMode ?? DEFAULT_SETTINGS.hdMode);
+      setOptimizeMode(s.optimizeMode ?? DEFAULT_SETTINGS.optimizeMode);
+      setSmartCrop(s.smartCrop ?? DEFAULT_SETTINGS.smartCrop);
+      setUltraHdMode(s.ultraHdMode ?? DEFAULT_SETTINGS.ultraHdMode);
+
+      // 2. Dosyayı aktif et
+      setUploadedFile(fileItem.url);
+      setFileType(fileItem.type);
+      // GÜNCELLEME: setSplitSlides([]) burada çağrılmıyor.
+      // processSplit fonksiyonu 'isSilent' ise eski görüntüyü tutacak, yenisi hazır olunca değiştirecek.
+  };
 
   const handlePrivacyAccept = () => {
     localStorage.setItem('privacy_accepted', 'true'); 
@@ -188,46 +303,49 @@ const App = () => {
     setIsMobileMenuOpen(false);
   };
 
-  // --- YENİ EKLENEN BUTON FONKSİYONLARI ---
-
-  // 1. SİL (Tekil): Seçili olanı siler
+  // --- SİL (Tekil) ---
   const handleDeleteCurrent = (e) => {
     e.stopPropagation();
     if (!uploadedFile || fileList.length === 0) return;
 
-    // Şu anki dosyanın indexini bul
     const currentIndex = fileList.findIndex(f => f.url === uploadedFile);
     if (currentIndex === -1) return;
 
-    // Listeden çıkar
     const newList = fileList.filter((_, i) => i !== currentIndex);
     setFileList(newList);
 
     if (newList.length > 0) {
-        // Eğer listede eleman kaldıysa, bir öncekine veya ilkine geç
         let nextIndex = currentIndex; 
         if (nextIndex >= newList.length) {
             nextIndex = newList.length - 1;
         }
         
-        // SİLME İŞLEMİNDE SESSİZ GEÇİŞ
+        // SESSİZ GEÇİŞ
         skipFeedbackRef.current = true;
 
         const nextFile = newList[nextIndex];
+        
+        // Sonraki dosyanın ayarlarını yükle
+        const s = nextFile.settings || DEFAULT_SETTINGS;
+        setSplitCount(s.splitCount ?? DEFAULT_SETTINGS.splitCount);
+        setDownloadFormat(s.downloadFormat || DEFAULT_SETTINGS.downloadFormat);
+        setAutoEnhance(s.autoEnhance ?? DEFAULT_SETTINGS.autoEnhance);
+        setHdMode(s.hdMode ?? DEFAULT_SETTINGS.hdMode);
+        setOptimizeMode(s.optimizeMode ?? DEFAULT_SETTINGS.optimizeMode);
+        setSmartCrop(s.smartCrop ?? DEFAULT_SETTINGS.smartCrop);
+        setUltraHdMode(s.ultraHdMode ?? DEFAULT_SETTINGS.ultraHdMode);
+
         setUploadedFile(nextFile.url);
         setFileType(nextFile.type);
         
-        // Loader'a yönlendirme kodu TAMAMEN KALDIRILDI
-        // Anlık geçiş sağlanıyor.
         showToast("Dosya silindi.");
     } else {
-        // Liste boşaldıysa ana sayfaya dön
         setUploadedFile(null);
         setPage('landing');
     }
   };
 
-  // 2. SIFIRLA (Toplu): Aktif hariç hepsini siler
+  // --- SIFIRLA (Toplu) ---
   const handleResetList = (e) => {
     e.stopPropagation(); 
     if (!uploadedFile) {
@@ -235,14 +353,121 @@ const App = () => {
         return;
     }
     
-    // Aktif dosyayı bul
     const currentFile = fileList.find(f => f.url === uploadedFile);
     
     if (currentFile) {
-        setFileList([currentFile]); // Sadece aktif dosyayı bırak
+        setFileList([currentFile]); 
         showToast("Liste temizlendi, aktif dosya korundu.");
     } else {
         setFileList([]); 
+    }
+  };
+
+  // --- TOPLU İNDİR (ZIP) - LOCAL AYARLAR İLE ---
+  const handleBatchDownload = async (e) => {
+    e.stopPropagation();
+    if (!window.JSZip) {
+      showToast("ZIP kütüphanesi yükleniyor, lütfen bekleyin...");
+      return;
+    }
+    if (fileList.length < 2) return;
+
+    setIsZipping(true);
+    setZipProgress({ current: 0, total: fileList.length });
+
+    const zip = new window.JSZip();
+    const folder = zip.folder("Dump_Splitter_Pack");
+
+    try {
+        for (let i = 0; i < fileList.length; i++) {
+            setZipProgress({ current: i + 1, total: fileList.length });
+            const fileItem = fileList[i];
+            const settings = fileItem.settings || DEFAULT_SETTINGS; // HER DOSYANIN KENDİ AYARINI KULLAN
+            
+            await new Promise((resolve, reject) => {
+                const img = new Image();
+                img.crossOrigin = "anonymous";
+                img.src = fileItem.url;
+                
+                img.onload = () => {
+                    const w = img.width;
+                    const h = img.height;
+                    const scaleFactor = settings.ultraHdMode ? 2 : 1;
+                    const sW = Math.floor(w * scaleFactor);
+                    const sH = Math.floor(h * scaleFactor);
+
+                    const sourceCanvas = document.createElement('canvas');
+                    sourceCanvas.width = sW;
+                    sourceCanvas.height = sH;
+                    const sCtx = sourceCanvas.getContext('2d', { willReadFrequently: true });
+
+                    if (settings.autoEnhance) {
+                      const contrastVal = settings.hdMode ? 1.15 : 1.1;
+                      const saturateVal = settings.hdMode ? 1.25 : 1.15;
+                      sCtx.filter = `contrast(${contrastVal}) saturate(${saturateVal}) brightness(1.05)`;
+                    }
+
+                    if (settings.smartCrop) {
+                      const cropMargin = 0.02;
+                      sCtx.drawImage(img, w * cropMargin, h * cropMargin, w * (1 - 2 * cropMargin), h * (1 - 2 * cropMargin), 0, 0, sW, sH);
+                    } else {
+                      sCtx.drawImage(img, 0, 0, sW, sH);
+                    }
+                    sCtx.filter = 'none';
+
+                    let rows = 1, cols = 1;
+                    if (settings.splitCount === 1) { rows = 1; cols = 1; }
+                    else if (settings.splitCount === 2) { rows = 2; cols = 1; }
+                    else if (settings.splitCount % 2 !== 0) { rows = settings.splitCount; cols = 1; }
+                    else { cols = 2; rows = settings.splitCount / 2; }
+
+                    const pW = Math.floor(sW / cols);
+                    const pH = Math.floor(sH / rows);
+                    
+                    const imgFolder = folder.folder(`Image_${i + 1}`);
+
+                    let partsProcessed = 0;
+                    const totalParts = rows * cols;
+
+                    for (let r = 0; r < rows; r++) {
+                        for (let c = 0; c < cols; c++) {
+                            const partCanvas = document.createElement('canvas');
+                            partCanvas.width = pW;
+                            partCanvas.height = pH;
+                            const pCtx = partCanvas.getContext('2d');
+                            pCtx.imageSmoothingEnabled = true;
+                            pCtx.imageSmoothingQuality = 'high';
+                            pCtx.drawImage(sourceCanvas, c * pW, r * pH, pW, pH, 0, 0, pW, pH);
+
+                            const mimeType = `image/${settings.downloadFormat === 'jpg' ? 'jpeg' : settings.downloadFormat}`;
+                            let quality = 0.95;
+                            if (settings.hdMode) quality = 1.0;
+                            if (settings.optimizeMode) quality = 0.80;
+
+                            partCanvas.toBlob((blob) => {
+                                imgFolder.file(`Part_${r * cols + c + 1}.${settings.downloadFormat}`, blob);
+                                partsProcessed++;
+                                if (partsProcessed === totalParts) resolve();
+                            }, mimeType, quality);
+                        }
+                    }
+                };
+                img.onerror = reject;
+            });
+        }
+
+        const content = await zip.generateAsync({ type: "blob" });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(content);
+        link.download = "Tüm_Dump_Arsivi.zip";
+        link.click();
+        showToast("Arşiv başarıyla indirildi.");
+
+    } catch (error) {
+        console.error("ZIP hatası:", error);
+        showToast("Arşivleme sırasında bir hata oluştu.");
+    } finally {
+        setIsZipping(false);
     }
   };
 
@@ -250,16 +475,15 @@ const App = () => {
     const files = event.target.files;
     if (!files || files.length === 0) return;
 
-    // Mevcut dosya sayısı (eğer reset ise 0)
     let currentCount = shouldResetList.current ? 0 : fileList.length;
     let limitExceeded = false;
     const newFilesToAdd = [];
 
-    // Dosyaları döngüye alarak işle
+    // GÜNCELLEME: ARTIK HER YENİ DOSYA VARSAYILAN (TEMİZ) AYARLARLA BAŞLAR
     for (let i = 0; i < files.length; i++) {
         if (currentCount >= 20) {
             limitExceeded = true;
-            break; // 20'yi aşarsa döngüyü kır
+            break; 
         }
 
         const file = files[i];
@@ -267,7 +491,13 @@ const App = () => {
         activeUrlsRef.current.push(url);
 
         const type = file.type.startsWith('video/') ? 'video' : 'image';
-        const newFileObj = { url, type, id: Date.now() + Math.random() + i }; // Unique ID
+        
+        const newFileObj = { 
+            url, 
+            type, 
+            id: Date.now() + Math.random() + i,
+            settings: { ...DEFAULT_SETTINGS } // MİRAS ALMA YOK, TEMİZ AYAR
+        }; 
         
         newFilesToAdd.push(newFileObj);
         currentCount++;
@@ -278,19 +508,26 @@ const App = () => {
     }
 
     if (newFilesToAdd.length > 0) {
-        // YENİ YÜKLEMEDE FEEDBACK GÖSTERİLSİN (Varsayılan davranış)
         skipFeedbackRef.current = false; 
 
         if (shouldResetList.current) {
             setFileList(newFilesToAdd);
             shouldResetList.current = false;
             
-            // İlk dosyayı otomatik aç
             setUploadedFile(newFilesToAdd[0].url);
             setFileType(newFilesToAdd[0].type);
+            
+            // GÜNCELLEME: UI Ayarlarını Sıfırla
+            setSplitCount(DEFAULT_SETTINGS.splitCount);
+            setDownloadFormat(DEFAULT_SETTINGS.downloadFormat);
+            setAutoEnhance(DEFAULT_SETTINGS.autoEnhance);
+            setHdMode(DEFAULT_SETTINGS.hdMode);
+            setOptimizeMode(DEFAULT_SETTINGS.optimizeMode);
+            setSmartCrop(DEFAULT_SETTINGS.smartCrop);
+            setUltraHdMode(DEFAULT_SETTINGS.ultraHdMode);
+
             setSplitSlides([]);
             setIsProcessing(false);
-            setSplitCount(4);
             
             setPage('loading');
             setTimeout(() => {
@@ -298,13 +535,21 @@ const App = () => {
             }, 800);
         } else {
             setFileList(prev => [...prev, ...newFilesToAdd]);
-            // Eğer Landing sayfasındaysa veya hiç dosya yüklenmemişse ilkini aç
             if (page === 'landing' || !uploadedFile) {
                 setUploadedFile(newFilesToAdd[0].url);
                 setFileType(newFilesToAdd[0].type);
+                
+                // GÜNCELLEME: UI Ayarlarını Sıfırla
+                setSplitCount(DEFAULT_SETTINGS.splitCount);
+                setDownloadFormat(DEFAULT_SETTINGS.downloadFormat);
+                setAutoEnhance(DEFAULT_SETTINGS.autoEnhance);
+                setHdMode(DEFAULT_SETTINGS.hdMode);
+                setOptimizeMode(DEFAULT_SETTINGS.optimizeMode);
+                setSmartCrop(DEFAULT_SETTINGS.smartCrop);
+                setUltraHdMode(DEFAULT_SETTINGS.ultraHdMode);
+
                 setSplitSlides([]);
                 setIsProcessing(false);
-                setSplitCount(4);
                 
                 setPage('loading');
                 setTimeout(() => {
@@ -314,7 +559,7 @@ const App = () => {
         }
     }
 
-    event.target.value = null; // Input'u temizle
+    event.target.value = null; 
   };
 
   const handleDragOver = (e) => {
@@ -352,14 +597,14 @@ const App = () => {
   const processSplit = (sourceUrl, isVideo) => {
     if (!sourceUrl) return;
 
-    // REF DEĞERİNİ YAKALA VE HEMEN SIFIRLA (Bir sonraki işlem için)
     const isSilent = skipFeedbackRef.current;
-    // skipFeedbackRef.current = false; // Reset'i burada yapmıyoruz, çünkü async işlemler var.
 
-    // SESSİZ MOD DEĞİLSE İŞLEME ANİMASYONUNU BAŞLAT
     if (!isSilent) {
         setIsProcessing(true);
         setAiLogs([]);
+        
+        // GÜNCELLEME: Sessiz değilse eski slaytları sil (yükleme efekti için)
+        // Eğer sessizse silme, yeni görüntü gelene kadar eskisi kalsın.
         setSplitSlides([]);
 
         SPLITTER_STATUS_MSGS.forEach((msg, i) => {
@@ -376,15 +621,16 @@ const App = () => {
       const h = isVideo ? mediaElement.videoHeight : mediaElement.height;
       
       const scaleFactor = ultraHdMode ? 2 : 1;
-      const sW = w * scaleFactor;
-      const sH = h * scaleFactor;
+      const sW = Math.floor(w * scaleFactor);
+      const sH = Math.floor(h * scaleFactor);
       
       setMediaDimensions({ width: sW, height: sH });
 
       const sourceCanvas = document.createElement('canvas');
       sourceCanvas.width = sW;
       sourceCanvas.height = sH;
-      const sCtx = sourceCanvas.getContext('2d');
+      // CRITICAL FIX: willReadFrequently for better mobile memory handling
+      const sCtx = sourceCanvas.getContext('2d', { willReadFrequently: true });
       
       if (autoEnhance) {
         const contrastVal = hdMode ? 1.15 : 1.1;
@@ -420,8 +666,8 @@ const App = () => {
         rows = splitCount / 2;
       }
 
-      const pW = sW / cols;
-      const pH = sH / rows;
+      const pW = Math.floor(sW / cols);
+      const pH = Math.floor(sH / rows);
       
       for (let r = 0; r < rows; r++) {
         for (let c = 0; c < cols; c++) {
@@ -452,13 +698,11 @@ const App = () => {
 
       setSplitSlides(parts);
       
-      // SESSİZ MOD DEĞİLSE TOAST GÖSTER VE İŞLEMEYİ KAPAT
       if (!isSilent) {
           setIsProcessing(false);
           showToast(`${parts.length} parça hazır.`);
       } 
       
-      // İşlem bitti, flag'i varsayılana döndür (Gelecek manuel işlemler için)
       skipFeedbackRef.current = false;
     };
 
@@ -486,19 +730,45 @@ const App = () => {
     }
   };
 
+  // GÜNCELLENMİŞ: TEK RESMİ ZIP OLARAK İNDİRME
   const handleDownloadAll = async () => {
     if (isDownloading) return;
+    if (!window.JSZip) {
+      showToast("ZIP kütüphanesi yükleniyor, lütfen bekleyin...");
+      return;
+    }
+    
     setIsDownloading(true);
-    showToast("İndirme işlemi başladı, lütfen bekleyin...");
+    // showToast("İndirme işlemi başladı, lütfen bekleyin..."); // Opsiyonel, sessiz de olabilir
+    
     try {
-      for (let i = 0; i < splitSlides.length; i++) {
-        const s = splitSlides[i];
-        downloadFile(s.dataUrl, `dump_part_${s.id}`);
-        await new Promise(resolve => setTimeout(resolve, 800)); 
-      }
-      showToast("Tüm parçalar indirildi.");
+      const zip = new window.JSZip();
+      
+      // splitSlides içindeki her parçayı ZIP'e ekle
+      const promises = splitSlides.map(async (s) => {
+         const response = await fetch(s.dataUrl);
+         const blob = await response.blob();
+         // Dosya isimlendirmesi: dump_part_1.png, dump_part_2.png gibi
+         const fileName = `dump_part_${s.id}.${downloadFormat}`;
+         zip.file(fileName, blob);
+      });
+
+      await Promise.all(promises);
+
+      // ZIP'i oluştur ve indir
+      const content = await zip.generateAsync({ type: "blob" });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(content);
+      // ZIP Dosya adı: Dump_Splitter_Parcalar.zip
+      link.download = `Dump_Splitter_Parcalar.zip`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      showToast("Tüm parçalar ZIP olarak indirildi.");
+
     } catch (error) {
-      console.error("Toplu indirme hatası:", error);
+      console.error("ZIP hatası:", error);
       showToast("İndirme sırasında bir hata oluştu.");
     } finally {
       setIsDownloading(false);
@@ -510,15 +780,28 @@ const App = () => {
     const Icon = details.icon;
     
     return (
-      <div className="group relative">
+      // GÜNCELLEME: Tüm div tıklanabilir yapıldı (Mobilde daha kolay basılsın diye)
+      <div 
+        className="group relative cursor-pointer"
+        onClick={() => { skipFeedbackRef.current = true; updateSetting(featureKey, !state); }}
+      >
         <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Icon size={16} className={details.color} />
               <span className="text-[12px] font-black text-white uppercase tracking-tight">{details.title}</span>
-              <button onClick={() => setFeatureInfo(details)} className="opacity-0 group-hover:opacity-100 transition-opacity p-1 bg-white/10 rounded-full hover:bg-white/20 text-gray-400 hover:text-white" title="Detaylı Bilgi"><Info size={10} /></button>
+              {/* Info butonu için stopPropagation eklendi ki toggle tetiklenmesin */}
+              <button 
+                onClick={(e) => { e.stopPropagation(); setFeatureInfo(details); }} 
+                className="opacity-0 group-hover:opacity-100 transition-opacity p-1 bg-white/10 rounded-full hover:bg-white/20 text-gray-400 hover:text-white" 
+                title="Detaylı Bilgi"
+              >
+                <Info size={10} />
+              </button>
             </div>
-            {/* GÜNCELLEME: Toggle değişimlerinde loader çıkmaması için skipFeedbackRef.current = true yapıldı */}
-            <button onClick={() => { skipFeedbackRef.current = true; setState(!state); }} className={`w-9 h-5 rounded-full transition-all relative ${state ? details.color.replace('text-', 'bg-') : 'bg-white/10'}`}><div className={`absolute top-1 w-3 h-3 rounded-full transition-all ${state ? 'right-1 bg-black' : 'left-1 bg-white/30'}`} /></button>
+            {/* Butonun kendi click'i de parent'a gidebilir, sorun yok */}
+            <div className={`w-9 h-5 rounded-full transition-all relative ${state ? details.color.replace('text-', 'bg-') : 'bg-white/10'}`}>
+                <div className={`absolute top-1 w-3 h-3 rounded-full transition-all ${state ? 'right-1 bg-black' : 'left-1 bg-white/30'}`} />
+            </div>
         </div>
         <p className="text-[11px] text-gray-500 leading-relaxed font-bold uppercase mt-2">{shortDesc}</p>
       </div>
@@ -554,7 +837,6 @@ const App = () => {
             <button 
   onClick={handleDownloadAll} 
   disabled={isDownloading}
-  // BUTON DÜZENLEMESİ: px-4 ile diğer butonla eşitlendi ve mr-2 ile sağ boşluk bırakıldı
   className={`bg-white text-black px-4 md:px-6 py-2 md:py-2.5 mr-2 md:mr-0 rounded-xl text-xs md:text-sm font-black flex items-center gap-2 hover:bg-gray-200 transition-all active:scale-95 shadow-[0_0_30px_rgba(255,255,255,0.2)] whitespace-nowrap ${isDownloading ? 'opacity-50 cursor-not-allowed' : ''}`}
 >
                {isDownloading ? <Loader2 size={16} className="animate-spin" /> : <DownloadCloud size={16} />} 
@@ -564,7 +846,6 @@ const App = () => {
         )}
 
         <div className="flex items-center justify-center">
-             {/* MOBIL MENU BUTONU - Sadece Landing sayfasında göster */}
              {!isEditor && (
                <button 
                  onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} 
@@ -574,7 +855,6 @@ const App = () => {
                </button>
              )}
 
-             {/* MASAÜSTÜ MENÜSÜ */}
              <div className="hidden md:flex flex-wrap justify-end gap-3">
                  {!isEditor && (
                    <>
@@ -790,6 +1070,19 @@ const App = () => {
       <FAQModal />
       <FeatureInfoModal />
 
+      {/* ZIP PROCESSING MODAL */}
+      {isZipping && (
+        <div className="fixed inset-0 z-[200] bg-black/95 backdrop-blur-xl flex flex-col items-center justify-center p-6 animate-in fade-in duration-300">
+            <div className="w-20 h-20 border-4 border-white/10 border-t-white rounded-full animate-spin mb-8 shadow-2xl"></div>
+            <h2 className="text-2xl font-black text-white uppercase tracking-tighter mb-2">ARŞİVLENİYOR...</h2>
+            <p className="text-gray-400 font-bold uppercase tracking-widest text-xs">Lütfen bekleyin, dosyalar sıkıştırılıyor</p>
+            <div className="mt-8 w-full max-w-xs bg-white/10 h-2 rounded-full overflow-hidden">
+                <div className="h-full bg-white transition-all duration-300 ease-out" style={{ width: `${(zipProgress.current / zipProgress.total) * 100}%` }}></div>
+            </div>
+            <p className="mt-4 text-white font-black text-lg">{zipProgress.current} / {zipProgress.total}</p>
+        </div>
+      )}
+
       {/* 3. Sayfa İçeriği (Condition ile değişir) */}
       {page === 'loading' ? (
         <div className="min-h-screen bg-[#050505] flex flex-col items-center justify-center text-white">
@@ -855,7 +1148,7 @@ const App = () => {
                     <div className="flex gap-2 p-1 bg-white/5 rounded-xl border border-white/10">
                         {['png', 'jpg', 'webp'].map(fmt => (
                           // GÜNCELLEME: Format değişiminde loader çıkmaması için skipFeedbackRef.current = true
-                          <button key={fmt} onClick={() => { skipFeedbackRef.current = true; setDownloadFormat(fmt); }} className={`flex-1 py-2 rounded-lg text-[12px] font-black uppercase transition-all ${downloadFormat === fmt ? 'bg-white text-black shadow-lg' : 'text-gray-500 hover:text-white'}`}>{fmt}</button>
+                          <button key={fmt} onClick={() => { skipFeedbackRef.current = true; updateSetting('downloadFormat', fmt); }} className={`flex-1 py-2 rounded-lg text-[12px] font-black uppercase transition-all ${downloadFormat === fmt ? 'bg-white text-black shadow-lg' : 'text-gray-500 hover:text-white'}`}>{fmt}</button>
                         ))}
                     </div>
                   </div>
@@ -865,7 +1158,7 @@ const App = () => {
                     <div className="grid grid-cols-5 gap-2 w-full">
                         {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(num => (
                           // GÜNCELLEME: Sayı değişiminde loader çıkmaması için skipFeedbackRef.current = true
-                          <button key={num} onClick={() => { skipFeedbackRef.current = true; setSplitCount(num); }} className={`aspect-square rounded-xl text-[12px] font-black flex items-center justify-center transition-all border ${splitCount === num ? 'bg-white text-black border-white shadow-[0_0_15px_rgba(255,255,255,0.3)] scale-105' : 'bg-white/5 border-white/10 text-gray-500 hover:bg-white/10 hover:text-white hover:border-white/30'}`}>{num}</button>
+                          <button key={num} onClick={() => { skipFeedbackRef.current = true; updateSetting('splitCount', num); }} className={`aspect-square rounded-xl text-[12px] font-black flex items-center justify-center transition-all border ${splitCount === num ? 'bg-white text-black border-white shadow-[0_0_15px_rgba(255,255,255,0.3)] scale-105' : 'bg-white/5 border-white/10 text-gray-500 hover:bg-white/10 hover:text-white hover:border-white/30'}`}>{num}</button>
                         ))}
                     </div>
                   </div>
@@ -1008,20 +1301,13 @@ const App = () => {
             {fileList.map((file, idx) => (
               <div 
                 key={file.id} 
-                onClick={() => { 
-                    if (uploadedFile === file.url) return; 
-                    // TIKLAYINCA SESSİZ GEÇİŞ
-                    skipFeedbackRef.current = true;
-                    setUploadedFile(file.url); 
-                    setFileType(file.type); 
-                    setSplitCount(4); 
-                    setSplitSlides([]); 
-                    // Loader göstermeden devam et
-                }} 
+                // !!! İŞTE ÇÖZÜM BURADA: !!!
+                // Artık inline (eski) kod yerine, yukarıdaki akıllı 'handleSwitchFile' fonksiyonu çağrılıyor.
+                // Bu fonksiyon hem resmi değiştiriyor hem de o resmin özel ayarlarını yüklüyor.
+                onClick={() => handleSwitchFile(file)} 
                 className={`relative group rounded-[16px] lg:rounded-[20px] overflow-hidden aspect-square h-16 lg:h-auto lg:w-full border-2 shadow-xl cursor-pointer transition-all shrink-0 ${uploadedFile === file.url ? 'border-white ring-2 ring-white/20' : 'border-white/10 opacity-60 hover:opacity-100'}`}
               >
                   {file.type === 'video' ? <video src={file.url} className="w-full h-full object-cover" /> : <img src={file.url} className="w-full h-full object-cover" alt="Thumb" />}
-                  {/* Fotoğraf üzerindeki X butonu kaldırıldı. */}
               </div>
             ))}
             <div className="flex lg:flex-col items-center gap-3 shrink-0">
@@ -1042,6 +1328,13 @@ const App = () => {
               {fileList.length > 1 && (
                 <button onClick={handleResetList} title="Diğerlerini Sil (Sıfırla)" className="w-16 h-16 lg:w-full lg:h-auto lg:py-4 bg-white text-black rounded-[16px] lg:rounded-[24px] font-black text-[10px] lg:text-xs shadow-xl hover:bg-gray-200 transition-all active:scale-95 uppercase tracking-normal flex flex-col lg:flex-row items-center justify-center gap-1 lg:gap-2 shrink-0">
                     <span>SIFIRLA</span>
+                </button>
+              )}
+
+              {/* TOPLU İNDİR BUTONU - SADECE 2 VEYA DAHA FAZLA FOTOĞRAF VARSA GÖSTERİLİR */}
+              {fileList.length > 1 && (
+                <button onClick={handleBatchDownload} title="Tümünü Arşivle ve İndir (ZIP)" className="w-16 h-16 lg:w-full lg:h-auto lg:py-4 bg-white text-black rounded-[16px] lg:rounded-[24px] font-black text-[10px] lg:text-xs shadow-xl hover:bg-gray-200 transition-all active:scale-95 uppercase tracking-tighter flex flex-col lg:flex-row items-center justify-center gap-1 lg:gap-2 shrink-0">
+                    <span className="text-center leading-tight">TOPLU<br/>İNDİR</span>
                 </button>
               )}
             </div>
