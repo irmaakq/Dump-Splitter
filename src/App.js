@@ -517,7 +517,8 @@ const App = () => {
               <span className="text-[12px] font-black text-white uppercase tracking-tight">{details.title}</span>
               <button onClick={() => setFeatureInfo(details)} className="opacity-0 group-hover:opacity-100 transition-opacity p-1 bg-white/10 rounded-full hover:bg-white/20 text-gray-400 hover:text-white" title="Detaylı Bilgi"><Info size={10} /></button>
             </div>
-            <button onClick={() => setState(!state)} className={`w-9 h-5 rounded-full transition-all relative ${state ? details.color.replace('text-', 'bg-') : 'bg-white/10'}`}><div className={`absolute top-1 w-3 h-3 rounded-full transition-all ${state ? 'right-1 bg-black' : 'left-1 bg-white/30'}`} /></button>
+            {/* GÜNCELLEME: Toggle değişimlerinde loader çıkmaması için skipFeedbackRef.current = true yapıldı */}
+            <button onClick={() => { skipFeedbackRef.current = true; setState(!state); }} className={`w-9 h-5 rounded-full transition-all relative ${state ? details.color.replace('text-', 'bg-') : 'bg-white/10'}`}><div className={`absolute top-1 w-3 h-3 rounded-full transition-all ${state ? 'right-1 bg-black' : 'left-1 bg-white/30'}`} /></button>
         </div>
         <p className="text-[11px] text-gray-500 leading-relaxed font-bold uppercase mt-2">{shortDesc}</p>
       </div>
@@ -853,7 +854,8 @@ const App = () => {
                     <span className="text-[12px] font-black text-gray-500 uppercase tracking-widest block">Format</span>
                     <div className="flex gap-2 p-1 bg-white/5 rounded-xl border border-white/10">
                         {['png', 'jpg', 'webp'].map(fmt => (
-                          <button key={fmt} onClick={() => setDownloadFormat(fmt)} className={`flex-1 py-2 rounded-lg text-[12px] font-black uppercase transition-all ${downloadFormat === fmt ? 'bg-white text-black shadow-lg' : 'text-gray-500 hover:text-white'}`}>{fmt}</button>
+                          // GÜNCELLEME: Format değişiminde loader çıkmaması için skipFeedbackRef.current = true
+                          <button key={fmt} onClick={() => { skipFeedbackRef.current = true; setDownloadFormat(fmt); }} className={`flex-1 py-2 rounded-lg text-[12px] font-black uppercase transition-all ${downloadFormat === fmt ? 'bg-white text-black shadow-lg' : 'text-gray-500 hover:text-white'}`}>{fmt}</button>
                         ))}
                     </div>
                   </div>
@@ -862,7 +864,8 @@ const App = () => {
                     <span className="text-[12px] font-black text-gray-500 uppercase tracking-widest block">Parça Sayısı</span>
                     <div className="grid grid-cols-5 gap-2 w-full">
                         {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(num => (
-                          <button key={num} onClick={() => setSplitCount(num)} className={`aspect-square rounded-xl text-[12px] font-black flex items-center justify-center transition-all border ${splitCount === num ? 'bg-white text-black border-white shadow-[0_0_15px_rgba(255,255,255,0.3)] scale-105' : 'bg-white/5 border-white/10 text-gray-500 hover:bg-white/10 hover:text-white hover:border-white/30'}`}>{num}</button>
+                          // GÜNCELLEME: Sayı değişiminde loader çıkmaması için skipFeedbackRef.current = true
+                          <button key={num} onClick={() => { skipFeedbackRef.current = true; setSplitCount(num); }} className={`aspect-square rounded-xl text-[12px] font-black flex items-center justify-center transition-all border ${splitCount === num ? 'bg-white text-black border-white shadow-[0_0_15px_rgba(255,255,255,0.3)] scale-105' : 'bg-white/5 border-white/10 text-gray-500 hover:bg-white/10 hover:text-white hover:border-white/30'}`}>{num}</button>
                         ))}
                     </div>
                   </div>
