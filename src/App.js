@@ -682,7 +682,7 @@ const App = () => {
           <h2 className="text-xl md:text-2xl font-black uppercase italic tracking-widest animate-pulse tracking-tighter">İşleniyor</h2>
         </div>
       ) : page === 'landing' ? (
-        // LANDING VIEW
+        // LANDING VIEW (Sadece Hero ve Upload butonu, Header/Menu YOK)
         <div className="flex-1 flex flex-col items-center justify-center p-6 text-center relative overflow-x-hidden pt-48 lg:pt-64">
           <div className="absolute top-0 -z-10 w-full h-full bg-gradient-to-b from-blue-900/10 via-transparent to-transparent" />
           <h1 className="text-5xl md:text-9xl font-black tracking-tighter mb-4 md:mb-8 leading-normal italic uppercase">DUMP <br /> SPLITTER</h1>
@@ -755,6 +755,7 @@ const App = () => {
             <div className="p-6 lg:p-8 border-t border-white/5 hidden lg:block">
                <button onClick={() => processSplit(uploadedFile, fileType === 'video')} disabled={isProcessing || !uploadedFile} className={`w-full py-4 lg:py-5 rounded-[24px] font-black text-xs transition-all shadow-2xl ${isProcessing || !uploadedFile ? 'bg-white/5 text-gray-600' : 'bg-white text-black hover:bg-gray-200 active:scale-95 uppercase tracking-widest'}`}>{isProcessing ? 'İŞLENİYOR...' : 'YENİDEN BÖL'}</button>
             </div>
+            {/* Mobilde "Yeniden Böl" butonu ayarların altına eklendi */}
             <div className="p-6 lg:hidden border-t border-white/5 pb-8">
                <button onClick={() => processSplit(uploadedFile, fileType === 'video')} disabled={isProcessing || !uploadedFile} className={`w-full py-4 rounded-[24px] font-black text-xs transition-all shadow-2xl ${isProcessing || !uploadedFile ? 'bg-white/5 text-gray-600' : 'bg-white text-black hover:bg-gray-200 active:scale-95 uppercase tracking-widest'}`}>{isProcessing ? 'İŞLENİYOR...' : 'YENİDEN BÖL'}</button>
             </div>
