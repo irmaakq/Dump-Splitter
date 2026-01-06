@@ -429,7 +429,7 @@ const App = () => {
       </div>
       
       <div className="flex items-center gap-2 md:gap-4">
-        {isEditor ? (
+        {isEditor && (
           <>
             <button 
               onClick={triggerNewUpload}
@@ -446,30 +446,33 @@ const App = () => {
                <span className="whitespace-nowrap">{isDownloading ? 'İndiriliyor...' : 'Tümünü İndir'}</span>
             </button>
           </>
-        ) : (
-          <div className="flex items-center justify-end">
-               {/* MOBIL MENU BUTONU */}
-               <button 
-                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} 
-                 className="md:hidden p-3 bg-white/10 rounded-full text-white border border-white/10 active:scale-95 transition-all"
-               >
-                  {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-               </button>
+        )}
 
-               {/* MASAÜSTÜ MENÜSÜ */}
-               <div className="hidden md:flex flex-wrap justify-end gap-3">
-                   <button onClick={() => setShowAbout(true)} className="flex items-center gap-2 text-[10px] font-bold text-gray-500 hover:text-white transition-colors uppercase tracking-widest border border-white/10 px-4 py-2 rounded-full hover:bg-white/5 bg-black/20 backdrop-blur-sm"><Info size={12} /> DUMP SPLITTER NEDİR?</button>
-                   <button onClick={() => setShowHowTo(true)} className="flex items-center gap-2 text-[10px] font-bold text-gray-500 hover:text-white transition-colors uppercase tracking-widest border border-white/10 px-4 py-2 rounded-full hover:bg-white/5 bg-black/20 backdrop-blur-sm"><HelpIcon size={12} /> Nasıl Kullanılır?</button>
-                   <button onClick={() => setShowFAQ(true)} className="flex items-center gap-2 text-[10px] font-bold text-gray-500 hover:text-white transition-colors uppercase tracking-widest border border-white/10 px-4 py-2 rounded-full hover:bg-white/5 bg-black/20 backdrop-blur-sm"><MessageCircleQuestion size={12} /> SSS</button>
-                   <button onClick={() => setShowPrivacy(true)} className="flex items-center gap-2 text-[10px] font-bold text-gray-500 hover:text-white transition-colors uppercase tracking-widest border border-white/10 px-4 py-2 rounded-full hover:bg-white/5 bg-black/20 backdrop-blur-sm"><ShieldCheck size={12} /> Gizlilik</button>
-               </div>
-          </div>
+        {/* MENÜLER SADECE LANDING SAYFASINDA GÖRÜNSÜN */}
+        {!isEditor && (
+        <div className="flex items-center justify-end">
+             {/* MOBIL MENU BUTONU */}
+             <button 
+               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} 
+               className="md:hidden p-3 bg-white/10 rounded-full text-white border border-white/10 active:scale-95 transition-all"
+             >
+                {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+             </button>
+
+             {/* MASAÜSTÜ MENÜSÜ */}
+             <div className="hidden md:flex flex-wrap justify-end gap-3">
+                 <button onClick={() => setShowAbout(true)} className="flex items-center gap-2 text-[10px] font-bold text-gray-500 hover:text-white transition-colors uppercase tracking-widest border border-white/10 px-4 py-2 rounded-full hover:bg-white/5 bg-black/20 backdrop-blur-sm"><Info size={12} /> DUMP SPLITTER NEDİR?</button>
+                 <button onClick={() => setShowHowTo(true)} className="flex items-center gap-2 text-[10px] font-bold text-gray-500 hover:text-white transition-colors uppercase tracking-widest border border-white/10 px-4 py-2 rounded-full hover:bg-white/5 bg-black/20 backdrop-blur-sm"><HelpIcon size={12} /> Nasıl Kullanılır?</button>
+                 <button onClick={() => setShowFAQ(true)} className="flex items-center gap-2 text-[10px] font-bold text-gray-500 hover:text-white transition-colors uppercase tracking-widest border border-white/10 px-4 py-2 rounded-full hover:bg-white/5 bg-black/20 backdrop-blur-sm"><MessageCircleQuestion size={12} /> SSS</button>
+                 <button onClick={() => setShowPrivacy(true)} className="flex items-center gap-2 text-[10px] font-bold text-gray-500 hover:text-white transition-colors uppercase tracking-widest border border-white/10 px-4 py-2 rounded-full hover:bg-white/5 bg-black/20 backdrop-blur-sm"><ShieldCheck size={12} /> Gizlilik</button>
+             </div>
+        </div>
         )}
       </div>
     </header>
   );
 
-  // ... (Geri kalan MobileMenu, Modallar ve Render aynı kalıyor, sadece Header'ı yukarıda koşullu yaptım) ...
+  // ... (Geri kalan MobileMenu, Modallar ve Render aynı kalıyor) ...
 
   const MobileMenu = () => {
     if (!isMobileMenuOpen) return null;
@@ -551,8 +554,10 @@ const App = () => {
         </div>
 
         <div className="relative space-y-8 px-4">
+            {/* Connecting Line */}
             <div className="absolute left-8 top-4 bottom-4 w-0.5 bg-gradient-to-b from-blue-500 via-purple-500 to-green-500 opacity-30 rounded-full"></div>
 
+            {/* ADIM 1 */}
             <div className="relative flex items-start gap-6 group">
                 <div className="relative z-10 w-16 h-16 bg-[#0f0f0f] border-4 border-blue-500/20 rounded-2xl flex items-center justify-center shadow-[0_0_20px_rgba(59,130,246,0.3)] group-hover:scale-110 transition-transform duration-300 shrink-0">
                     <Upload size={24} className="text-blue-400" strokeWidth={2.5} />
@@ -563,6 +568,7 @@ const App = () => {
                 </div>
             </div>
 
+            {/* ADIM 2 */}
             <div className="relative flex items-start gap-6 group">
                 <div className="relative z-10 w-16 h-16 bg-[#0f0f0f] border-4 border-purple-500/20 rounded-2xl flex items-center justify-center shadow-[0_0_20px_rgba(168,85,247,0.3)] group-hover:scale-110 transition-transform duration-300 shrink-0">
                     <Settings size={24} className="text-purple-400" strokeWidth={2.5} />
@@ -573,6 +579,7 @@ const App = () => {
                 </div>
             </div>
 
+            {/* ADIM 3 */}
             <div className="relative flex items-start gap-6 group">
                 <div className="relative z-10 w-16 h-16 bg-[#0f0f0f] border-4 border-green-500/20 rounded-2xl flex items-center justify-center shadow-[0_0_20px_rgba(34,197,94,0.3)] group-hover:scale-110 transition-transform duration-300 shrink-0">
                     <DownloadCloud size={24} className="text-green-400" strokeWidth={2.5} />
@@ -713,9 +720,8 @@ const App = () => {
       ) : (
         // EDITOR VIEW (Ana Uygulama)
         <main className="flex-1 pt-20 flex flex-col lg:flex-row overflow-hidden relative">
-          {/* ... (Editor View içerikleri aynı kalıyor) ... */}
-           {/* Ayarlar Paneli İçeriği Aynı... */}
           <aside className="w-full lg:w-[320px] h-auto lg:h-full bg-[#0a0a0a] border-r border-white/5 flex flex-col order-2 lg:order-1 z-20 shrink-0">
+             {/* Ayarlar Paneli İçeriği Aynı... */}
              <div className="flex-1 lg:overflow-y-auto custom-scrollbar p-6 space-y-6 lg:space-y-8">
               <div className="space-y-6">
                   <div className="p-5 bg-white/[0.03] border border-white/10 rounded-[28px] space-y-5 shadow-inner">
@@ -754,7 +760,7 @@ const App = () => {
           {/* Canvas ve Geçmiş (Aynı) */}
           <section className="flex-1 bg-[#050505] p-2 md:p-6 flex flex-col items-center relative order-1 lg:order-2 min-h-[50vh] lg:min-h-0">
              {/* ... Canvas içeriği (Mevcut kodun aynısı) ... */}
-              <div className="relative w-full h-full max-w-[95vw] bg-black rounded-[32px] md:rounded-[56px] overflow-hidden border border-white/10 shadow-[0_0_150px_rgba(0,0,0,1)] flex items-center justify-center group/canvas my-auto">
+              <div className="relative w-full h-full max-w-[95vw] bg-black rounded-[32px] md:rounded-[56px] overflow-hidden border border-white/10 shadow-[0_0_150px_rgba(0,0,0,0.5)] flex items-center justify-center group/canvas my-auto">
                 {uploadedFile ? (
                   <div className="w-full h-full p-4 md:p-12 flex flex-col overflow-y-auto custom-scrollbar bg-black/40">
                     <div className={`w-full ${splitCount === 1 ? 'max-w-none px-2 md:px-4' : 'max-w-6xl'} mx-auto space-y-8 md:space-y-16 pb-32 md:pb-40 flex flex-col items-center`}>
