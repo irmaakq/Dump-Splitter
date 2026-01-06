@@ -426,13 +426,10 @@ const App = () => {
   <div className="w-7 h-7 md:w-10 md:h-10 bg-white text-black rounded-xl flex items-center justify-center font-black italic shadow-2xl transition-transform group-hover:scale-105 text-base md:text-2xl tracking-tight">
     D
   </div>
-  <span className="text-base md:text-2xl font-black uppercase italic tracking-tight leading-none">
-    Dump Splitter
-  </span>
+  <span className="hidden md:block text-base md:text-2xl font-black uppercase italic tracking-tight leading-none">
+  Dump Splitter
+</span>
 </div>
-
-
-      
       <div className="flex items-center gap-2 md:gap-4">
         {isEditor && (
           <>
@@ -926,5 +923,6 @@ const App = () => {
 };
 
 export default App;
+
 
 
