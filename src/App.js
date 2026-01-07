@@ -187,7 +187,7 @@ const HowToModal = ({ isOpen, onClose }) => {
               </div>
           </div>
       </div>
-      <button onClick={onClose} className="w-full bg-white text-black font-black py-4 rounded-2xl mt-12 hover:bg-gray-200 transition-all uppercase tracking-widest text-xs shadow-xl active:scale-95">Anladım, Başlayalım</button>
+      <button onClick={onClose} className="w-full bg-white text-black font-black py-4 rounded-xl mt-12 hover:bg-gray-200 transition-all uppercase tracking-widest text-xs shadow-xl active:scale-95">Anladım, Başlayalım</button>
     </div>
   </div>
   );
@@ -381,67 +381,28 @@ const App = () => {
   // --- FEEDBACK CONTROL REF ---
   const skipFeedbackRef = useRef(false);
 
-  // --- LOAD JSZIP & PWA CONFIG DYNAMICALLY ---
+  // --- LOAD JSZIP & REGISTER SW ---
   useEffect(() => {
-    // 1. JSZip Yükle
+    // 1. JSZip
     if (!window.JSZip) {
       const script = document.createElement('script');
       script.src = "https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js";
       script.async = true;
       document.body.appendChild(script);
     }
-
-    // 2. PWA MANIFEST (Data URI)
-    const manifest = {
-      name: "Dump Splitter",
-      short_name: "DumpSplitter",
-      start_url: ".",
-      display: "standalone",
-      background_color: "#050505",
-      theme_color: "#050505",
-      icons: [
-        {
-          src: "https://cdn-icons-png.flaticon.com/512/10051/10051390.png", // Örnek bir ikon
-          sizes: "192x192",
-          type: "image/png"
-        },
-        {
-          src: "https://cdn-icons-png.flaticon.com/512/10051/10051390.png",
-          sizes: "512x512",
-          type: "image/png"
-        }
-      ]
-    };
     
-    const stringManifest = JSON.stringify(manifest);
-    const blob = new Blob([stringManifest], {type: 'application/json'});
-    const manifestURL = URL.createObjectURL(blob);
-    
-    let link = document.querySelector("link[rel='manifest']");
-    if (!link) {
-      link = document.createElement('link');
-      link.rel = 'manifest';
-      document.head.appendChild(link);
+    // 2. Service Worker Registration
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/service-worker.js')
+                .then(registration => {
+                    console.log('SW registered: ', registration);
+                })
+                .catch(registrationError => {
+                    console.log('SW registration failed: ', registrationError);
+                });
+        });
     }
-    link.href = manifestURL;
-
-    // 3. PWA META TAGS
-    const metaTags = [
-      { name: 'theme-color', content: '#050505' },
-      { name: 'apple-mobile-web-app-capable', content: 'yes' },
-      { name: 'apple-mobile-web-app-status-bar-style', content: 'black-translucent' }
-    ];
-
-    metaTags.forEach(tag => {
-      let meta = document.querySelector(`meta[name='${tag.name}']`);
-      if (!meta) {
-        meta = document.createElement('meta');
-        meta.name = tag.name;
-        document.head.appendChild(meta);
-      }
-      meta.content = tag.content;
-    });
-
   }, []);
 
   const handleDockPointerDown = (e) => {
@@ -648,7 +609,6 @@ const App = () => {
     }
   };
 
-  // GÜNCELLENMİŞ VE GÜVENLİ BATCH DOWNLOAD (FAIL-SAFE)
   const handleBatchDownload = async (e) => {
     e.stopPropagation();
     
@@ -677,7 +637,7 @@ const App = () => {
             setZipProgress({ current: processedCount + 1, total: fileList.length });
 
             // 1. SADECE RESİM VE GEÇERLİ URL KONTROLÜ (Sessizce geç)
-            if (!fileItem || fileItem.type !== 'image' || !isValidBlobUrl(fileItem.url)) {
+            if (!fileItem || fileItem.type !== 'image' || !fileItem.url) {
                 processedCount++;
                 continue;
             }
@@ -696,8 +656,10 @@ const App = () => {
                         const w = img.width;
                         const h = img.height;
                         
-                        // Boyut kontrolü
-                        if (!w || !h) return resolve();
+                        if (!w || !h) {
+                             resolve();
+                             return;
+                        }
 
                         const scaleFactor = settings.ultraHdMode ? 2 : 1;
                         const sW = Math.floor(w * scaleFactor);
@@ -707,10 +669,12 @@ const App = () => {
                         sourceCanvas.width = sW;
                         sourceCanvas.height = sH;
                         
-                        // willReadFrequently: Mobil bellek yönetimi için kritik
                         const sCtx = sourceCanvas.getContext('2d', { willReadFrequently: true });
 
-                        if (!sCtx) return resolve();
+                        if (!sCtx) {
+                            resolve();
+                            return;
+                        }
 
                         if (settings.autoEnhance) {
                           const contrastVal = settings.hdMode ? 1.15 : 1.1;
@@ -762,7 +726,6 @@ const App = () => {
                                             if (blob) {
                                                 imgFolder.file(`Part_${partIndex}.${settings.downloadFormat}`, blob);
                                             }
-                                            // 5. ANLIK TEMİZLİK (Garbage Collection Dostu)
                                             partCanvas.width = 0;
                                             partCanvas.height = 0;
                                             resBlob();
@@ -773,19 +736,17 @@ const App = () => {
                             }
                         }
 
-                        // 6. ANA CANVAS TEMİZLİĞİ
                         sourceCanvas.width = 0;
                         sourceCanvas.height = 0;
                         
                     } catch (err) {
-                        // Sessiz hata (Console warning bile kaldırılabilir isteğe göre)
+                        // Silent error
                     } finally {
-                        img.src = ""; // Kaynağı boşalt
-                        resolve(); // Her durumda devam et
+                        img.src = ""; 
+                        resolve(); 
                     }
                 };
                 
-                // 7. SESSİZ HATA YÖNETİMİ (NO REJECT)
                 img.onerror = () => {
                     resolve(); 
                 };
@@ -796,7 +757,6 @@ const App = () => {
             processedCount++;
         }
 
-        // ZIP İndirme Aşaması
         if (Object.keys(zip.files).length === 0) {
              showToast("İndirilecek geçerli resim bulunamadı.");
         } else {
@@ -1109,8 +1069,6 @@ const App = () => {
       setIsDownloading(false);
     }
   };
-
-  const isValidBlobUrl = (url) => typeof url === "string" && url.startsWith("blob:");
 
   return (
 <div className="min-h-screen bg-[#050505] text-white flex flex-col overflow-x-hidden">
