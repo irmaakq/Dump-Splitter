@@ -69,9 +69,6 @@ const FEATURE_DETAILS = {
   }
 };
 
-// --- HELPER ---
-const isValidBlobUrl = (url) => typeof url === "string" && url.startsWith("blob:");
-
 // --- SUB-COMPONENTS (DEFINED OUTSIDE APP) ---
 
 const FeatureToggle = ({ featureKey, state, onToggle, onInfo }) => {
@@ -384,14 +381,67 @@ const App = () => {
   // --- FEEDBACK CONTROL REF ---
   const skipFeedbackRef = useRef(false);
 
-  // --- LOAD JSZIP DYNAMICALLY ---
+  // --- LOAD JSZIP & PWA CONFIG DYNAMICALLY ---
   useEffect(() => {
+    // 1. JSZip Yükle
     if (!window.JSZip) {
       const script = document.createElement('script');
       script.src = "https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js";
       script.async = true;
       document.body.appendChild(script);
     }
+
+    // 2. PWA MANIFEST (Data URI)
+    const manifest = {
+      name: "Dump Splitter",
+      short_name: "DumpSplitter",
+      start_url: ".",
+      display: "standalone",
+      background_color: "#050505",
+      theme_color: "#050505",
+      icons: [
+        {
+          src: "https://cdn-icons-png.flaticon.com/512/10051/10051390.png", // Örnek bir ikon
+          sizes: "192x192",
+          type: "image/png"
+        },
+        {
+          src: "https://cdn-icons-png.flaticon.com/512/10051/10051390.png",
+          sizes: "512x512",
+          type: "image/png"
+        }
+      ]
+    };
+    
+    const stringManifest = JSON.stringify(manifest);
+    const blob = new Blob([stringManifest], {type: 'application/json'});
+    const manifestURL = URL.createObjectURL(blob);
+    
+    let link = document.querySelector("link[rel='manifest']");
+    if (!link) {
+      link = document.createElement('link');
+      link.rel = 'manifest';
+      document.head.appendChild(link);
+    }
+    link.href = manifestURL;
+
+    // 3. PWA META TAGS
+    const metaTags = [
+      { name: 'theme-color', content: '#050505' },
+      { name: 'apple-mobile-web-app-capable', content: 'yes' },
+      { name: 'apple-mobile-web-app-status-bar-style', content: 'black-translucent' }
+    ];
+
+    metaTags.forEach(tag => {
+      let meta = document.querySelector(`meta[name='${tag.name}']`);
+      if (!meta) {
+        meta = document.createElement('meta');
+        meta.name = tag.name;
+        document.head.appendChild(meta);
+      }
+      meta.content = tag.content;
+    });
+
   }, []);
 
   const handleDockPointerDown = (e) => {
@@ -598,9 +648,7 @@ const App = () => {
     }
   };
 
-  const isValidBlobUrl = (url) => typeof url === "string" && url.startsWith("blob:");
-
-  // GÜNCELLENMİŞ VE GÜVENLİ BATCH DOWNLOAD
+  // GÜNCELLENMİŞ VE GÜVENLİ BATCH DOWNLOAD (FAIL-SAFE)
   const handleBatchDownload = async (e) => {
     e.stopPropagation();
     
@@ -1023,7 +1071,6 @@ const App = () => {
     }
   };
 
-  // GÜNCELLENMİŞ: TEK RESMİ ZIP OLARAK İNDİRME
   const handleDownloadAll = async () => {
     if (isDownloading) return;
     if (!window.JSZip) {
@@ -1062,6 +1109,8 @@ const App = () => {
       setIsDownloading(false);
     }
   };
+
+  const isValidBlobUrl = (url) => typeof url === "string" && url.startsWith("blob:");
 
   return (
 <div className="min-h-screen bg-[#050505] text-white flex flex-col overflow-x-hidden">
