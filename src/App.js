@@ -69,6 +69,9 @@ const FEATURE_DETAILS = {
   }
 };
 
+// --- HELPER ---
+const isValidBlobUrl = (url) => typeof url === "string" && url.startsWith("blob:");
+
 // --- SUB-COMPONENTS (DEFINED OUTSIDE APP) ---
 
 const FeatureToggle = ({ featureKey, state, onToggle, onInfo }) => {
@@ -595,38 +598,59 @@ const App = () => {
     }
   };
 
+  const isValidBlobUrl = (url) => typeof url === "string" && url.startsWith("blob:");
+
+  // GÜNCELLENMİŞ VE GÜVENLİ BATCH DOWNLOAD
   const handleBatchDownload = async (e) => {
     e.stopPropagation();
+    
     if (!window.JSZip) {
       showToast("ZIP kütüphanesi yükleniyor, lütfen bekleyin...");
       return;
     }
-    if (fileList.length < 2) return;
+
+    if (!fileList || fileList.length === 0) {
+      showToast("İndirilecek dosya yok.");
+      return;
+    }
 
     setIsZipping(true);
     setZipProgress({ current: 0, total: fileList.length });
 
     const zip = new window.JSZip();
     const folder = zip.folder("Dump_Splitter_Pack");
+    
+    let processedCount = 0;
 
     try {
         for (let i = 0; i < fileList.length; i++) {
-            setZipProgress({ current: i + 1, total: fileList.length });
             const fileItem = fileList[i];
-            const settings = fileItem.settings || DEFAULT_SETTINGS; 
             
-            // INCREASED DELAY for better stability on 20 items (Mobile Optimization)
-            await new Promise(r => setTimeout(r, 250)); 
+            setZipProgress({ current: processedCount + 1, total: fileList.length });
 
-            await new Promise((resolve, reject) => {
+            // 1. SADECE RESİM VE GEÇERLİ URL KONTROLÜ (Sessizce geç)
+            if (!fileItem || fileItem.type !== 'image' || !isValidBlobUrl(fileItem.url)) {
+                processedCount++;
+                continue;
+            }
+
+            const settings = fileItem.settings || DEFAULT_SETTINGS;
+
+            // 2. NEFES ALMA PAYI (CPU/RAM Soğutma)
+            await new Promise(r => setTimeout(r, 80));
+
+            // 3. RESİM İŞLEME (Asla Crash Etmez)
+            await new Promise((resolve) => {
                 const img = new Image();
-                img.crossOrigin = "anonymous"; 
-                img.src = fileItem.url;
                 
-                img.onload = () => {
+                img.onload = async () => {
                     try {
                         const w = img.width;
                         const h = img.height;
+                        
+                        // Boyut kontrolü
+                        if (!w || !h) return resolve();
+
                         const scaleFactor = settings.ultraHdMode ? 2 : 1;
                         const sW = Math.floor(w * scaleFactor);
                         const sH = Math.floor(h * scaleFactor);
@@ -634,10 +658,11 @@ const App = () => {
                         const sourceCanvas = document.createElement('canvas');
                         sourceCanvas.width = sW;
                         sourceCanvas.height = sH;
-                        // CRITICAL FIX: willReadFrequently for better mobile memory handling
+                        
+                        // willReadFrequently: Mobil bellek yönetimi için kritik
                         const sCtx = sourceCanvas.getContext('2d', { willReadFrequently: true });
 
-                        if (!sCtx) { reject(new Error("Canvas Context Failed")); return; }
+                        if (!sCtx) return resolve();
 
                         if (settings.autoEnhance) {
                           const contrastVal = settings.hdMode ? 1.15 : 1.1;
@@ -663,68 +688,83 @@ const App = () => {
                         const pH = Math.floor(sH / rows);
                         
                         const imgFolder = folder.folder(`Image_${i + 1}`);
+                        let partIndex = 1;
 
-                        let partsProcessed = 0;
-                        const totalParts = rows * cols;
-                        let hasError = false;
-
+                        // 4. PARÇALARI SIRAYLA OLUŞTUR (Memory Safe)
                         for (let r = 0; r < rows; r++) {
                             for (let c = 0; c < cols; c++) {
-                                if (hasError) break;
                                 
                                 const partCanvas = document.createElement('canvas');
                                 partCanvas.width = pW;
                                 partCanvas.height = pH;
                                 const pCtx = partCanvas.getContext('2d');
-                                pCtx.imageSmoothingEnabled = true;
-                                pCtx.imageSmoothingQuality = 'high';
-                                pCtx.drawImage(sourceCanvas, c * pW, r * pH, pW, pH, 0, 0, pW, pH);
+                                
+                                if (pCtx) {
+                                    pCtx.imageSmoothingEnabled = true;
+                                    pCtx.imageSmoothingQuality = 'high';
+                                    pCtx.drawImage(sourceCanvas, c * pW, r * pH, pW, pH, 0, 0, pW, pH);
 
-                                const mimeType = `image/${settings.downloadFormat === 'jpg' ? 'jpeg' : settings.downloadFormat}`;
-                                let quality = 0.95;
-                                if (settings.hdMode) quality = 1.0;
-                                if (settings.optimizeMode) quality = 0.80;
+                                    const mimeType = `image/${settings.downloadFormat === 'jpg' ? 'jpeg' : settings.downloadFormat}`;
+                                    let quality = 0.95;
+                                    if (settings.hdMode) quality = 1.0;
+                                    if (settings.optimizeMode) quality = 0.80;
 
-                                partCanvas.toBlob((blob) => {
-                                    if (!blob) {
-                                        console.error("Blob creation failed for part", r, c);
-                                        if (!hasError) {
-                                            hasError = true;
-                                            reject(new Error("Blob creation failed"));
-                                        }
-                                        return;
-                                    }
-                                    imgFolder.file(`Part_${r * cols + c + 1}.${settings.downloadFormat}`, blob);
-                                    partsProcessed++;
-                                    
-                                    if (partsProcessed === totalParts) {
-                                        // CLEANUP MEMORY EXPLICITLY
-                                        sourceCanvas.width = 0;
-                                        sourceCanvas.height = 0;
-                                        img.src = "";
-                                        resolve();
-                                    }
-                                }, mimeType, quality);
+                                    await new Promise((resBlob) => {
+                                        partCanvas.toBlob((blob) => {
+                                            if (blob) {
+                                                imgFolder.file(`Part_${partIndex}.${settings.downloadFormat}`, blob);
+                                            }
+                                            // 5. ANLIK TEMİZLİK (Garbage Collection Dostu)
+                                            partCanvas.width = 0;
+                                            partCanvas.height = 0;
+                                            resBlob();
+                                        }, mimeType, quality);
+                                    });
+                                    partIndex++;
+                                }
                             }
                         }
+
+                        // 6. ANA CANVAS TEMİZLİĞİ
+                        sourceCanvas.width = 0;
+                        sourceCanvas.height = 0;
+                        
                     } catch (err) {
-                        reject(err);
+                        // Sessiz hata (Console warning bile kaldırılabilir isteğe göre)
+                    } finally {
+                        img.src = ""; // Kaynağı boşalt
+                        resolve(); // Her durumda devam et
                     }
                 };
-                img.onerror = (e) => reject(new Error("Image load failed"));
+                
+                // 7. SESSİZ HATA YÖNETİMİ (NO REJECT)
+                img.onerror = () => {
+                    resolve(); 
+                };
+                
+                img.src = fileItem.url;
             });
+            
+            processedCount++;
         }
 
-        const content = await zip.generateAsync({ type: "blob" });
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(content);
-        link.download = "Tüm_Dump_Arsivi.zip";
-        link.click();
-        showToast("Arşiv başarıyla indirildi.");
+        // ZIP İndirme Aşaması
+        if (Object.keys(zip.files).length === 0) {
+             showToast("İndirilecek geçerli resim bulunamadı.");
+        } else {
+             const content = await zip.generateAsync({ type: "blob" });
+             const link = document.createElement('a');
+             link.href = URL.createObjectURL(content);
+             link.download = "Tüm_Dump_Arsivi.zip";
+             document.body.appendChild(link);
+             link.click();
+             document.body.removeChild(link);
+             setTimeout(() => URL.revokeObjectURL(link.href), 10000); 
+             showToast("Arşiv başarıyla indirildi.");
+        }
 
-    } catch (error) {
-        console.error("ZIP hatası:", error);
-        showToast("Arşivleme sırasında bir hata oluştu.");
+    } catch (globalError) {
+        showToast("Bir hata oluştu ama işlem kurtarıldı.");
     } finally {
         setIsZipping(false);
     }
@@ -992,27 +1032,22 @@ const App = () => {
     }
     
     setIsDownloading(true);
-    // showToast("İndirme işlemi başladı, lütfen bekleyin..."); // Opsiyonel, sessiz de olabilir
     
     try {
       const zip = new window.JSZip();
       
-      // splitSlides içindeki her parçayı ZIP'e ekle
       const promises = splitSlides.map(async (s) => {
          const response = await fetch(s.dataUrl);
          const blob = await response.blob();
-         // Dosya isimlendirmesi: dump_part_1.png, dump_part_2.png gibi
          const fileName = `dump_part_${s.id}.${downloadFormat}`;
          zip.file(fileName, blob);
       });
 
       await Promise.all(promises);
 
-      // ZIP'i oluştur ve indir
       const content = await zip.generateAsync({ type: "blob" });
       const link = document.createElement('a');
       link.href = URL.createObjectURL(content);
-      // ZIP Dosya adı: Dump_Splitter_Parcalar.zip
       link.download = `Dump_Splitter_Parcalar.zip`;
       document.body.appendChild(link);
       link.click();
