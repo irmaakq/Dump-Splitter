@@ -615,7 +615,8 @@ const App = () => {
             const fileItem = fileList[i];
             const settings = fileItem.settings || DEFAULT_SETTINGS; 
             
-            await new Promise(r => setTimeout(r, 100));
+            // INCREASED DELAY for better stability on 20 items (Mobile Optimization)
+            await new Promise(r => setTimeout(r, 250)); 
 
             await new Promise((resolve, reject) => {
                 const img = new Image();
@@ -633,6 +634,7 @@ const App = () => {
                         const sourceCanvas = document.createElement('canvas');
                         sourceCanvas.width = sW;
                         sourceCanvas.height = sH;
+                        // CRITICAL FIX: willReadFrequently for better mobile memory handling
                         const sCtx = sourceCanvas.getContext('2d', { willReadFrequently: true });
 
                         if (!sCtx) { reject(new Error("Canvas Context Failed")); return; }
@@ -694,7 +696,14 @@ const App = () => {
                                     }
                                     imgFolder.file(`Part_${r * cols + c + 1}.${settings.downloadFormat}`, blob);
                                     partsProcessed++;
-                                    if (partsProcessed === totalParts) resolve();
+                                    
+                                    if (partsProcessed === totalParts) {
+                                        // CLEANUP MEMORY EXPLICITLY
+                                        sourceCanvas.width = 0;
+                                        sourceCanvas.height = 0;
+                                        img.src = "";
+                                        resolve();
+                                    }
                                 }, mimeType, quality);
                             }
                         }
@@ -873,6 +882,7 @@ const App = () => {
       const sourceCanvas = document.createElement('canvas');
       sourceCanvas.width = sW;
       sourceCanvas.height = sH;
+      // CRITICAL FIX: willReadFrequently for better mobile memory handling
       const sCtx = sourceCanvas.getContext('2d', { willReadFrequently: true });
       
       if (autoEnhance) {
@@ -973,6 +983,7 @@ const App = () => {
     }
   };
 
+  // GÜNCELLENMİŞ: TEK RESMİ ZIP OLARAK İNDİRME
   const handleDownloadAll = async () => {
     if (isDownloading) return;
     if (!window.JSZip) {
@@ -981,22 +992,27 @@ const App = () => {
     }
     
     setIsDownloading(true);
+    // showToast("İndirme işlemi başladı, lütfen bekleyin..."); // Opsiyonel, sessiz de olabilir
     
     try {
       const zip = new window.JSZip();
       
+      // splitSlides içindeki her parçayı ZIP'e ekle
       const promises = splitSlides.map(async (s) => {
          const response = await fetch(s.dataUrl);
          const blob = await response.blob();
+         // Dosya isimlendirmesi: dump_part_1.png, dump_part_2.png gibi
          const fileName = `dump_part_${s.id}.${downloadFormat}`;
          zip.file(fileName, blob);
       });
 
       await Promise.all(promises);
 
+      // ZIP'i oluştur ve indir
       const content = await zip.generateAsync({ type: "blob" });
       const link = document.createElement('a');
       link.href = URL.createObjectURL(content);
+      // ZIP Dosya adı: Dump_Splitter_Parcalar.zip
       link.download = `Dump_Splitter_Parcalar.zip`;
       document.body.appendChild(link);
       link.click();
