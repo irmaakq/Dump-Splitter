@@ -2,12 +2,10 @@
 <html lang="tr">
   <head>
     <meta charset="utf-8" />
-    <!-- Tarayıcı sekmesindeki ikon (Senin yüklediğin favicon.ico dosyasını çeker) -->
     <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
     
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     
-    <!-- Tarayıcı çubuğu rengini sitenle uyumlu siyah (#050505) yaptık -->
     <meta name="theme-color" content="#050505" />
     
     <meta
@@ -15,17 +13,29 @@
       content="Instagram için profesyonel Dump Bölme ve Kalite Artırma Aracı"
     />
     
-    <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
+    <link rel="apple-touch-icon" href="%PUBLIC_URL%/icon-192.png" />
     <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
     
-    <!-- Tailwind CSS (Tasarımın siyah ve havalı görünmesi için ŞART) -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- GÜNCELLENDİ: Sitenin sekmede görünen ismi -->
     <title>Dump Splitter</title>
   </head>
   <body>
     <noscript>Bu uygulamayı çalıştırmak için JavaScript'i etkinleştirmeniz gerekir.</noscript>
     <div id="root"></div>
+
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js')
+            .then(registration => {
+              console.log('SW kaydedildi:', registration.scope);
+            })
+            .catch(err => {
+              console.log('SW hatası:', err);
+            });
+        });
+      }
+    </script>
   </body>
 </html>
