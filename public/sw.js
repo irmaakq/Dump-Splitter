@@ -1,4 +1,4 @@
-const CACHE_NAME = 'dump-splitter-cache-v3'; // Burayı v3 yap ki tarayıcı değişikliği anlasın!
+const CACHE_NAME = 'dump-splitter-cache-v4'; // Burayı v3 yap ki tarayıcı değişikliği anlasın!
 const urlsToCache = [
   '/',
   '/index.html',
@@ -62,3 +62,4 @@ self.addEventListener('fetch', (event) => {
       })
   );
 });
+
