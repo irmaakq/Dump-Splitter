@@ -6,7 +6,7 @@ import {
   Zap, CheckCircle2,
   Grid, DownloadCloud, FileImage, 
   ShieldCheck, Cpu, Activity, Target, Lock, ServerOff, HelpCircle as HelpIcon, Info, MessageCircleQuestion, FileQuestion, ZoomIn, Maximize,
-  Download, Eye, Shield, Github, Settings, ChevronRight, Loader2, Menu, Trash2, RefreshCcw, Archive, Layers, Smartphone, Wand2, FlaskConical
+  Download, Eye, Shield, Github, Settings, ChevronRight, Loader2, Menu, Trash2, RefreshCcw, Archive, Layers, Smartphone, Wand2
 } from 'lucide-react';
 
 // --- ICONS (Custom) ---
@@ -419,8 +419,6 @@ const Header = ({
                    <button onClick={onShowHowTo} className="flex items-center gap-2 text-[10px] font-bold text-gray-500 hover:text-white transition-colors uppercase tracking-widest border border-white/10 px-4 py-2 rounded-full hover:bg-white/5 bg-black/20 backdrop-blur-sm"><HelpIcon size={12} /> Nasıl Kullanılır?</button>
                    <button onClick={onShowFAQ} className="flex items-center gap-2 text-[10px] font-bold text-gray-500 hover:text-white transition-colors uppercase tracking-widest border border-white/10 px-4 py-2 rounded-full hover:bg-white/5 bg-black/20 backdrop-blur-sm"><MessageCircleQuestion size={12} /> SSS</button>
                    <button onClick={onShowPrivacy} className="flex items-center gap-2 text-[10px] font-bold text-gray-500 hover:text-white transition-colors uppercase tracking-widest border border-white/10 px-4 py-2 rounded-full hover:bg-white/5 bg-black/20 backdrop-blur-sm"><ShieldCheck size={12} /> Gizlilik</button>
-                    {/* DENEME BUTONU */}
-                   <button className="flex items-center gap-2 text-[10px] font-bold text-red-500 hover:text-white transition-colors uppercase tracking-widest border border-red-500/50 bg-red-500/10 px-4 py-2 rounded-full hover:bg-red-500 backdrop-blur-sm"><FlaskConical size={12} /> DENEME</button>
                  </>
                )}
            </div>
@@ -439,8 +437,6 @@ const MobileMenu = ({ isOpen, onClose, onShowAbout, onShowHowTo, onShowFAQ, onSh
           <button onClick={onShowHowTo} className="text-lg font-black text-white uppercase tracking-widest py-4 border-b border-white/10 hover:text-gray-300">Nasıl Kullanılır?</button>
           <button onClick={onShowFAQ} className="text-lg font-black text-white uppercase tracking-widest py-4 border-b border-white/10 hover:text-gray-300">Sıkça Sorulan Sorular</button>
           <button onClick={onShowPrivacy} className="text-lg font-black text-white uppercase tracking-widest py-4 border-b border-white/10 hover:text-gray-300">Gizlilik</button>
-          {/* MOBIL DENEME BUTONU */}
-          <button className="text-lg font-black text-red-500 uppercase tracking-widest py-4 border-b border-red-500/30 hover:text-red-300 flex items-center justify-center gap-2"><FlaskConical size={20}/> DENEME</button>
        </div>
     </div>
   );
