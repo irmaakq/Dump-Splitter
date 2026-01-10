@@ -6,7 +6,7 @@ import {
   Zap, CheckCircle2,
   Grid, DownloadCloud, FileImage, 
   ShieldCheck, Cpu, Activity, Target, Lock, ServerOff, HelpCircle as HelpIcon, Info, MessageCircleQuestion, FileQuestion, ZoomIn, Maximize,
-  Download, Eye, Shield, Github, Settings, ChevronRight, Loader2, Menu, Trash2, RefreshCcw, Archive
+  Download, Eye, Shield, Github, Settings, ChevronRight, Loader2, Menu, Trash2, RefreshCcw, Archive, Layers, Smartphone, Wand2
 } from 'lucide-react';
 
 // --- ICONS (Custom) ---
@@ -41,30 +41,35 @@ const FEATURE_DETAILS = {
     title: "AI ENHANCE",
     icon: Sparkles,
     color: "text-pink-500",
+    shortDesc: "Renkleri ve kontrastı otomatik canlandırır.", 
     desc: "Yapay zeka algoritmaları fotoğrafın renk dengesini, doygunluğunu ve kontrastını analiz eder. Soluk renkleri canlandırır ve profesyonel bir görünüm kazandırır."
   },
   hdMode: {
     title: "HD KALİTE",
     icon: Cpu,
     color: "text-blue-400",
+    shortDesc: "Kenar tırtıklarını giderir ve netleştirir.",
     desc: "Çıktı alma sürecinde gelişmiş pikselleri yumuşatarak kenar tırtıklarını giderir. Instagram'ın sıkıştırma algoritmasına karşı görüntüyü netleştirir."
   },
   optimize: {
     title: "OPTIMIZE",
     icon: Activity,
     color: "text-green-400",
+    shortDesc: "Kaliteyi koruyarak dosya boyutunu düşürür.",
     desc: "Görselin kalitesini gözle görülür şekilde düşürmeden dosya boyutunu %30-40 oranında sıkıştırır. Instagram hikaye ve gönderileri için ideal yükleme hızı sağlar."
   },
   smartCrop: {
     title: "SMART CROP",
     icon: Target,
     color: "text-purple-400",
+    shortDesc: "Gereksiz kenar boşluklarını temizler.",
     desc: "Fotoğrafın kenarlarındaki gereksiz veya boş alanları analiz eder ve %5 oranında 'Safe Zoom' yaparak ana objeyi merkeze odaklar."
   },
   ultraHd: {
     title: "ULTRA HD İNDİR",
     icon: Zap,
     color: "text-yellow-400",
+    shortDesc: "Çözünürlüğü yapay zeka ile 2 katına çıkarır.",
     desc: "Super-Resolution (Süper Çözünürlük) teknolojisi kullanır. Mevcut görseli sanal olarak genişletip eksik pikselleri tamamlayarak çözünürlüğü 2 katına (2x Upscale) çıkarır."
   }
 };
@@ -96,7 +101,7 @@ const FeatureToggle = ({ featureKey, state, onToggle, onInfo }) => {
               <div className={`absolute top-1 w-3 h-3 rounded-full transition-all ${state ? 'right-1 bg-black' : 'left-1 bg-white/30'}`} />
           </div>
       </div>
-      <p className="text-[11px] text-gray-500 leading-relaxed font-bold uppercase mt-2">{details.desc.substring(0, 50)}...</p>
+      <p className="text-[10px] text-gray-500 leading-relaxed font-bold uppercase mt-1.5 opacity-80">{details.shortDesc}</p>
     </div>
   );
 };
@@ -151,43 +156,97 @@ const HowToModal = ({ isOpen, onClose }) => {
   if (!isOpen) return null;
   return (
   <div className="fixed inset-0 z-[90] bg-black/90 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300">
-    <div className="bg-[#0f0f0f] border border-white/10 rounded-[40px] max-w-lg w-full p-8 relative shadow-2xl overflow-y-auto max-h-[85vh] custom-scrollbar">
+    <div className="bg-[#0f0f0f] border border-white/10 rounded-[40px] max-w-lg w-full p-8 md:p-10 relative shadow-2xl overflow-y-auto max-h-[85vh] custom-scrollbar">
       <button onClick={onClose} className="absolute top-6 right-6 text-gray-500 hover:text-white transition-colors p-2 hover:bg-white/10 rounded-full"><X size={24} /></button>
-      <div className="text-center mb-10">
-          <h2 className="text-3xl font-black text-white uppercase tracking-tighter italic">NASIL ÇALIŞIR?</h2>
-          <p className="text-gray-500 text-xs font-bold uppercase tracking-widest mt-2">HIZLI BAŞLANGIÇ REHBERİ</p>
+      
+      <div className="text-center mb-12">
+          <div className="inline-flex items-center justify-center p-3 bg-blue-500/10 rounded-2xl mb-4 border border-blue-500/20">
+            <HelpIcon size={32} className="text-blue-400" />
+          </div>
+          <h2 className="text-3xl font-black text-white uppercase tracking-tighter italic">KULLANIM REHBERİ</h2>
+          <p className="text-gray-500 text-xs font-bold uppercase tracking-widest mt-2">PROFESYONEL BİR DUMP NASIL OLUŞTURULUR?</p>
       </div>
-      <div className="relative space-y-8 px-4">
-          <div className="absolute left-8 top-4 bottom-4 w-0.5 bg-gradient-to-b from-blue-500 via-purple-500 to-green-500 opacity-30 rounded-full"></div>
-          <div className="relative flex items-start gap-6 group">
-              <div className="relative z-10 w-16 h-16 bg-[#0f0f0f] border-4 border-blue-500/20 rounded-2xl flex items-center justify-center shadow-[0_0_20px_rgba(59,130,246,0.3)] group-hover:scale-110 transition-transform duration-300 shrink-0">
-                  <Upload size={24} className="text-blue-400" strokeWidth={2.5} />
+
+      <div className="space-y-8 relative px-2">
+          {/* Timeline Line */}
+          <div className="absolute left-[27px] top-4 bottom-4 w-0.5 bg-gradient-to-b from-blue-500 via-purple-500 to-green-500 opacity-20 rounded-full hidden md:block"></div>
+
+          {/* STEP 1 */}
+          <div className="relative flex flex-col md:flex-row items-start gap-6 group">
+              <div className="relative z-10 w-14 h-14 bg-[#1a1a1a] border border-white/10 rounded-2xl flex items-center justify-center shadow-lg group-hover:border-blue-500/50 group-hover:scale-110 transition-all shrink-0">
+                  <span className="text-blue-400 font-black text-xl">1</span>
               </div>
-              <div className="pt-2">
-                  <h3 className="text-white font-black text-lg uppercase tracking-wide mb-1 group-hover:text-blue-400 transition-colors">1. Yükle</h3>
-                  <p className="text-gray-400 text-xs leading-relaxed font-medium">Galerinden yüksek kaliteli fotoğrafını veya videonu seç.</p>
+              <div className="flex-1 bg-white/[0.03] p-5 rounded-2xl border border-white/5 group-hover:border-white/10 transition-colors">
+                  <div className="flex items-center gap-3 mb-2">
+                    <Upload size={18} className="text-blue-400" />
+                    <h3 className="text-white font-black text-sm uppercase tracking-wide">Medyayı Yükle</h3>
+                  </div>
+                  <p className="text-gray-400 text-xs leading-relaxed">
+                    Yüksek çözünürlüklü fotoğraf veya videonuzu yükleyin. Sürükle-bırak yapabilir veya dosya seçiciyi kullanabilirsiniz. 
+                    <span className="block mt-2 text-blue-400/80 font-bold text-[10px] uppercase">İPUCU: Panoramik, yatay veya dikey 'Dump' fotoğraflarınızda harika sonuçlar verir. Format fark etmeksizin her türlü görseli bölebilirsiniz.</span>
+                  </p>
               </div>
           </div>
-          <div className="relative flex items-start gap-6 group">
-              <div className="relative z-10 w-16 h-16 bg-[#0f0f0f] border-4 border-purple-500/20 rounded-2xl flex items-center justify-center shadow-[0_0_20px_rgba(168,85,247,0.3)] group-hover:scale-110 transition-transform duration-300 shrink-0">
-                  <Settings size={24} className="text-purple-400" strokeWidth={2.5} />
+
+          {/* STEP 2 */}
+          <div className="relative flex flex-col md:flex-row items-start gap-6 group">
+              <div className="relative z-10 w-14 h-14 bg-[#1a1a1a] border border-white/10 rounded-2xl flex items-center justify-center shadow-lg group-hover:border-purple-500/50 group-hover:scale-110 transition-all shrink-0">
+                  <span className="text-purple-400 font-black text-xl">2</span>
               </div>
-              <div className="pt-2">
-                  <h3 className="text-white font-black text-lg uppercase tracking-wide mb-1 group-hover:text-purple-400 transition-colors">2. Düzenle</h3>
-                  <p className="text-gray-400 text-xs leading-relaxed font-medium">Parça sayısını seç, <strong>AI Enhance</strong> ile renkleri canlandır.</p>
+              <div className="flex-1 bg-white/[0.03] p-5 rounded-2xl border border-white/5 group-hover:border-white/10 transition-colors">
+                  <div className="flex items-center gap-3 mb-2">
+                    <Settings size={18} className="text-purple-400" />
+                    <h3 className="text-white font-black text-sm uppercase tracking-wide">Düzenle & Ayarla</h3>
+                  </div>
+                  <p className="text-gray-400 text-xs leading-relaxed mb-3">
+                    Sol menüden parça sayısını (1-10) seçin. Formatı (PNG/JPG) belirleyin.
+                  </p>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="bg-black/20 p-2 rounded-lg border border-white/5 text-[10px] text-gray-400"><span className="text-purple-400 font-bold">Smart Crop:</span> Kenar boşluklarını temizler.</div>
+                    <div className="bg-black/20 p-2 rounded-lg border border-white/5 text-[10px] text-gray-400"><span className="text-green-400 font-bold">Optimize:</span> Instagram için boyutu küçültür.</div>
+                  </div>
               </div>
           </div>
-          <div className="relative flex items-start gap-6 group">
-              <div className="relative z-10 w-16 h-16 bg-[#0f0f0f] border-4 border-green-500/20 rounded-2xl flex items-center justify-center shadow-[0_0_20px_rgba(34,197,94,0.3)] group-hover:scale-110 transition-transform duration-300 shrink-0">
-                  <DownloadCloud size={24} className="text-green-400" strokeWidth={2.5} />
+
+          {/* STEP 3 */}
+          <div className="relative flex flex-col md:flex-row items-start gap-6 group">
+              <div className="relative z-10 w-14 h-14 bg-[#1a1a1a] border border-white/10 rounded-2xl flex items-center justify-center shadow-lg group-hover:border-pink-500/50 group-hover:scale-110 transition-all shrink-0">
+                  <span className="text-pink-400 font-black text-xl">3</span>
               </div>
-              <div className="pt-2">
-                  <h3 className="text-white font-black text-lg uppercase tracking-wide mb-1 group-hover:text-green-400 transition-colors">3. Paylaş</h3>
-                  <p className="text-gray-400 text-xs leading-relaxed font-medium">Sonuçları <strong>Ultra HD</strong> kalitede indir ve Instagram'da paylaş!</p>
+              <div className="flex-1 bg-white/[0.03] p-5 rounded-2xl border border-white/5 group-hover:border-white/10 transition-colors">
+                  <div className="flex items-center gap-3 mb-2">
+                    <Wand2 size={18} className="text-pink-400" />
+                    <h3 className="text-white font-black text-sm uppercase tracking-wide">Kaliteyi Artır (AI)</h3>
+                  </div>
+                  <p className="text-gray-400 text-xs leading-relaxed">
+                    Eğer fotoğrafınız soluksa veya düşük kaliteliyse bu modları açın:
+                  </p>
+                  <ul className="mt-2 space-y-1 text-[10px] text-gray-500 font-medium">
+                    <li className="flex items-center gap-2"><div className="w-1 h-1 bg-pink-500 rounded-full"></div> <strong>AI Enhance:</strong> Renkleri canlandırır.</li>
+                    <li className="flex items-center gap-2"><div className="w-1 h-1 bg-blue-500 rounded-full"></div> <strong>HD Kalite:</strong> Pikselleri yumuşatır.</li>
+                    <li className="flex items-center gap-2"><div className="w-1 h-1 bg-yellow-500 rounded-full"></div> <strong>Ultra HD:</strong> Çözünürlüğü 2 katına çıkarır.</li>
+                  </ul>
+              </div>
+          </div>
+
+          {/* STEP 4 */}
+          <div className="relative flex flex-col md:flex-row items-start gap-6 group">
+              <div className="relative z-10 w-14 h-14 bg-[#1a1a1a] border border-white/10 rounded-2xl flex items-center justify-center shadow-lg group-hover:border-green-500/50 group-hover:scale-110 transition-all shrink-0">
+                  <span className="text-green-400 font-black text-xl">4</span>
+              </div>
+              <div className="flex-1 bg-white/[0.03] p-5 rounded-2xl border border-white/5 group-hover:border-white/10 transition-colors">
+                  <div className="flex items-center gap-3 mb-2">
+                    <DownloadCloud size={18} className="text-green-400" />
+                    <h3 className="text-white font-black text-sm uppercase tracking-wide">İndir ve Paylaş</h3>
+                  </div>
+                  <p className="text-gray-400 text-xs leading-relaxed">
+                    Tüm parçaları tek seferde <strong>ZIP</strong> olarak indirebilir veya resimlerin üzerine tıklayarak tek tek kaydedebilirsiniz. Artık Instagram'da paylaşmaya hazır!
+                  </p>
               </div>
           </div>
       </div>
-      <button onClick={onClose} className="w-full bg-white text-black font-black py-4 rounded-xl mt-12 hover:bg-gray-200 transition-all uppercase tracking-widest text-xs shadow-xl active:scale-95">Anladım, Başlayalım</button>
+
+      <button onClick={onClose} className="w-full bg-white text-black font-black py-4 rounded-xl mt-10 hover:bg-gray-200 transition-all uppercase tracking-widest text-xs shadow-[0_0_40px_rgba(255,255,255,0.2)] hover:shadow-[0_0_60px_rgba(255,255,255,0.4)] active:scale-95">Anladım, Başlayalım</button>
     </div>
   </div>
   );
@@ -197,35 +256,69 @@ const AboutModal = ({ isOpen, onClose }) => {
   if (!isOpen) return null;
   return (
   <div className="fixed inset-0 z-[90] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-300">
-    <div className="bg-[#0f0f0f] border border-white/10 rounded-3xl max-w-2xl w-full p-8 md:p-10 relative shadow-2xl overflow-y-auto max-h-[90vh]">
+    <div className="bg-[#0f0f0f] border border-white/10 rounded-3xl max-w-4xl w-full p-8 md:p-10 relative shadow-2xl overflow-y-auto max-h-[90vh]">
       <button onClick={onClose} className="absolute top-6 right-6 text-gray-500 hover:text-white transition-colors"><X size={24} /></button>
-      <h2 className="text-3xl font-black text-white uppercase tracking-tighter mb-4">DUMP SPLITTER NEDİR?</h2>
-      <div className="text-gray-400 text-sm leading-relaxed mb-8 space-y-4">
-          <p>Dump Splitter, Instagram'da popüler olan "Photo Dump" paylaşımlarınızı düzenlemenizi sağlayan, yapay zeka destekli bir web aracıdır.</p>
-          <div className="bg-white/5 p-4 rounded-xl border-l-2 border-white/20">
-              <h4 className="text-white font-bold mb-2 text-xs uppercase tracking-wider">Nasıl Çalışır?</h4>
-              <ol className="list-decimal list-inside space-y-1 text-xs">
-                  <li>Fotoğraflarınızı sisteme yükersiniz.</li>
-                  <li>Sistem, fotoğrafları otomatik olarak böler.</li>
-                  <li>Yapay zeka desteği ile renkler ve netlik optimize edilir.</li>
-                  <li>Sonuçları tek tek veya toplu olarak indirirsiniz.</li>
-              </ol>
-          </div>
+      
+      <div className="flex flex-col items-center text-center mb-10">
+        <div className="w-16 h-16 bg-white text-black rounded-2xl flex items-center justify-center mb-6 shadow-[0_0_30px_rgba(255,255,255,0.1)]">
+           <span className="font-black italic text-3xl tracking-tighter">D</span>
+        </div>
+        <h2 className="text-4xl md:text-5xl font-black text-white uppercase tracking-tighter italic mb-2">DUMP SPLITTER</h2>
+        <p className="text-gray-500 text-xs md:text-sm font-bold uppercase tracking-[0.2em]">Instagram İçin Profesyonel Dump Bölme Aracı</p>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="bg-white/5 p-4 rounded-2xl border border-white/5 flex items-center gap-4"><div className="w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center text-blue-400 shrink-0"><Zap size={24} /></div><div><h3 className="font-bold text-white text-sm">Hızlı & Ücretsiz</h3><p className="text-[10px] text-gray-500">Saniyeler içinde sonuç al.</p></div></div>
-          <div className="bg-white/5 p-4 rounded-2xl border border-white/5 flex items-center gap-4"><div className="w-12 h-12 bg-purple-500/20 rounded-xl flex items-center justify-center text-purple-400 shrink-0"><Sparkles size={24} /></div><div><h3 className="font-bold text-white text-sm">AI Güçlü İyileştirme</h3><p className="text-[10px] text-gray-500">Renkleri otomatik canlandır.</p></div></div>
-          <div className="bg-white/5 p-4 rounded-2xl border border-white/5 flex items-center gap-4"><div className="w-12 h-12 bg-green-500/20 rounded-xl flex items-center justify-center text-green-400 shrink-0"><Lock size={24} /></div><div><h3 className="font-bold text-white text-sm">İstemci Taraflı</h3><p className="text-[10px] text-gray-500">Fotoğrafların sunucuya yüklenmez.</p></div></div>
-          <div className="bg-white/5 p-4 rounded-2xl border border-white/5 flex items-center gap-4"><div className="w-12 h-12 bg-yellow-500/20 rounded-xl flex items-center justify-center text-yellow-400 shrink-0"><Grid size={24} /></div><div><h3 className="font-bold text-white text-sm">Esnek Izgara Sistemi</h3><p className="text-[10px] text-gray-500">Tüm parça seçeneklerini destekler.</p></div></div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
+         <div className="bg-white/[0.03] border border-white/5 p-6 rounded-3xl hover:bg-white/[0.05] transition-colors group">
+            <div className="w-12 h-12 bg-blue-500/10 text-blue-400 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+               <Layers size={24} />
+            </div>
+            <h3 className="text-white font-black text-lg uppercase tracking-wide mb-2">Profesyonel Dump Bölme</h3>
+            <p className="text-gray-400 text-xs leading-relaxed">
+               Bu sitenin asıl amacı, fotoğraflarınızı Instagram 'Dump' formatına uygun şekilde, kalite kaybı olmadan parçalara ayırmaktır. Dikey veya yatay fark etmez.
+            </p>
+         </div>
+
+         <div className="bg-white/[0.03] border border-white/5 p-6 rounded-3xl hover:bg-white/[0.05] transition-colors group">
+            <div className="w-12 h-12 bg-purple-500/10 text-purple-400 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+               <Sparkles size={24} />
+            </div>
+            <h3 className="text-white font-black text-lg uppercase tracking-wide mb-2">Yapay Zeka Destekli</h3>
+            <p className="text-gray-400 text-xs leading-relaxed">
+               Sadece kesmekle kalmaz; soluk renkleri canlandırır (AI Enhance), düşük çözünürlüğü yükseltir (Ultra HD) ve sıkıştırma kaybını önler.
+            </p>
+         </div>
+
+         <div className="bg-white/[0.03] border border-white/5 p-6 rounded-3xl hover:bg-white/[0.05] transition-colors group">
+            <div className="w-12 h-12 bg-green-500/10 text-green-400 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+               <Lock size={24} />
+            </div>
+            <h3 className="text-white font-black text-lg uppercase tracking-wide mb-2">Gizlilik Odaklı</h3>
+            <p className="text-gray-400 text-xs leading-relaxed">
+               Fotoğraflarınız asla sunucuya yüklenmez. Tüm işlemler tarayıcınızın içinde (Client-Side) gerçekleşir. %100 güvenli ve anonimdir.
+            </p>
+         </div>
+
+         <div className="bg-white/[0.03] border border-white/5 p-6 rounded-3xl hover:bg-white/[0.05] transition-colors group">
+            <div className="w-12 h-12 bg-yellow-500/10 text-yellow-400 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+               <Video size={24} />
+            </div>
+            <h3 className="text-white font-black text-lg uppercase tracking-wide mb-2">Video Desteği</h3>
+            <p className="text-gray-400 text-xs leading-relaxed">
+               Sadece fotoğraf değil, videoları da yükleyebilirsiniz. Videonuzun o anki karesini yüksek kalitede yakalar ve parçalara ayırır.
+            </p>
+         </div>
       </div>
-      <div className="mt-6 pt-6 border-t border-white/10 text-center">
-          <p className="text-[10px] text-gray-500 uppercase tracking-widest font-bold mb-1 flex items-center justify-center gap-2">
+
+      <div className="mt-6 pt-6 border-t border-white/10 text-center flex flex-col items-center gap-2">
+          <div className="flex items-center gap-2 text-[10px] text-gray-500 font-bold uppercase tracking-widest">
             <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-            GNU GPLv2 • OPEN SOURCE
+            Açık Kaynak & Ücretsiz
+          </div>
+          <p className="text-[10px] text-gray-600 max-w-md mx-auto">
+            Bu proje, topluluk için geliştirilmiş, kar amacı gütmeyen açık kaynaklı bir yazılımdır.
           </p>
-          <p className="text-[9px] text-gray-600 leading-relaxed">Bu proje açık kaynak kodludur ve topluluk geliştirmesine açıktır.</p>
       </div>
-      <button onClick={onClose} className="w-full bg-white text-black font-black py-4 rounded-xl mt-8 hover:bg-white hover:text-black transition-all uppercase tracking-widest text-xs">Harika, Başlayalım!</button>
+      <button onClick={onClose} className="w-full bg-white text-black font-black py-4 rounded-xl mt-8 hover:bg-white hover:text-black transition-all uppercase tracking-widest text-xs shadow-[0_0_40px_rgba(255,255,255,0.2)] hover:shadow-[0_0_60px_rgba(255,255,255,0.4)] active:scale-95">Harika, Başlayalım!</button>
     </div>
   </div>
   );
@@ -245,8 +338,21 @@ const FAQModal = ({ isOpen, onClose }) => {
         <div className="bg-white/[0.03] p-5 rounded-2xl border border-white/5"><h3 className="text-white font-bold text-xs uppercase tracking-wider mb-2 flex items-center gap-2"><Check size={14} className="text-blue-400"/> Ücretli mi, Sınır var mı?</h3><p className="text-gray-400 text-xs leading-relaxed">Tamamen ücretsizdir. Üyelik veya kredi sistemi yoktur. Performansın düşmemesi için aynı anda en fazla 20 dosya yükleyebilirsiniz ancak işlem bitince listeyi temizleyip tekrar yükleyebilirsiniz.</p></div>
          <div className="bg-white/[0.03] p-5 rounded-2xl border border-white/5"><h3 className="text-white font-bold text-xs uppercase tracking-wider mb-2 flex items-center gap-2"><ImageIcon size={14} className="text-pink-400"/> Hangi formatlar destekleniyor?</h3><p className="text-gray-400 text-xs leading-relaxed">Giriş olarak JPG, PNG, WEBP, HEIC (tarayıcı desteğine göre) ve popüler video formatlarını kabul eder. Çıktı olarak PNG, JPG veya WEBP formatında indirebilirsiniz.</p></div>
          <div className="bg-white/[0.03] p-5 rounded-2xl border border-white/5"><h3 className="text-white font-bold text-xs uppercase tracking-wider mb-2 flex items-center gap-2"><Download size={14} className="text-orange-400"/> İndirme çalışmıyor?</h3><p className="text-gray-400 text-xs leading-relaxed">Eğer indirme başlamazsa tarayıcınızın "Pop-up engelleyicisini" kontrol edin veya sayfayı yenileyip (F5) tekrar deneyin. Tek tek indirmek için parçanın üzerindeki ok işaretine basmanız yeterlidir.</p></div>
+         
+         {/* YENİ EKLENEN SORULAR */}
+         <div className="bg-white/[0.03] p-5 rounded-2xl border border-white/5"><h3 className="text-white font-bold text-xs uppercase tracking-wider mb-2 flex items-center gap-2"><Sparkles size={14} className="text-fuchsia-400"/> AI Enhance renkleri bozar mı?</h3><p className="text-gray-400 text-xs leading-relaxed">Hayır, yapay zeka fotoğrafın doğal yapısını bozmadan sadece soluk renkleri, kontrastı ve doygunluğu optimize eder. Aşırı filtreli bir görünüm yerine profesyonel ve canlı bir sonuç verir.</p></div>
+         <div className="bg-white/[0.03] p-5 rounded-2xl border border-white/5"><h3 className="text-white font-bold text-xs uppercase tracking-wider mb-2 flex items-center gap-2"><DownloadCloud size={14} className="text-sky-400"/> Uygulamayı telefonuma indirebilir miyim?</h3><p className="text-gray-400 text-xs leading-relaxed">Evet! Dump Splitter bir PWA (Progressive Web App) uygulamasıdır. Tarayıcınızın menüsünden (Safari'de "Paylaş" &rarr; "Ana Ekrana Ekle", Chrome'da "Uygulamayı Yükle") diyerek telefonunuza uygulama gibi kurabilirsiniz.</p></div>
+         <div className="bg-white/[0.03] p-5 rounded-2xl border border-white/5"><h3 className="text-white font-bold text-xs uppercase tracking-wider mb-2 flex items-center gap-2"><Target size={14} className="text-rose-400"/> Smart Crop fotoğrafımı keser mi?</h3><p className="text-gray-400 text-xs leading-relaxed">Smart Crop, fotoğrafın sadece en dışındaki %2'lik "ölü alanı" temizler. Bu işlem, ana objeyi merkeze daha iyi odaklamak ve Instagram'da daha profesyonel bir çerçeveleme sağlamak için yapılır.</p></div>
+         <div className="bg-white/[0.03] p-5 rounded-2xl border border-white/5"><h3 className="text-white font-bold text-xs uppercase tracking-wider mb-2 flex items-center gap-2"><Zap size={14} className="text-teal-400"/> Ultra HD modunda dosya boyutu artar mı?</h3><p className="text-gray-400 text-xs leading-relaxed">Evet, Ultra HD modu fotoğrafın çözünürlüğünü 2 katına çıkardığı (Upscale) için dosya boyutu artabilir. Ancak bu, Instagram'ın sıkıştırma algoritmasına karşı fotoğrafınızın netliğini korumasını sağlar.</p></div>
+
+         {/* KULLANICI İSTEĞİ İLE EKLENEN YENİ SORULAR - GÜNCELLENMİŞ VERSİYON */}
+         <div className="bg-white/[0.03] p-5 rounded-2xl border border-white/5"><h3 className="text-white font-bold text-xs uppercase tracking-wider mb-2 flex items-center gap-2"><Grid size={14} className="text-indigo-400"/> ANA MENÜYE NASIL GİDİLİR?</h3><p className="text-gray-400 text-xs leading-relaxed">Sol üst köşedeki "D" logosuna veya "Dump Splitter" yazısına tıklayarak istediğiniz zaman ana başlangıç ekranına dönebilirsiniz.</p></div>
+         <div className="bg-white/[0.03] p-5 rounded-2xl border border-white/5"><h3 className="text-white font-bold text-xs uppercase tracking-wider mb-2 flex items-center gap-2"><RefreshCcw size={14} className="text-red-400"/> YENİ YÜKLEME NEDİR?</h3><p className="text-gray-400 text-xs leading-relaxed">"Yeni Yükleme" butonu, mevcut çalışma alanını tamamen temizler. Listede 20/20 fotoğraf olsa bile hepsi silinir ve sıfırdan başlamanızı sağlar.</p></div>
+         <div className="bg-white/[0.03] p-5 rounded-2xl border border-white/5"><h3 className="text-white font-bold text-xs uppercase tracking-wider mb-2 flex items-center gap-2"><Archive size={14} className="text-amber-400"/> TOPLU İNDİR BASINCA NEDEN BAZI İMAGELER İNMİYOR?</h3><p className="text-gray-400 text-xs leading-relaxed">Bazı dosya türleri toplu indirme (ZIP) sırasında teknik nedenlerle atlanabilir. Eğer bir fotoğraf inmezse, sol taraftaki listeden o fotoğrafın üzerine tıklayıp tekrar 'TÜMÜNÜ İNDİR' butonuna basabilir veya parçanın üzerindeki tekli indirme butonunu kullanarak indirebilirsiniz.</p></div>
+         <div className="bg-white/[0.03] p-5 rounded-2xl border border-white/5"><h3 className="text-white font-bold text-xs uppercase tracking-wider mb-2 flex items-center gap-2"><Settings size={14} className="text-lime-400"/> EDİTÖRDEKİ ÖZELLİKLER (AI, HD, OPTIMIZE) NE İŞE YARAR?</h3><p className="text-gray-400 text-xs leading-relaxed">Bu özellikler fotoğrafınızı geliştirmenizi sağlar: <strong>AI Enhance</strong> renkleri canlandırır, <strong>HD Mode</strong> netliği artırır, <strong>Optimize</strong> boyutu küçültür, <strong>Smart Crop</strong> kadrajı düzeltir ve <strong>Ultra HD</strong> çözünürlüğü yükseltir. Her özelliğin yanındaki bilgi butonuna basarak daha detaylı açıklama görebilirsiniz.</p></div>
+         <div className="bg-white/[0.03] p-5 rounded-2xl border border-white/5"><h3 className="text-white font-bold text-xs uppercase tracking-wider mb-2 flex items-center gap-2"><Grid size={14} className="text-orange-400"/> NEDEN 3 SÜTUN (YAN YANA 3) YERİNE HEP 2 SÜTUN BÖLÜYOR?</h3><p className="text-gray-400 text-xs leading-relaxed">Instagram'da en iyi görünüm için 2 sütunlu yapı standarttır. Eğer 3 sütun (yan yana 3 parça) yapılsaydı, her bir parça "kürdan gibi" ince ve dar olurdu. Bu da fotoğrafın anlaşılmaz görünmesine neden olur. Bu yüzden sistem, görsel kalitesini korumak için 3 yerine 2 sütunlu (daha geniş parçalı) düzeni kullanır.</p></div>
       </div>
-      <button onClick={onClose} className="w-full bg-white/10 text-white font-bold py-4 rounded-xl mt-8 hover:bg-white hover:text-black transition-all uppercase tracking-widest text-xs">Tamamdır, Anladım</button>
+      <button onClick={onClose} className="w-full bg-white text-black font-black py-4 rounded-xl mt-8 hover:bg-white hover:text-black transition-all uppercase tracking-widest text-xs shadow-[0_0_40px_rgba(255,255,255,0.2)] hover:shadow-[0_0_60px_rgba(255,255,255,0.4)]">Tamamdır, Anladım</button>
     </div>
   </div>
   );
@@ -258,11 +364,11 @@ const Header = ({
   onUpload, 
   onDownload, 
   isDownloading, 
-  onMobileMenuToggle,
-  onShowAbout,
-  onShowHowTo,
-  onShowFAQ,
-  onShowPrivacy
+  onMobileMenuToggle, 
+  onShowAbout, 
+  onShowHowTo, 
+  onShowFAQ, 
+  onShowPrivacy 
 }) => (
   <header className={`fixed top-0 left-0 right-0 z-[70] px-4 md:px-8 py-2 md:py-4 flex items-center justify-between backdrop-blur-3xl transition-all ${isEditor ? 'bg-black/90 border-b border-white/5' : 'bg-transparent'}`}>
     <div className="flex items-center gap-3 md:gap-6 ml-0 md:ml-10">
@@ -283,14 +389,14 @@ const Header = ({
             onClick={onUpload}
             className="bg-white text-black px-4 md:px-6 py-2 md:py-2.5 rounded-xl text-xs md:text-sm font-black flex items-center gap-2 hover:bg-gray-200 transition-all active:scale-95 shadow-lg border border-white/10 whitespace-nowrap"
           >
-             <Upload size={16} /> <span className="whitespace-nowrap">Yeni Yükleme</span>
+              <Upload size={16} /> <span className="whitespace-nowrap">Yeni Yükleme</span>
           </button>
           <button 
             onClick={onDownload} 
             disabled={isDownloading}
             className={`bg-white text-black px-4 md:px-6 py-2 md:py-2.5 mr-2 md:mr-0 rounded-xl text-xs md:text-sm font-black flex items-center gap-2 hover:bg-gray-200 transition-all active:scale-95 shadow-[0_0_30px_rgba(255,255,255,0.2)] whitespace-nowrap ${isDownloading ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
-             {isDownloading ? <Loader2 size={16} className="animate-spin" /> : <DownloadCloud size={16} />} 
+              {isDownloading ? <Loader2 size={16} className="animate-spin" /> : <DownloadCloud size={16} />} 
             <span className="whitespace-nowrap">{isDownloading ? 'İndiriliyor...' : 'Tümünü İndir'}</span>
           </button>
         </>
@@ -343,6 +449,9 @@ const App = () => {
   const [notification, setNotification] = useState(null);
   const [aiLogs, setAiLogs] = useState([]);
   
+  // EKLENDİ: Sürükleme efekti için state
+  const [isDragging, setIsDragging] = useState(false);
+
   // Batch Download State
   const [isZipping, setIsZipping] = useState(false);
   const [zipProgress, setZipProgress] = useState({ current: 0, total: 0 });
@@ -377,6 +486,8 @@ const App = () => {
   const [dockPos, setDockPos] = useState({ x: 0, y: 0 });
   const [isDraggingDock, setIsDraggingDock] = useState(false);
   const dragStartRef = useRef({ x: 0, y: 0 });
+  const dockRef = useRef(null);
+  const containerRef = useRef(null);
 
   // --- FEEDBACK CONTROL REF ---
   const skipFeedbackRef = useRef(false);
@@ -425,10 +536,30 @@ const App = () => {
     const clientX = e.clientX || (e.touches && e.touches[0].clientX);
     const clientY = e.clientY || (e.touches && e.touches[0].clientY);
 
-    setDockPos({
-      x: clientX - dragStartRef.current.x,
-      y: clientY - dragStartRef.current.y
-    });
+    let nextX = clientX - dragStartRef.current.x;
+    // Y konumunu hesaplamayı devre dışı bırakıyoruz
+    // let nextY = clientY - dragStartRef.current.y; 
+
+    // Sınırlandırma Mantığı (Container'a göre)
+    if (dockRef.current && containerRef.current) {
+        const dockRect = dockRef.current.getBoundingClientRect();
+        const containerRect = containerRef.current.getBoundingClientRect();
+        
+        const dockW = dockRect.width;
+        // const dockH = dockRect.height;
+        const containerW = containerRect.width;
+        // const containerH = containerRect.height;
+
+        const margin = 10; // Kenarlardan 10px boşluk
+
+        // X Ekseni Sınırları (Container merkezine göre)
+        const minX = -(containerW / 2) + (dockW / 2) + margin;
+        const maxX = (containerW / 2) - (dockW / 2) - margin;
+
+        nextX = Math.max(minX, Math.min(maxX, nextX));
+    }
+
+    setDockPos({ x: nextX, y: 0 }); // Y'yi 0'a sabitle
   };
 
   const handleDockPointerUp = () => {
@@ -866,14 +997,25 @@ const App = () => {
     event.target.value = null; 
   };
 
+  // GÜNCELLENDİ: Sürükleme başladığında efekti aç
   const handleDragOver = (e) => {
     e.preventDefault();
     e.stopPropagation();
+    setIsDragging(true); // GÜNCELLENDİ: State'i true yap
   };
 
+  // EKLENDİ: Sürükleme alandan çıkarsa efekti kapat
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false); // GÜNCELLENDİ: State'i false yap
+  };
+
+  // GÜNCELLENDİ: Dosya bırakıldığında efekti kapat ve dosyaları işle
   const handleDrop = (e) => {
     e.preventDefault();
     e.stopPropagation();
+    setIsDragging(false); // GÜNCELLENDİ: State'i false yap
     
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
       const mockEvent = {
@@ -1130,66 +1272,67 @@ const App = () => {
           
           <div 
             onClick={triggerFileInput}
-            onDragOver={handleDragOver}
-            onDrop={handleDrop}
-            className="w-full max-w-xl bg-[#0c0c0c] border-2 border-dashed border-white/10 rounded-[32px] md:rounded-[48px] flex flex-col items-center justify-center group hover:border-white/30 transition-all cursor-pointer mx-4 p-12 md:p-16"
+            onDragOver={handleDragOver} // GÜNCELLENDİ: Sürükleme başladığında efekti aç
+            onDragLeave={handleDragLeave} // EKLENDİ: Sürükleme alandan çıkarsa efekti kapat
+            onDrop={handleDrop} // GÜNCELLENDİ: Dosya bırakıldığında efekti kapat ve dosyaları işle
+            className={`w-full max-w-xl bg-[#0c0c0c] border-2 border-dashed rounded-[32px] md:rounded-[48px] flex flex-col items-center justify-center group transition-all cursor-pointer mx-4 p-12 md:p-16 ${isDragging ? 'border-blue-500 bg-white/10 scale-105 shadow-[0_0_50px_rgba(59,130,246,0.3)]' : 'border-white/10 hover:border-white/30'}`} // GÜNCELLENDİ: ClassName artık dinamik
           >
-             <div className="w-16 h-16 md:w-20 md:h-20 bg-white text-black rounded-3xl flex items-center justify-center mb-6 shadow-2xl group-hover:scale-110 transition-transform pointer-events-none">
+              <div className="w-16 h-16 md:w-20 md:h-20 bg-white text-black rounded-3xl flex items-center justify-center mb-6 shadow-2xl group-hover:scale-110 transition-transform pointer-events-none">
                 <Upload size={28} className="md:w-9 md:h-9" />
-             </div>
-             <p className="text-lg md:text-2xl font-black uppercase italic pointer-events-none text-center">Dosya Yükle</p>
-             <p className="text-gray-500 text-[10px] md:text-xs mt-3 font-bold uppercase tracking-widest opacity-60 pointer-events-none text-center">Dosyayı buraya sürükle veya tıklayarak yükle</p>
+              </div>
+              <p className="text-lg md:text-2xl font-black uppercase italic pointer-events-none text-center">Dosya Yükle</p>
+              <p className="text-gray-500 text-[10px] md:text-xs mt-3 font-bold uppercase tracking-widest opacity-60 pointer-events-none text-center">Dosyayı buraya sürükle veya tıklayarak yükle</p>
           </div>
           
           <p className="text-gray-500 mt-6 text-[9px] md:text-[10px] font-bold uppercase tracking-widest opacity-60">Fotoğraflar tarayıcında işlenir, sunucuya yüklenmez.</p>
 
           <div className="mt-8 flex flex-wrap justify-center gap-4 animate-in slide-in-from-bottom-5 fade-in duration-700 delay-200">
-             <a href="https://github.com/irmaakq/Dump-Splitter" target="_blank" rel="noreferrer" className="flex items-center gap-2 px-5 py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full transition-all group">
+              <a href="https://github.com/irmaakq/Dump-Splitter" target="_blank" rel="noreferrer" className="flex items-center gap-2 px-5 py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full transition-all group">
                 <Github size={14} className="text-white group-hover:scale-110 transition-transform" />
                 <div className="flex flex-col items-start">
                    <span className="text-[8px] text-gray-500 font-bold uppercase tracking-wider leading-none mb-0.5">Project</span>
                    <span className="text-[10px] text-white font-bold uppercase tracking-widest leading-none">Open Source</span>
                 </div>
-             </a>
-             <div className="flex items-center gap-2 px-5 py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full transition-all cursor-help" title="GNU General Public License v2.0">
+              </a>
+              <div className="flex items-center gap-2 px-5 py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full transition-all cursor-help" title="GNU General Public License v2.0">
                 <ShieldCheck size={14} className="text-green-500" />
                 <div className="flex flex-col items-start">
                    <span className="text-[8px] text-gray-500 font-bold uppercase tracking-wider leading-none mb-0.5">License</span>
                    <span className="text-[10px] text-white font-bold uppercase tracking-widest leading-none">GNU GPLv2</span>
                 </div>
-             </div>
+              </div>
           </div>
         </div>
       ) : (
         // EDITOR VIEW
         <main className="flex-1 pt-16 md:pt-20 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden relative">
           <aside className="w-full lg:w-[320px] h-auto lg:h-full bg-[#0a0a0a] border-r border-white/5 flex flex-col order-2 lg:order-1 z-20 shrink-0">
-             <div className="flex-1 lg:overflow-y-auto custom-scrollbar p-6 space-y-6 lg:space-y-8">
-              <div className="space-y-6">
-                  <div className="p-5 bg-white/[0.03] border border-white/10 rounded-[28px] space-y-5 shadow-inner">
-                    <div className="space-y-2"><FeatureToggle featureKey="aiEnhance" state={autoEnhance} onToggle={updateSetting} onInfo={setFeatureInfo} /></div>
-                    <div className="space-y-2 border-t border-white/5 pt-4"><FeatureToggle featureKey="hdMode" state={hdMode} onToggle={updateSetting} onInfo={setFeatureInfo} /></div>
-                    <div className="space-y-2 border-t border-white/5 pt-4"><FeatureToggle featureKey="optimize" state={optimizeMode} onToggle={updateSetting} onInfo={setFeatureInfo} /></div>
-                    <div className="space-y-2 border-t border-white/5 pt-4"><FeatureToggle featureKey="smartCrop" state={smartCrop} onToggle={updateSetting} onInfo={setFeatureInfo} /></div>
-                  </div>
-                  <div className="space-y-3">
-                    <span className="text-[12px] font-black text-gray-500 uppercase tracking-widest block">Format</span>
-                    <div className="flex gap-2 p-1 bg-white/5 rounded-xl border border-white/10">
-                        {['png', 'jpg', 'webp'].map(fmt => (
-                          <button key={fmt} onClick={() => { skipFeedbackRef.current = true; updateSetting('downloadFormat', fmt); }} className={`flex-1 py-2 rounded-lg text-[12px] font-black uppercase transition-all ${downloadFormat === fmt ? 'bg-white text-black shadow-lg' : 'text-gray-500 hover:text-white'}`}>{fmt}</button>
-                        ))}
-                    </div>
-                  </div>
-                  <div className="space-y-2 border-t border-white/5 pt-3"><FeatureToggle featureKey="ultraHd" state={ultraHdMode} onToggle={updateSetting} onInfo={setFeatureInfo} /></div>
-                  <div className="space-y-3">
-                    <span className="text-[12px] font-black text-gray-500 uppercase tracking-widest block">Parça Sayısı</span>
-                    <div className="grid grid-cols-5 gap-2 w-full">
-                        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(num => (
-                          <button key={num} onClick={() => { skipFeedbackRef.current = true; updateSetting('splitCount', num); }} className={`aspect-square rounded-xl text-[12px] font-black flex items-center justify-center transition-all border ${splitCount === num ? 'bg-white text-black border-white shadow-[0_0_15px_rgba(255,255,255,0.3)] scale-105' : 'bg-white/5 border-white/10 text-gray-500 hover:bg-white/10 hover:text-white hover:border-white/30'}`}>{num}</button>
-                        ))}
-                    </div>
-                  </div>
-              </div>
+              <div className="flex-1 lg:overflow-y-auto custom-scrollbar p-6 space-y-6 lg:space-y-8">
+               <div className="space-y-6">
+                   <div className="p-5 bg-white/[0.03] border border-white/10 rounded-[28px] space-y-5 shadow-inner">
+                     <div className="space-y-2"><FeatureToggle featureKey="aiEnhance" state={autoEnhance} onToggle={updateSetting} onInfo={setFeatureInfo} /></div>
+                     <div className="space-y-2 border-t border-white/5 pt-4"><FeatureToggle featureKey="hdMode" state={hdMode} onToggle={updateSetting} onInfo={setFeatureInfo} /></div>
+                     <div className="space-y-2 border-t border-white/5 pt-4"><FeatureToggle featureKey="optimize" state={optimizeMode} onToggle={updateSetting} onInfo={setFeatureInfo} /></div>
+                     <div className="space-y-2 border-t border-white/5 pt-4"><FeatureToggle featureKey="smartCrop" state={smartCrop} onToggle={updateSetting} onInfo={setFeatureInfo} /></div>
+                   </div>
+                   <div className="space-y-3">
+                     <span className="text-[12px] font-black text-gray-500 uppercase tracking-widest block">Format</span>
+                     <div className="flex gap-2 p-1 bg-white/5 rounded-xl border border-white/10">
+                         {['png', 'jpg', 'webp'].map(fmt => (
+                           <button key={fmt} onClick={() => { skipFeedbackRef.current = true; updateSetting('downloadFormat', fmt); }} className={`flex-1 py-2 rounded-lg text-[12px] font-black uppercase transition-all ${downloadFormat === fmt ? 'bg-white text-black shadow-lg' : 'text-gray-500 hover:text-white'}`}>{fmt}</button>
+                         ))}
+                     </div>
+                   </div>
+                   <div className="space-y-2 border-t border-white/5 pt-3"><FeatureToggle featureKey="ultraHd" state={ultraHdMode} onToggle={updateSetting} onInfo={setFeatureInfo} /></div>
+                   <div className="space-y-3">
+                     <span className="text-[12px] font-black text-gray-500 uppercase tracking-widest block">Parça Sayısı</span>
+                     <div className="grid grid-cols-5 gap-2 w-full">
+                         {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(num => (
+                           <button key={num} onClick={() => { skipFeedbackRef.current = true; updateSetting('splitCount', num); }} className={`aspect-square rounded-xl text-[12px] font-black flex items-center justify-center transition-all border ${splitCount === num ? 'bg-white text-black border-white shadow-[0_0_15px_rgba(255,255,255,0.3)] scale-105' : 'bg-white/5 border-white/10 text-gray-500 hover:bg-white/10 hover:text-white hover:border-white/30'}`}>{num}</button>
+                         ))}
+                     </div>
+                   </div>
+               </div>
             </div>
             <div className="p-6 lg:p-8 border-t border-white/5 hidden lg:block">
                <button onClick={() => processSplit(uploadedFile, fileType === 'video')} disabled={isProcessing || !uploadedFile} className={`w-full py-4 lg:py-5 rounded-[24px] font-black text-xs transition-all shadow-2xl ${isProcessing || !uploadedFile ? 'bg-white/5 text-gray-600' : 'bg-white text-black hover:bg-gray-200 active:scale-95 uppercase tracking-widest'}`}>{isProcessing ? 'İŞLENİYOR...' : 'YENİDEN BÖL'}</button>
@@ -1200,7 +1343,10 @@ const App = () => {
           </aside>
 
           <section className="flex-1 bg-[#050505] p-2 md:p-6 flex flex-col items-center relative order-1 lg:order-2 min-h-[50vh] lg:min-h-0">
-             <div className="relative w-full h-full max-w-[95vw] bg-black rounded-[32px] md:rounded-[56px] overflow-hidden border border-white/10 shadow-[0_0_150px_rgba(0,0,0,0.5)] flex items-center justify-center group/canvas my-auto">
+             <div 
+               ref={containerRef} 
+               className="relative w-full h-full max-w-[95vw] bg-black rounded-[32px] md:rounded-[56px] overflow-hidden border border-white/10 shadow-[0_0_150px_rgba(0,0,0,0.5)] flex items-center justify-center group/canvas my-auto"
+             >
                {uploadedFile ? (
                  <div className="w-full h-full p-4 md:p-12 flex flex-col overflow-y-auto custom-scrollbar bg-black/40">
                    <div className={`w-full ${splitCount === 1 ? 'max-w-none px-2 md:px-4' : 'max-w-6xl'} mx-auto space-y-8 md:space-y-16 pb-32 md:pb-40 flex flex-col items-center`}>
@@ -1242,9 +1388,9 @@ const App = () => {
                                          const initialZoom = zoom;
                                          const handlePinchMove = (moveEvent) => {
                                            if (moveEvent.touches.length === 2) {
-                                               const newDist = Math.hypot(moveEvent.touches[0].pageX - moveEvent.touches[1].pageX, moveEvent.touches[0].pageY - moveEvent.touches[1].pageY);
-                                              const newZoom = initialZoom * (newDist / dist);
-                                              setZoom(Math.max(10, Math.min(200, newZoom)));
+                                                const newDist = Math.hypot(moveEvent.touches[0].pageX - moveEvent.touches[1].pageX, moveEvent.touches[0].pageY - moveEvent.touches[1].pageY);
+                                                const newZoom = initialZoom * (newDist / dist);
+                                                setZoom(Math.max(10, Math.min(200, newZoom)));
                                            }
                                          };
                                          const handlePinchEnd = () => {
@@ -1271,6 +1417,7 @@ const App = () => {
                    </div>
                    {splitSlides.length > 0 && (
                      <div 
+                       ref={dockRef}
                        onPointerDown={handleDockPointerDown}
                        onPointerMove={handleDockPointerMove}
                        onPointerUp={handleDockPointerUp}
