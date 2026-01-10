@@ -127,7 +127,7 @@ const PrivacyModal = ({ isOpen, onClose }) => {
     <div className="bg-[#0f0f0f] border border-white/10 rounded-3xl max-w-3xl w-full p-6 md:p-10 relative shadow-2xl animate-in zoom-in-95 duration-300 my-auto">
       <div className="flex items-center gap-4 mb-8 border-b border-white/10 pb-6">
         <div className="p-3 bg-green-500/10 rounded-2xl animate-pulse"><ShieldCheck size={32} className="text-green-500" /></div>
-        <div><h2 className="text-xl md:text-2xl font-black text-white uppercase tracking-tighter">Güvenlik ve Gizlilik Protokolü</h2><p className="text-xs text-gray-500 font-medium uppercase tracking-widest mt-1">Son Güncelleme: 7.01.2026 • Sürüm 3.6 (Secure Build)</p></div>
+        <div><h2 className="text-xl md:text-2xl font-black text-white uppercase tracking-tighter">Güvenlik ve Gizlilik Protokolü</h2><p className="text-xs text-gray-500 font-medium uppercase tracking-widest mt-1">Son Güncelleme: 10.01.2026 • Sürüm 3.9 (Secure Build)</p></div>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
         <div className="bg-white/[0.03] p-5 rounded-2xl border border-white/5 hover:border-white/10 transition-colors"><h3 className="text-white font-bold mb-3 flex items-center gap-3"><Lock size={18} className="text-blue-400"/><span className="uppercase tracking-tight text-xs">İstemci Taraflı İşleme</span></h3><p className="text-gray-400 leading-relaxed text-xs">Dump Splitter, dosyalarınızı <strong>uzak bir sunucuya (Cloud) yüklemez.</strong> Tüm işlemler tarayıcınızın belleğinde (HTML5 Canvas) gerçekleşir. Verileriniz cihazınızdan asla dışarı çıkmaz.</p></div>
@@ -1518,3 +1518,4 @@ const App = () => {
 };
 
 export default App;
+
