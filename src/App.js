@@ -1419,8 +1419,11 @@ const App = () => {
 
         setSplitSlides(parts);
 
+        setSplitSlides(parts);
+
+        // HER DURUMDA LOADING'İ KAPAT VE İÇERİĞİ GÖSTER
+        setIsProcessing(false);
         if (!isSilent) {
-          setIsProcessing(false);
           showToast(`${parts.length} parça hazır.`);
         }
 
