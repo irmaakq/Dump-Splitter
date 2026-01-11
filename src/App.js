@@ -626,6 +626,9 @@ const App = () => {
     }
     // SINGLE TOUCH (PAN)
     else if (evCache.current.length === 1) {
+      // MOBILE GUARD: Mobilde yanlışlıkla kaydırmayı önlemek için 1024px altında PAN işlemini engelle.
+      if (window.innerWidth < 1024) return;
+
       const imgContainer = e.currentTarget;
       const img = imgContainer.querySelector('img');
       if (img && img.dataset.panStart) {
