@@ -442,7 +442,8 @@ const Header = ({
   onShowAbout,
   onShowHowTo,
   onShowFAQ,
-  onShowPrivacy
+  onShowPrivacy,
+  splitCount // EKLENDİ: Buton kontrolü için
 }) => (
   <header className={`fixed top-0 left-0 right-0 z-[70] px-4 md:px-8 py-2 md:py-4 flex items-center justify-between backdrop-blur-3xl transition-all ${isEditor ? 'bg-black/90 border-b border-white/5' : 'bg-transparent'}`}>
     <div className="flex items-center gap-3 md:gap-6 ml-0 md:ml-10">
@@ -468,14 +469,19 @@ const Header = ({
           >
             <Upload size={16} /> <span className="whitespace-nowrap">Yeni Yükleme</span>
           </button>
-          <button
-            onClick={onDownload}
-            disabled={isDownloading}
-            className={`bg-white text-black px-4 md:px-6 py-2 md:py-2.5 mr-2 md:mr-0 rounded-xl text-xs md:text-sm font-black flex items-center gap-2 hover:bg-gray-200 transition-all active:scale-95 shadow-[0_0_30px_rgba(255,255,255,0.2)] whitespace-nowrap ${isDownloading ? 'opacity-50 cursor-not-allowed' : ''}`}
-          >
-            {isDownloading ? <Loader2 size={16} className="animate-spin" /> : <DownloadCloud size={16} />}
-            <span className="whitespace-nowrap">{isDownloading ? 'İndiriliyor...' : 'Tümünü İndir'}</span>
-          </button>
+
+          {/* SAĞ BUTTON: TÜMÜNÜ İNDİR - SADECE PARÇA SAYISI 1'DEN BÜYÜKSE GÖSTER */}
+          {splitCount > 1 && (
+            <button
+              onClick={onDownload}
+              disabled={isDownloading}
+              className={`bg-white text-black px-4 md:px-6 py-2 md:py-2.5 mr-2 md:mr-0 rounded-xl text-xs md:text-sm font-black flex items-center gap-2 hover:bg-gray-200 transition-all active:scale-95 shadow-[0_0_30px_rgba(255,255,255,0.2)] whitespace-nowrap ${isDownloading ? 'opacity-50 cursor-not-allowed' : ''}`}
+            >
+              {isDownloading ? <Loader2 size={16} className="animate-spin" /> : <DownloadCloud size={16} />}
+              <span className="whitespace-nowrap">{isDownloading ? 'İndiriliyor...' : 'Tümünü İndir'}</span>
+            </button>
+          )}
+
         </>
       )}
 
@@ -1301,6 +1307,21 @@ const App = () => {
     e.stopPropagation();
     setIsDragging(false); // GÜNCELLENDİ: State'i false yap
 
+    // 1. Klasör Kontrolü (Güvenlik Önlemi)
+    const items = e.dataTransfer.items;
+    if (items) {
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+        if (item.webkitGetAsEntry) {
+          const entry = item.webkitGetAsEntry();
+          if (entry && entry.isDirectory) {
+            showToast("Klasör yükleme desteklenmiyor. Lütfen sadece video ya da fotoğraf sürükleyin.");
+            return;
+          }
+        }
+      }
+    }
+
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
       const mockEvent = {
         target: {
@@ -1530,6 +1551,7 @@ const App = () => {
         onShowHowTo={() => setShowHowTo(true)}
         onShowFAQ={() => setShowFAQ(true)}
         onShowPrivacy={() => setShowPrivacy(true)}
+        splitCount={splitCount}
       />
 
       <MobileMenu
