@@ -941,32 +941,34 @@ const App = () => {
     }
 
     setIsZipping(true);
-    // İlerleme çubuğunu sıfırla
     setZipProgress({ current: 0, total: fileList.length });
 
     const zip = new window.JSZip();
-    const folder = zip.folder("Dump_Splitter_Pack");
+    const mainFolder = zip.folder("Dump_Splitter_Pack");
 
     let processedCount = 0;
 
-    // --- YARDIMCI: DOKU İŞLEME (RETRY DESTEKLİ) ---
+    // YARDIMCI: Tekil Dosya İşleme (Garantili Klasör)
     const processItem = async (fileItem, index, retryCount = 0) => {
+      // 1. KLASÖRÜ PEŞİN OLUŞTUR (Böylece "Image_6" asla eksik olmaz, boş da olsa oluşur)
+      const itemFolderName = `Image_${index + 1}`;
+      const itemFolder = mainFolder.folder(itemFolderName);
+
       try {
-        // 1. SADECE RESİM VE GEÇERLİ URL KONTROLÜ
         if (!fileItem || fileItem.type !== 'image' || !fileItem.url) {
+          itemFolder.file("Bilgi.txt", "Bu dosya görsel olmadığı için atlandı.");
           return;
         }
 
         const settings = fileItem.settings || DEFAULT_SETTINGS;
 
-        // 2. RESİM YÜKLEME (Promise)
         await new Promise((resolve, reject) => {
           const img = new Image();
 
-          // Zaman aşımı koruması (10 saniye içinde açılmazsa hata ver)
+          // 10sn Timeout
           const timeoutTimer = setTimeout(() => {
             img.src = "";
-            reject(new Error("Zaman Aşımı"));
+            reject(new Error("İşlem Zaman Aşımı (10sn)"));
           }, 10000);
 
           img.onload = async () => {
@@ -976,11 +978,11 @@ const App = () => {
               const h = img.height;
 
               if (!w || !h) {
-                reject(new Error("Boyut Hatası (0px)"));
+                reject(new Error("Görsel Boyutu Okunamadı"));
                 return;
               }
 
-              // --- CANVAS İŞLEMLERİ (Aynen korundu) ---
+              // --- CANVAS ---
               const scaleFactor = settings.ultraHdMode ? 2 : 1;
               const sW = Math.floor(w * scaleFactor);
               const sH = Math.floor(h * scaleFactor);
@@ -989,10 +991,9 @@ const App = () => {
               sourceCanvas.width = sW;
               sourceCanvas.height = sH;
 
-              // Mobile Memory Safe
               const sCtx = sourceCanvas.getContext('2d', { willReadFrequently: true });
               if (!sCtx) {
-                reject(new Error("Canvas Oluşturulamadı"));
+                reject(new Error("Bellek Dolu (Canvas Oluşmadı)"));
                 return;
               }
 
@@ -1010,7 +1011,7 @@ const App = () => {
               }
               sCtx.filter = 'none';
 
-              // --- PARÇALAMA DÖNGÜSÜ ---
+              // --- SPLIT ---
               let rows = 1, cols = 1;
               if (settings.splitCount === 1) { rows = 1; cols = 1; }
               else if (settings.splitCount === 2) { rows = 2; cols = 1; }
@@ -1020,7 +1021,6 @@ const App = () => {
               const pW = Math.floor(sW / cols);
               const pH = Math.floor(sH / rows);
 
-              const imgFolder = folder.folder(`Image_${index + 1}`);
               let partIndex = 1;
 
               for (let r = 0; r < rows; r++) {
@@ -1040,26 +1040,27 @@ const App = () => {
                     if (settings.hdMode) quality = 1.0;
                     if (settings.optimizeMode) quality = 0.80;
 
-                    await new Promise((resBlob) => {
+                    await new Promise((resBlob, rejBlob) => {
                       partCanvas.toBlob((blob) => {
                         if (blob) {
-                          imgFolder.file(`Part_${partIndex}.${settings.downloadFormat}`, blob);
+                          itemFolder.file(`Part_${partIndex}.${settings.downloadFormat}`, blob);
+                          partIndex++;
+                          resBlob();
+                        } else {
+                          rejBlob(new Error("Bellek Dolu (Blob Oluşmadı)"));
                         }
-                        // Cleanup Part
+                        // Anında temizlik
                         partCanvas.width = 0;
                         partCanvas.height = 0;
-                        resBlob();
                       }, mimeType, quality);
                     });
-                    partIndex++;
                   }
                 }
               }
 
-              // Cleanup Source
               sourceCanvas.width = 0;
               sourceCanvas.height = 0;
-              img.src = ""; // Clear mem
+              img.src = "";
               resolve();
 
             } catch (err) {
@@ -1069,58 +1070,61 @@ const App = () => {
 
           img.onerror = () => {
             clearTimeout(timeoutTimer);
-            reject(new Error("Resim Dosyası Açılamadı"));
+            reject(new Error("Görsel Yüklenemedi (Corrupt)"));
           };
 
           img.src = fileItem.url;
         });
       } catch (error) {
-        console.error(`Error processing item ${index}:`, error);
-        // RETRY LOGIC (1 Kere Tekrar Dene)
-        if (retryCount < 1) {
-          console.log(`Retrying item ${index}...`);
-          await new Promise(r => setTimeout(r, 1000)); // 1sn bekle ve tekrar dene
+        console.error(`Item ${index} error:`, error);
+        if (retryCount < 2) { // 2 Kere Tekrar Dene
+          console.log(`Retrying item ${index}... (${retryCount + 1}/2)`);
+          await new Promise(r => setTimeout(r, 1500)); // Bekleme süresini arttır
+          // Klasörü temizlemeye gerek yok, overwrite eder
           await processItem(fileItem, index, retryCount + 1);
         } else {
-          // HATA RAPORU OLUŞTUR
-          const errorFolder = folder.folder(`HATA_Image_${index + 1}`);
-          errorFolder.file("Hata_Raporu.txt", `Bu dosya işlenirken bir hata oluştu.\nSebep: ${error.message}\nLütfen bu dosyayı tek başına indirmeyi deneyin.`);
+          // Son çare: Hatayı yaz
+          itemFolder.file("Hata_Raporu.txt", `HATA: Bu dosya indirilemedi.\nSebep: ${error.message}\nLütfen cihaz hafızasını kontrol edin veya bu dosyayı tekli indirin.`);
         }
       }
     };
 
     try {
       for (let i = 0; i < fileList.length; i++) {
-        // UI Güncelle
         setZipProgress({ current: i + 1, total: fileList.length });
 
-        // 3. NEFES ALMA PAYI (300ms) - Arttırıldı
-        await new Promise(r => setTimeout(r, 300));
+        // CİHAZI SOĞUTMA MOLASI
+        // Her 5 dosyada bir uzun mola (1.5 saniye) ver
+        if (i > 0 && i % 5 === 0) {
+          await new Promise(r => setTimeout(r, 1500));
+        } else {
+          // Standart bekleme (500ms)
+          await new Promise(r => setTimeout(r, 500));
+        }
 
         await processItem(fileList[i], i);
-
         processedCount++;
       }
 
       if (Object.keys(zip.files).length === 0) {
-        showToast("İndirilecek dosya üretilemedi.");
+        showToast("ZIP oluşturulamadı.");
       } else {
         const content = await zip.generateAsync({ type: "blob" });
         const link = document.createElement('a');
         link.href = URL.createObjectURL(content);
-        link.download = "Tüm_Dump_Arsivi.zip";
+        link.download = `Dump_Splitter_Pack_Total_${fileList.length}.zip`;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
         setTimeout(() => URL.revokeObjectURL(link.href), 10000);
-        showToast("İndirme tamamlandı! (Hata varsa ZIP içinde raporlanmıştır)");
+        showToast("İndirme tamamlandı! Eksik varsa 'Hata_Raporu'nu okuyun.");
       }
 
     } catch (globalError) {
-      showToast("Bir hata oluştu: " + globalError.message);
+      showToast("Kritik Hata: " + globalError.message);
     } finally {
       setIsZipping(false);
-      setZipProgress({ current: 0, total: 0 }); // Reset
+      setZipProgress({ current: 0, total: 0 });
     }
   };
 
