@@ -718,38 +718,28 @@ const App = () => {
         return;
       }
 
-      let loadedCount = 0;
-      const totalScripts = 2;
-
-      const checkDone = () => {
-        loadedCount++;
-        if (loadedCount === totalScripts) resolve();
+      // Helper function to load script
+      const loadScript = (src) => {
+        return new Promise((res, rej) => {
+          const script = document.createElement('script');
+          script.src = src;
+          script.onload = () => res();
+          script.onerror = () => rej(new Error(`Script yüklenemedi: ${src}`));
+          document.body.appendChild(script);
+        });
       };
 
-      // TFJS Yükle
-      if (!window.tf) {
-        const scriptTF = document.createElement('script');
-        scriptTF.src = "https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.21.0/dist/tf.min.js";
-        scriptTF.onload = checkDone;
-        scriptTF.onerror = () => reject(new Error("TensorFlow yüklenemedi"));
-        document.body.appendChild(scriptTF);
-      } else {
-        loadedCount++;
-      }
-
-      // UpscalerJS Yükle
-      if (!window.Upscaler) {
-        const scriptUp = document.createElement('script');
-        scriptUp.src = "https://cdn.jsdelivr.net/npm/upscaler@0.13.2/dist/browser/umd/upscaler.min.js";
-        scriptUp.onload = checkDone;
-        scriptUp.onerror = () => reject(new Error("UpscalerJS yüklenemedi"));
-        document.body.appendChild(scriptUp);
-      } else {
-        loadedCount++;
-      }
-
-      // Eğer ikisi de zaten varsa (ama yukarıdaki check'i geçemediyse - nadir durum)
-      if (loadedCount === totalScripts) resolve();
+      // SIRALI YÜKLEME: Önce TFJS, Sonra Upscaler
+      loadScript("https://unpkg.com/@tensorflow/tfjs@3.21.0/dist/tf.min.js")
+        .then(() => {
+          return loadScript("https://unpkg.com/upscaler@0.13.2/dist/browser/umd/upscaler.min.js");
+        })
+        .then(() => {
+          resolve();
+        })
+        .catch(err => {
+          reject(err);
+        });
     });
   };
 
