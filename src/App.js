@@ -745,8 +745,9 @@ const App = () => {
       const tfBackup = "https://unpkg.com/@tensorflow/tfjs@4.20.0/dist/tf.min.js";
 
       // 2. Default Model (Gerekli - v1.0.0+)
-      const modelPrimary = "https://cdn.jsdelivr.net/npm/@upscalerjs/default-model@latest/dist/browser/umd/index.min.js";
-      const modelBackup = "https://unpkg.com/@upscalerjs/default-model@latest/dist/browser/umd/index.min.js";
+      // package.json "umd:main": "dist/umd/index.min.js"
+      const modelPrimary = "https://cdn.jsdelivr.net/npm/@upscalerjs/default-model@latest/dist/umd/index.min.js";
+      const modelBackup = "https://unpkg.com/@upscalerjs/default-model@latest/dist/umd/index.min.js";
 
       // 3. UpscalerJS Core
       const upPrimary = "https://cdn.jsdelivr.net/npm/upscaler@latest/dist/browser/umd/upscaler.min.js";
