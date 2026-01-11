@@ -687,6 +687,7 @@ const App = () => {
   // --- AI UPSCALE STATE ---
   const [isAiUpscaling, setIsAiUpscaling] = useState(false);
   const [aiProgress, setAiProgress] = useState(0);
+  const [upscaleFactor, setUpscaleFactor] = useState(1);
 
   useEffect(() => {
     // 1. JSZip
@@ -767,6 +768,12 @@ const App = () => {
   // --- AI UPSCALE LOGIC ---
   const handleAiUpscale = async (ratio) => { // ratio: 2 veya 4
     if (isAiUpscaling) return; // Çift tıklamayı önle
+
+    if (upscaleFactor >= ratio) {
+      showToast(`Bu görsel zaten ${upscaleFactor}x kalitesinde (veya daha yüksek).`, "error");
+      return;
+    }
+
     if (!uploadedFile) return;
     if (fileType === 'video') {
       showToast("Video için AI Upscale henüz desteklenmiyor.", "error");
@@ -804,7 +811,11 @@ const App = () => {
 
       // Orijinal görseli yükle
       const originalImage = new Image();
-      originalImage.src = URL.createObjectURL(uploadedFile);
+      if (typeof uploadedFile === 'string') {
+        originalImage.src = uploadedFile;
+      } else {
+        originalImage.src = URL.createObjectURL(uploadedFile);
+      }
       await new Promise((r) => (originalImage.onload = r));
 
       setAiProgress(20);
@@ -1015,6 +1026,7 @@ const App = () => {
 
     setUploadedFile(fileItem.url);
     setFileType(fileItem.type);
+    setUpscaleFactor(1); // Reset upscale status for new file
   };
 
   const showToast = (msg, type = 'success') => {
@@ -1411,6 +1423,7 @@ const App = () => {
 
         setUploadedFile(newFilesToAdd[0].url);
         setFileType(newFilesToAdd[0].type);
+        setUpscaleFactor(1); // Reset upscale history for new upload
 
         setSplitCount(DEFAULT_SETTINGS.splitCount);
         setDownloadFormat(DEFAULT_SETTINGS.downloadFormat);
@@ -1862,7 +1875,7 @@ const App = () => {
                     <button
                       onClick={() => handleAiUpscale(2)}
                       disabled={isAiUpscaling}
-                      className={`flex-1 bg-[#151515] border border-[#222] rounded-lg py-3 px-3 hover:border-purple-500/50 transition-all group flex flex-col items-center gap-2 relative overflow-hidden ${isAiUpscaling ? 'opacity-50 cursor-not-allowed' : 'hover:bg-[#1a1a1a]'}`}
+                      className="flex-1 bg-[#151515] border border-[#222] rounded-lg py-3 px-3 hover:border-purple-500/50 transition-all group flex flex-col items-center gap-2 relative overflow-hidden"
                     >
                       <span className="text-xs font-medium text-gray-400 group-hover:text-purple-400 transition-colors">2x (200%)</span>
                       {/* ... icon ... */}
@@ -1870,7 +1883,7 @@ const App = () => {
                     <button
                       onClick={() => handleAiUpscale(4)}
                       disabled={isAiUpscaling}
-                      className={`flex-1 bg-[#151515] border border-[#222] rounded-lg py-3 px-3 hover:border-purple-500/50 transition-all group flex flex-col items-center gap-2 relative overflow-hidden ${isAiUpscaling ? 'opacity-50 cursor-not-allowed' : 'hover:bg-[#1a1a1a]'}`}
+                      className="flex-1 bg-[#151515] border border-[#222] rounded-lg py-3 px-3 hover:border-purple-500/50 transition-all group flex flex-col items-center gap-2 relative overflow-hidden"
                     >
                       <span className="text-xs font-medium text-gray-400 group-hover:text-purple-400 transition-colors">4x (400%)</span>
                     </button>
