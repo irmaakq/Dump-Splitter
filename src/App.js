@@ -1309,11 +1309,21 @@ const App = () => {
   const processSplit = (sourceUrl, isVideo) => {
     if (!sourceUrl) return;
 
-    // 1. ANİMASYON BAŞLAT (KAPAT)
+    // 1. ANINDA GİZLE VE TEMİZLE
     setIsContentReady(false);
 
+    const isSilent = skipFeedbackRef.current;
+    if (!isSilent) {
+      setIsProcessing(true);
+      setAiLogs([]);
+      setSplitSlides([]); // Eski slaytları hemen silip "boşa" düşürüyoruz
+
+      SPLITTER_STATUS_MSGS.forEach((msg, i) => {
+        setTimeout(() => setAiLogs(prev => [...prev.slice(-3), msg]), i * 350);
+      });
+    }
+
     // 2. BEKLE (Fade-out süresi kadar)
-    // Bu sayede eski resim kaybolurken yeni işlem arkada döner
     setTimeout(() => {
       if (!sourceUrl) {
         setSplitSlides([]);
@@ -1321,20 +1331,10 @@ const App = () => {
         return;
       }
 
-      const isSilent = skipFeedbackRef.current;
-
-      if (!isSilent) {
-        setIsProcessing(true);
-        setAiLogs([]);
-        setSplitSlides([]);
-
-        SPLITTER_STATUS_MSGS.forEach((msg, i) => {
-          setTimeout(() => setAiLogs(prev => [...prev.slice(-3), msg]), i * 350);
-        });
-      }
-
+      // Create Media (Image or Video)
       const mediaElement = isVideo ? document.createElement('video') : new Image();
-      mediaElement.crossOrigin = "anonymous";
+      mediaElement.setAttribute('crossOrigin', 'anonymous');
+
       mediaElement.src = sourceUrl;
 
       const onMediaLoaded = () => {
