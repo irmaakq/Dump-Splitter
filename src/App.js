@@ -729,10 +729,10 @@ const App = () => {
         });
       };
 
-      // SIRALI YÜKLEME: Önce TFJS, Sonra Upscaler
-      loadScript("https://unpkg.com/@tensorflow/tfjs@3.21.0/dist/tf.min.js")
+      // SIRALI YÜKLEME: Önce TFJS, Sonra Upscaler (jsDelivr kullanarak)
+      loadScript("https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.21.0/dist/tf.min.js")
         .then(() => {
-          return loadScript("https://unpkg.com/upscaler@0.13.2/dist/browser/umd/upscaler.min.js");
+          return loadScript("https://cdn.jsdelivr.net/npm/upscaler@0.13.2/dist/browser/umd/upscaler.min.js");
         })
         .then(() => {
           resolve();
