@@ -955,30 +955,78 @@ const App = () => {
       const itemFolder = mainFolder.folder(itemFolderName);
 
       try {
-        if (!fileItem || fileItem.type !== 'image' || !fileItem.url) {
-          itemFolder.file("Bilgi.txt", "Bu dosya görsel olmadığı için atlandı.");
+        // 1. FORMAT KONTROLÜ (Artık Video da kabul ediyoruz)
+        if (!fileItem || !fileItem.url) {
+          itemFolder.file("Bilgi.txt", "Dosya URL'si geçersiz.");
+          return;
+        }
+        // Sadece Image ve Video tiplerini al, gerisini ele
+        if (fileItem.type !== 'image' && fileItem.type !== 'video') {
+          itemFolder.file("Bilgi.txt", `Desteklenmeyen dosya türü: ${fileItem.type}`);
           return;
         }
 
         const settings = fileItem.settings || DEFAULT_SETTINGS;
 
         await new Promise((resolve, reject) => {
-          const img = new Image();
+          // --- A) VİDEO İŞLEME DALI ---
+          if (fileItem.type === 'video') {
+            const video = document.createElement('video');
+            video.muted = true;
+            video.playsInline = true;
+            video.crossOrigin = "anonymous";
 
-          // 10sn Timeout
-          const timeoutTimer = setTimeout(() => {
-            img.src = "";
-            reject(new Error("İşlem Zaman Aşımı (10sn)"));
-          }, 10000);
+            const timeoutTimer = setTimeout(() => {
+              video.src = "";
+              reject(new Error("Video Zaman Aşımı (15sn)"));
+            }, 15000);
 
-          img.onload = async () => {
-            clearTimeout(timeoutTimer);
+            video.onloadeddata = () => {
+              video.currentTime = 0.5; // İlk kareden az ileri sar (siyah ekran olmasın)
+            };
+
+            video.onseeked = () => {
+              clearTimeout(timeoutTimer);
+              processCanvas(video, video.videoWidth, video.videoHeight, resolve, reject);
+              video.src = ""; // Clean memory
+            };
+
+            video.onerror = () => {
+              clearTimeout(timeoutTimer);
+              reject(new Error("Video Dosyası Açılamadı"));
+            };
+
+            video.src = fileItem.url;
+          }
+          // --- B) RESİM İŞLEME DALI ---
+          else {
+            const img = new Image();
+
+            const timeoutTimer = setTimeout(() => {
+              img.src = "";
+              reject(new Error("Resim Zaman Aşımı (10sn)"));
+            }, 10000);
+
+            img.onload = () => {
+              clearTimeout(timeoutTimer);
+              processCanvas(img, img.width, img.height, resolve, reject);
+              img.src = ""; // Clean
+            };
+
+            img.onerror = () => {
+              clearTimeout(timeoutTimer);
+              reject(new Error("Resim Dosyası Açılamadı"));
+            };
+
+            img.src = fileItem.url;
+          }
+
+          // --- ORTAK: KANVAS & SPLIT MANTIĞI ---
+          // Hem resim hem video burayı kullanır
+          async function processCanvas(sourceMedia, w, h, res, rej) {
             try {
-              const w = img.width;
-              const h = img.height;
-
               if (!w || !h) {
-                reject(new Error("Görsel Boyutu Okunamadı"));
+                rej(new Error("Boyut Hatası (0px)"));
                 return;
               }
 
@@ -993,7 +1041,7 @@ const App = () => {
 
               const sCtx = sourceCanvas.getContext('2d', { willReadFrequently: true });
               if (!sCtx) {
-                reject(new Error("Bellek Dolu (Canvas Oluşmadı)"));
+                rej(new Error("Bellek Dolu (Canvas Oluşmadı)"));
                 return;
               }
 
@@ -1005,9 +1053,9 @@ const App = () => {
 
               if (settings.smartCrop) {
                 const cropMargin = 0.02;
-                sCtx.drawImage(img, w * cropMargin, h * cropMargin, w * (1 - 2 * cropMargin), h * (1 - 2 * cropMargin), 0, 0, sW, sH);
+                sCtx.drawImage(sourceMedia, w * cropMargin, h * cropMargin, w * (1 - 2 * cropMargin), h * (1 - 2 * cropMargin), 0, 0, sW, sH);
               } else {
-                sCtx.drawImage(img, 0, 0, sW, sH);
+                sCtx.drawImage(sourceMedia, 0, 0, sW, sH);
               }
               sCtx.filter = 'none';
 
@@ -1033,6 +1081,7 @@ const App = () => {
                   if (pCtx) {
                     pCtx.imageSmoothingEnabled = true;
                     pCtx.imageSmoothingQuality = 'high';
+                    // Video or Image source works same here
                     pCtx.drawImage(sourceCanvas, c * pW, r * pH, pW, pH, 0, 0, pW, pH);
 
                     const mimeType = `image/${settings.downloadFormat === 'jpg' ? 'jpeg' : settings.downloadFormat}`;
@@ -1047,9 +1096,8 @@ const App = () => {
                           partIndex++;
                           resBlob();
                         } else {
-                          rejBlob(new Error("Bellek Dolu (Blob Oluşmadı)"));
+                          rejBlob(new Error("Bellek Dolu (Blob Yok)"));
                         }
-                        // Anında temizlik
                         partCanvas.width = 0;
                         partCanvas.height = 0;
                       }, mimeType, quality);
@@ -1060,20 +1108,12 @@ const App = () => {
 
               sourceCanvas.width = 0;
               sourceCanvas.height = 0;
-              img.src = "";
-              resolve();
+              res();
 
             } catch (err) {
-              reject(err);
+              rej(err);
             }
-          };
-
-          img.onerror = () => {
-            clearTimeout(timeoutTimer);
-            reject(new Error("Görsel Yüklenemedi (Corrupt)"));
-          };
-
-          img.src = fileItem.url;
+          }
         });
       } catch (error) {
         console.error(`Item ${index} error:`, error);
