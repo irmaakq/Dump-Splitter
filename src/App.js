@@ -695,26 +695,18 @@ const App = () => {
       document.body.appendChild(script);
     }
 
-    // 2. TensorFlow.js (Gerekli)
+    // 2. TensorFlow.js (Sabit Versiyon - Uyumlu)
     if (!window.tf) {
       const scriptTF = document.createElement('script');
-      scriptTF.src = "https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js";
+      scriptTF.src = "https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.21.0/dist/tf.min.js";
       scriptTF.async = true;
       document.body.appendChild(scriptTF);
     }
 
-    // 3a. UpscalerJS Default Model (Gerekli)
-    if (!window['@upscalerjs/default-model']) {
-      const scriptModel = document.createElement('script');
-      scriptModel.src = "https://cdn.jsdelivr.net/npm/@upscalerjs/default-model@latest/dist/browser/umd/index.min.js";
-      scriptModel.async = true;
-      document.body.appendChild(scriptModel);
-    }
-
-    // 3b. UpscalerJS (Ana AI Kütüphanesi)
+    // 3. UpscalerJS (Sabit Versiyon - Uyumlu)
     if (!window.Upscaler) {
       const scriptUp = document.createElement('script');
-      scriptUp.src = "https://cdn.jsdelivr.net/npm/upscaler@latest/dist/browser/umd/upscaler.min.js";
+      scriptUp.src = "https://cdn.jsdelivr.net/npm/upscaler@0.13.2/dist/browser/umd/upscaler.min.js";
       scriptUp.async = true;
       document.body.appendChild(scriptUp);
     }
@@ -751,14 +743,8 @@ const App = () => {
     setAiProgress(0);
 
     try {
-      // Modeli Hazırla
-      // CDN UMD kullanıldığında model window['@upscalerjs/default-model'] içinde olabilir.
-      // Eğer yoksa boş constructor deneriz (kendi yüklemeye çalışır).
-      const model = window['@upscalerjs/default-model'] || undefined;
-
-      const upscaler = new window.Upscaler({
-        model: model,
-      });
+      // BASİTLEŞTİRİLDİ: Parametre vermeden çağırınca default modeli (GANS) CDN'den kendi çeker.
+      const upscaler = new window.Upscaler();
 
       // ADIM 1: İlk Upscale (2x)
       setAiProgress(10);
