@@ -682,6 +682,8 @@ const App = () => {
       if (img) delete img.dataset.panStart;
     }
   };
+  // --- REFS ---
+  const upscalerRef = useRef(null); // AI Modeli için Singleton Ref
   // --- AI UPSCALE STATE ---
   const [isAiUpscaling, setIsAiUpscaling] = useState(false);
   const [aiProgress, setAiProgress] = useState(0);
@@ -764,6 +766,7 @@ const App = () => {
 
   // --- AI UPSCALE LOGIC ---
   const handleAiUpscale = async (ratio) => { // ratio: 2 veya 4
+    if (isAiUpscaling) return; // Çift tıklamayı önle
     if (!uploadedFile) return;
     if (fileType === 'video') {
       showToast("Video için AI Upscale henüz desteklenmiyor.", "error");
@@ -773,94 +776,95 @@ const App = () => {
     setIsAiUpscaling(true);
     setAiProgress(0);
 
+    // Bloğu UI'ın güncellenmesi için bir sonraki tick'e at
+    await new Promise(r => setTimeout(r, 10));
+
     try {
       // 1. KÜTÜPHANE KONTROLÜ VE YÜKLEME
-      // Modelin de yüklü olup olmadığına bakmalıyız
       if (!window.Upscaler || !window.tf || !window['@upscalerjs/default-model']) {
         console.log("AI Modülleri Yükleniyor...");
         await loadAiLibrary();
       }
 
-      // Kütüphane yüklendi, şimdi işleme başla
-      setAiProgress(5); // Başlangıç efekti
+      setAiProgress(5);
 
-      // Model Tanımlama (V1.0.0+ için zorunlu)
-      const upscaler = new window.Upscaler({
-        model: window['@upscalerjs/default-model'],
-      });
+      // 2. UPSCALER BAŞLATMA (Singleton Pattern - Ref Kullanarak)
+      // Eğer daha önce oluşturulduysa onu kullan, yoksa yenisini yarat ve sakla.
+      // Bu, "Failed to link vertex/fragment shaders" hatasını (WebGL context kaybını) önler.
+      if (!upscalerRef.current) {
+        upscalerRef.current = new window.Upscaler({
+          model: window['@upscalerjs/default-model'],
+        });
+      }
+
+      const upscaler = upscalerRef.current;
 
       // ADIM 1: İlk Upscale (2x)
       setAiProgress(10);
-      const img = new Image();
-      img.crossOrigin = "anonymous";
-      img.src = uploadedFile;
 
-      await new Promise(r => img.onload = r);
+      // Orijinal görseli yükle
+      const originalImage = new Image();
+      originalImage.src = URL.createObjectURL(uploadedFile);
+      await new Promise((r) => (originalImage.onload = r));
 
-      const dataUrl2x = await upscaler.upscale(img, {
+      setAiProgress(20);
+
+      // İlk işlem (2x)
+      const upscaleResult1 = await upscaler.upscale(originalImage, {
         patchSize: 64,
-        padding: 4,
+        padding: 2,
         progress: (amount) => {
-          // 0 ile 1.0 arasında gelir.
-          // 2x ise: %0 - %100 arası
-          // 4x ise: %0 - %50 arası (ilk adım)
-          const percentage = Math.round(amount * 100);
-          setAiProgress(ratio === 2 ? percentage : Math.floor(percentage / 2));
+          // 2x için progress bar %20 ile %60 arasında ilerlesin
+          setAiProgress(Math.round(20 + (amount * 40)));
         }
       });
 
-      let finalUrl = dataUrl2x;
+      let finalResult = upscaleResult1;
 
-      // ADIM 2: Eğer 4x istendiyse, sonucu tekrar upscale et
+      // Eğer 4x isteniyorsa, sonucu tekrar işle (2x * 2x = 4x)
       if (ratio === 4) {
-        setAiProgress(50);
-        const img2 = new Image();
-        img2.crossOrigin = "anonymous";
-        img2.src = dataUrl2x;
-        await new Promise(r => img2.onload = r);
+        setAiProgress(60);
+        // İlk sonucu yeni bir Image objesine çevir
+        const intermediateImage = new Image();
+        intermediateImage.src = upscaleResult1;
+        await new Promise((r) => (intermediateImage.onload = r));
 
-        finalUrl = await upscaler.upscale(img2, {
+        setAiProgress(70);
+
+        finalResult = await upscaler.upscale(intermediateImage, {
           patchSize: 64,
-          padding: 4,
+          padding: 2,
           progress: (amount) => {
-            // %50 - %100 arası
-            const percentage = Math.round(amount * 50); // 0-50
-            setAiProgress(50 + percentage);
+            // 4x ikinci aşama için progress bar %70 ile %95 arasında ilerlesin
+            setAiProgress(Math.round(70 + (amount * 25)));
           }
         });
       }
 
       setAiProgress(100);
 
-      // İşlem Başarılı!
-      // Şimdi bu yeni URL'i sisteme "yeni dosya" gibi ekleyelim ama mevcutun üzerine yazsın istiyoruz.
-      // Aslında mantıklı olan: Mevcut dosya URL'ini güncellemek.
+      // Sonucu Bloba Çevir ve Kaydet
+      const response = await fetch(finalResult);
+      const blob = await response.blob();
+      const newFile = new File([blob], `upscaled_${uploadedFile.name}`, { type: uploadedFile.type });
 
-      // 1. Blob'a çevir (URL sızıntısını önlemek için)
-      const res = await fetch(finalUrl);
-      const blob = await res.blob();
-      const newObjectUrl = URL.createObjectURL(blob); // Yeni temiz URL
+      setUploadedFile(newFile);
+      const newUrl = URL.createObjectURL(newFile);
+      setFileList([{ file: newFile, preview: newUrl }]);
+      // Zoom reset KALDIRILDI - Kullanıcı isteği
 
-      setUploadedFile(newObjectUrl); // Aktif dosyayı değiştir
+      showToast(`Görsel başarıyla ${ratio}x büyütüldü ve netleştirildi!`, "success");
 
-      // FileList'i de güncelle ki thumbnaillerde görünsün
-      setFileList(prev => prev.map(f => {
-        if (f.url === uploadedFile) {
-          return { ...f, url: newObjectUrl };
-        }
-        return f;
-      }));
+    } catch (error) {
+      console.error("Upscale Hatası:", error);
+      showToast(`Upscale Hatası: ${error.message || error}`, "error");
 
-      showToast(`Başarılı! Görüntü ${ratio}x boyutuna yükseltildi.`);
-
-    } catch (err) {
-      console.error(err);
-      showToast("Upscale Hatası: " + err.message, "error");
+      // Hata durumunda ref'i temizle ki bir dahakine temiz kurulum yapsın
+      upscalerRef.current = null;
     } finally {
-      setIsAiUpscaling(false);
+      setIsAiUpscaling(false); // Her durumda loading'i kapat
       setAiProgress(0);
-      // Zoom'u resetle ki devasa resmi görsünler
-      setZoom(50);
+      // Zoom reset KALDIRILDI
     }
   };
 
@@ -1854,23 +1858,21 @@ const App = () => {
 
                   <p className="text-[10px] text-gray-400 font-bold uppercase leading-relaxed">Bulanık fotoğrafları yapay zeka ile yeniden inşa et.</p>
 
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="flex gap-2">
                     <button
                       onClick={() => handleAiUpscale(2)}
-                      disabled={isAiUpscaling || fileType === 'video'}
-                      className="bg-black/40 hover:bg-white text-white hover:text-black border border-white/10 hover:border-white rounded-xl py-3 flex flex-col items-center justify-center transition-all group/btn"
+                      disabled={isAiUpscaling}
+                      className={`flex-1 bg-[#151515] border border-[#222] rounded-lg py-3 px-3 hover:border-purple-500/50 transition-all group flex flex-col items-center gap-2 relative overflow-hidden ${isAiUpscaling ? 'opacity-50 cursor-not-allowed' : 'hover:bg-[#1a1a1a]'}`}
                     >
-                      <span className="text-lg font-black italic">2x</span>
-                      <span className="text-[9px] font-bold opacity-60 group-hover/btn:opacity-100 uppercase tracking-widest">Ratio: 200%</span>
+                      <span className="text-xs font-medium text-gray-400 group-hover:text-purple-400 transition-colors">2x (200%)</span>
+                      {/* ... icon ... */}
                     </button>
-
                     <button
                       onClick={() => handleAiUpscale(4)}
-                      disabled={isAiUpscaling || fileType === 'video'}
-                      className="bg-black/40 hover:bg-white text-white hover:text-black border border-white/10 hover:border-white rounded-xl py-3 flex flex-col items-center justify-center transition-all group/btn"
+                      disabled={isAiUpscaling}
+                      className={`flex-1 bg-[#151515] border border-[#222] rounded-lg py-3 px-3 hover:border-purple-500/50 transition-all group flex flex-col items-center gap-2 relative overflow-hidden ${isAiUpscaling ? 'opacity-50 cursor-not-allowed' : 'hover:bg-[#1a1a1a]'}`}
                     >
-                      <span className="text-lg font-black italic">4x</span>
-                      <span className="text-[9px] font-bold opacity-60 group-hover/btn:opacity-100 uppercase tracking-widest">Ratio: 400%</span>
+                      <span className="text-xs font-medium text-gray-400 group-hover:text-purple-400 transition-colors">4x (400%)</span>
                     </button>
                   </div>
                 </div>
