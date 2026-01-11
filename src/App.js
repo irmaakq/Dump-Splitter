@@ -988,7 +988,6 @@ const App = () => {
             video.onseeked = () => {
               clearTimeout(timeoutTimer);
               processCanvas(video, video.videoWidth, video.videoHeight, resolve, reject);
-              video.src = ""; // Clean memory
             };
 
             video.onerror = () => {
@@ -1010,7 +1009,6 @@ const App = () => {
             img.onload = () => {
               clearTimeout(timeoutTimer);
               processCanvas(img, img.width, img.height, resolve, reject);
-              img.src = ""; // Clean
             };
 
             img.onerror = () => {
@@ -1123,8 +1121,17 @@ const App = () => {
           // Klasörü temizlemeye gerek yok, overwrite eder
           await processItem(fileItem, index, retryCount + 1);
         } else {
-          // Son çare: Hatayı yaz
-          itemFolder.file("Hata_Raporu.txt", `HATA: Bu dosya indirilemedi.\nSebep: ${error.message}\nLütfen cihaz hafızasını kontrol edin veya bu dosyayı tekli indirin.`);
+          const detayliRapor = `⚠️ DOSYA İNDİRME HATASI\n\n` +
+            `📁 HANGİ DOSYA?: Bu klasör (Image_${index + 1}), uygulamanızdaki listenin ${index + 1}. sırasındaki dosyasını temsil eder.\n` +
+            `Dosya Tipi: ${fileItem.type}\n` +
+            `Hata Sebebi: ${error.message}\n\n` +
+            `💡 ÇÖZÜM ÖNERİLERİ:\n` +
+            `1. Bu dosyayı listeden seçip tek başına indirmeyi veya 'Tümünü İndir' yapmayı deneyebilirsiniz.\n` +
+            `2. Cihaz hafızasının dolu olup olmadığını kontrol edin.\n` +
+            `3. Dosyanın bozuk olmadığından emin olun (video ise oynatılıyor mu?).\n` +
+            `4. Sorun devam ederse 'Toplu İndir' işlemini tekrar başlatmayı deneyin.`;
+
+          itemFolder.file("Hata_Raporu.txt", detayliRapor);
         }
       }
     };
