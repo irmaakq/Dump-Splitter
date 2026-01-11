@@ -786,9 +786,14 @@ const App = () => {
     // Bloğu UI'ın güncellenmesi için bir sonraki tick'e at
     await new Promise(r => setTimeout(r, 10));
 
+    let tensorInput = null;
+    let tensorResult1 = null;
+    let tensorResultFinal = null;
+    const tf = window.tf;
+
     try {
       // 1. KÜTÜPHANE KONTROLÜ VE YÜKLEME
-      if (!window.Upscaler || !window.tf || !window['@upscalerjs/default-model']) {
+      if (!window.Upscaler || !tf || !window['@upscalerjs/default-model']) {
         console.log("AI Modülleri Yükleniyor...");
         await loadAiLibrary();
       }
@@ -818,51 +823,57 @@ const App = () => {
       }
       await new Promise((r) => (originalImage.onload = r));
 
+      // Görüntüyü Tensör'e çevir (GPU Belleği)
+      tensorInput = tf.browser.fromPixels(originalImage);
+
       setAiProgress(20);
 
-      // İlk işlem (2x)
-      const upscaleResult1 = await upscaler.upscale(originalImage, {
+      // İlk işlem (2x) -> Çıktı olarak Tensor al
+      tensorResult1 = await upscaler.upscale(tensorInput, {
         patchSize: 64,
         padding: 2,
+        output: 'tensor',
         progress: (amount) => {
-          // 2x için progress bar %20 ile %60 arasında ilerlesin
           setAiProgress(Math.round(20 + (amount * 40)));
         }
       });
 
-      let finalResult = upscaleResult1;
+      let finalTensor = tensorResult1;
 
       // Eğer 4x isteniyorsa, sonucu tekrar işle (2x * 2x = 4x)
       if (ratio === 4) {
         setAiProgress(60);
-        // İlk sonucu yeni bir Image objesine çevir
-        const intermediateImage = new Image();
-        intermediateImage.src = upscaleResult1;
-        await new Promise((r) => (intermediateImage.onload = r));
 
-        setAiProgress(70);
-
-        finalResult = await upscaler.upscale(intermediateImage, {
+        // Önceki tensor'u girdi olarak kullan
+        tensorResultFinal = await upscaler.upscale(tensorResult1, {
           patchSize: 64,
           padding: 2,
+          output: 'tensor',
           progress: (amount) => {
-            // 4x ikinci aşama için progress bar %70 ile %95 arasında ilerlesin
             setAiProgress(Math.round(70 + (amount * 25)));
           }
         });
+
+        finalTensor = tensorResultFinal;
       }
 
-      setAiProgress(100);
+      setAiProgress(95);
 
-      // Sonucu Bloba Çevir ve Kaydet
-      const response = await fetch(finalResult);
-      const blob = await response.blob();
-      const newFile = new File([blob], `upscaled_${uploadedFile.name}`, { type: uploadedFile.type });
+      // Sonucu Canvas'a yazdır (toPixels)
+      const outputCanvas = document.createElement('canvas');
+      outputCanvas.width = finalTensor.shape[1];
+      outputCanvas.height = finalTensor.shape[0];
+
+      await tf.browser.toPixels(finalTensor, outputCanvas);
+
+      // Canvas'ı Blob'a çevir
+      const blob = await new Promise(resolve => outputCanvas.toBlob(resolve, uploadedFile.type, 1.0));
+      const newFile = new File([blob], `upscaled_${uploadedFile.name || 'image.png'}`, { type: uploadedFile.type });
 
       setUploadedFile(newFile);
       const newUrl = URL.createObjectURL(newFile);
       setFileList([{ file: newFile, preview: newUrl }]);
-      // Zoom reset KALDIRILDI - Kullanıcı isteği
+      setUpscaleFactor(ratio); // Yeni kalite seviyesini kaydet
 
       showToast(`Görsel başarıyla ${ratio}x büyütüldü ve netleştirildi!`, "success");
 
@@ -873,9 +884,14 @@ const App = () => {
       // Hata durumunda ref'i temizle ki bir dahakine temiz kurulum yapsın
       upscalerRef.current = null;
     } finally {
+      // TEMİZLİK: Hafızadaki Tensorları sil (Memory Leak Önleme)
+      if (tensorInput) tensorInput.dispose();
+      if (tensorResult1) tensorResult1.dispose();
+      // finalTensor referans oldugu icin dispose etmeye gerek yok ama tensorResultFinal yaratildiysa silinmeli
+      if (tensorResultFinal) tensorResultFinal.dispose();
+
       setIsAiUpscaling(false); // Her durumda loading'i kapat
       setAiProgress(0);
-      // Zoom reset KALDIRILDI
     }
   };
 
