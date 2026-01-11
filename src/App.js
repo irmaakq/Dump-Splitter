@@ -933,7 +933,11 @@ const App = () => {
       }));
     }
 
-    skipFeedbackRef.current = true;
+    if (key === 'ultraHd' || key === 'ultraHdMode') {
+      skipFeedbackRef.current = false;
+    } else {
+      skipFeedbackRef.current = true;
+    }
   };
 
   // --- DOSYA DEĞİŞTİRME YÖNETİCİSİ ---
@@ -1480,6 +1484,9 @@ const App = () => {
       SPLITTER_STATUS_MSGS.forEach((msg, i) => {
         setTimeout(() => setAiLogs(prev => [...prev.slice(-3), msg]), i * 350);
       });
+
+      // CRITICAL: UI'ın "Yükleniyor" ekranını çizmesi için bir nefes aldır
+      await new Promise(r => setTimeout(r, 100));
     }
 
     // Gecikmeli Başlat (Fade-out efekti için)
@@ -1526,47 +1533,58 @@ const App = () => {
 
         // 2.1 Load Library
         await loadAiLibrary();
+        const tf = window.tf;
 
         // 2.2 Initialize Upscaler
-        // window.UpscalerShould be loaded now
         const upscaler = new window.Upscaler({
           model: window['@upscalerjs/default-model'],
         });
 
         // 2.3 Convert to Tensor
-        const tf = window.tf;
-        const tensorInput = tf.browser.fromPixels(mediaElement);
+        let currentTensor = tf.browser.fromPixels(mediaElement);
 
-        // 2.4 Run Inference
-        // upscale method returns base64 or tensor. Let's use base64 for simplicity in this pipeline refactor
-        // or improved: tensor -> tensor to save memory if we chain models.
-        // For now: Input Media -> Upscale -> Base64 -> Image -> Canvas
+        if (!isSilent) setAiLogs(prev => [...prev, "Pikseller analiz ediliyor..."]);
 
-        const upscaledDataUrl = await upscaler.upscale(tensorInput, {
+        // 2.4 Run Inference (Step 1: 2x)
+        let upscaledTensor1 = await upscaler.upscale(currentTensor, {
           patchSize: 64,
           padding: 2,
-          output: 'base64'
+          output: 'tensor'
         });
 
-        // Cleanup Tensor
-        tensorInput.dispose();
-        // Note: upscaler instance cleanup might be needed if heavily reused, but garbage collector handles it mostly.
+        currentTensor.dispose();
+        currentTensor = upscaledTensor1;
 
-        // 2.5 Load Upscaled Image back to Canvas
-        const upscaledImg = new Image();
-        upscaledImg.src = upscaledDataUrl;
-        await new Promise(r => upscaledImg.onload = r);
+        // 2.5 Run Inference (Step 2: 4x if needed)
+        if (upscaleFactor === 4) {
+          if (!isSilent) setAiLogs(prev => [...prev, "İnce detaylar dokunuyor (4x)..."]);
+          let upscaledTensor2 = await upscaler.upscale(currentTensor, {
+            patchSize: 64,
+            padding: 2,
+            output: 'tensor'
+          });
+          currentTensor.dispose();
+          currentTensor = upscaledTensor2;
+        }
 
-        finalW = upscaledImg.width;
-        finalH = upscaledImg.height;
+        // 2.6 Convert Final Tensor to Image
+        finalW = currentTensor.shape[1];
+        finalH = currentTensor.shape[0];
+
+        const finalCanvas = document.createElement('canvas');
+        finalCanvas.width = finalW;
+        finalCanvas.height = finalH;
+        await tf.browser.toPixels(currentTensor, finalCanvas);
 
         processingCanvas.width = finalW;
         processingCanvas.height = finalH;
         const pCtx = processingCanvas.getContext('2d');
-        pCtx.drawImage(upscaledImg, 0, 0);
+        pCtx.drawImage(finalCanvas, 0, 0);
+
+        // Cleanup
+        currentTensor.dispose();
 
         if (!isSilent) setAiLogs(prev => [...prev, `Upscale tamamlandı: ${finalW}x${finalH}`]);
-
       } else {
         // No Upscale -> Draw directly to canvas
         processingCanvas.width = w;
