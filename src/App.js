@@ -695,22 +695,6 @@ const App = () => {
       document.body.appendChild(script);
     }
 
-    // 2. TensorFlow.js (Sabit Versiyon - Uyumlu)
-    if (!window.tf) {
-      const scriptTF = document.createElement('script');
-      scriptTF.src = "https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.21.0/dist/tf.min.js";
-      scriptTF.async = true;
-      document.body.appendChild(scriptTF);
-    }
-
-    // 3. UpscalerJS (Sabit Versiyon - Uyumlu)
-    if (!window.Upscaler) {
-      const scriptUp = document.createElement('script');
-      scriptUp.src = "https://cdn.jsdelivr.net/npm/upscaler@0.13.2/dist/browser/umd/upscaler.min.js";
-      scriptUp.async = true;
-      document.body.appendChild(scriptUp);
-    }
-
     // 4. Service Worker Registration
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
@@ -725,6 +709,50 @@ const App = () => {
     }
   }, []);
 
+  // --- AI LIBRARY LOADER ---
+  const loadAiLibrary = () => {
+    return new Promise((resolve, reject) => {
+      // Zaten yüklüyse hemen dön
+      if (window.Upscaler && window.tf) {
+        resolve();
+        return;
+      }
+
+      let loadedCount = 0;
+      const totalScripts = 2;
+
+      const checkDone = () => {
+        loadedCount++;
+        if (loadedCount === totalScripts) resolve();
+      };
+
+      // TFJS Yükle
+      if (!window.tf) {
+        const scriptTF = document.createElement('script');
+        scriptTF.src = "https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.21.0/dist/tf.min.js";
+        scriptTF.onload = checkDone;
+        scriptTF.onerror = () => reject(new Error("TensorFlow yüklenemedi"));
+        document.body.appendChild(scriptTF);
+      } else {
+        loadedCount++;
+      }
+
+      // UpscalerJS Yükle
+      if (!window.Upscaler) {
+        const scriptUp = document.createElement('script');
+        scriptUp.src = "https://cdn.jsdelivr.net/npm/upscaler@0.13.2/dist/browser/umd/upscaler.min.js";
+        scriptUp.onload = checkDone;
+        scriptUp.onerror = () => reject(new Error("UpscalerJS yüklenemedi"));
+        document.body.appendChild(scriptUp);
+      } else {
+        loadedCount++;
+      }
+
+      // Eğer ikisi de zaten varsa (ama yukarıdaki check'i geçemediyse - nadir durum)
+      if (loadedCount === totalScripts) resolve();
+    });
+  };
+
   // --- AI UPSCALE LOGIC ---
   const handleAiUpscale = async (ratio) => { // ratio: 2 veya 4
     if (!uploadedFile) return;
@@ -733,16 +761,21 @@ const App = () => {
       return;
     }
 
-    // Kütüphane kontrolü
-    if (!window.Upscaler || !window.tf) {
-      showToast("Yapay Zeka Modülü Yükleniyor... Lütfen 5 saniye sonra tekrar deneyin.");
-      return;
-    }
-
     setIsAiUpscaling(true);
     setAiProgress(0);
 
     try {
+      // 1. KÜTÜPHANE KONTROLÜ VE YÜKLEME
+      if (!window.Upscaler || !window.tf) {
+        // Kullanıcıya bilgi ver (Toast yerine ekrandaki progress bar'ı kullanabiliriz veya Toast geçebiliriz)
+        // Ancak burada setAiProgress(1) diyerek ekranda hareket başlatmak daha iyi.
+        console.log("AI Modülleri Yükleniyor...");
+        await loadAiLibrary();
+      }
+
+      // Kütüphane yüklendi, şimdi işleme başla
+      setAiProgress(5); // Başlangıç efekti
+
       // BASİTLEŞTİRİLDİ: Parametre vermeden çağırınca default modeli (GANS) CDN'den kendi çeker.
       const upscaler = new window.Upscaler();
 
@@ -2012,8 +2045,12 @@ const App = () => {
               <div className="w-32 h-32 rounded-full border-[8px] border-white/5 border-t-white animate-spin"></div>
               <div className="absolute inset-0 flex items-center justify-center font-black text-2xl animate-pulse">{aiProgress}%</div>
             </div>
-            <h2 className="text-3xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 uppercase tracking-tighter mt-12 mb-4 animate-pulse">Yapay Zeka Çalışıyor</h2>
-            <p className="text-gray-400 font-bold uppercase tracking-[0.3em] text-xs md:text-sm animate-bounce">Pikseller Yeniden İnşa Ediliyor...</p>
+            <h2 className="text-3xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 uppercase tracking-tighter mt-12 mb-4 animate-pulse">
+              {aiProgress < 5 ? "Modül Yükleniyor..." : "Yapay Zeka Çalışıyor"}
+            </h2>
+            <p className="text-gray-400 font-bold uppercase tracking-[0.3em] text-xs md:text-sm animate-bounce">
+              {aiProgress < 5 ? "Gerekli dosyalar indiriliyor..." : "Pikseller Yeniden İnşa Ediliyor..."}
+            </p>
             <div className="mt-12 w-full max-w-md bg-white/10 h-1.5 rounded-full overflow-hidden">
               <div className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 transition-all duration-300 ease-out shadow-[0_0_20px_rgba(255,255,255,0.5)]" style={{ width: `${aiProgress}%` }}></div>
             </div>
