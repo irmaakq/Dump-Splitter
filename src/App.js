@@ -740,23 +740,24 @@ const App = () => {
       };
 
       // URL'ler
+      // 1. TensorFlow.js
       const tfPrimary = "https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.20.0/dist/tf.min.js";
       const tfBackup = "https://unpkg.com/@tensorflow/tfjs@4.20.0/dist/tf.min.js";
 
+      // 2. Default Model (Gerekli - v1.0.0+)
+      const modelPrimary = "https://cdn.jsdelivr.net/npm/@upscalerjs/default-model@latest/dist/browser/umd/index.min.js";
+      const modelBackup = "https://unpkg.com/@upscalerjs/default-model@latest/dist/browser/umd/index.min.js";
+
+      // 3. UpscalerJS Core
       const upPrimary = "https://cdn.jsdelivr.net/npm/upscaler@latest/dist/browser/umd/upscaler.min.js";
       const upBackup = "https://unpkg.com/upscaler@latest/dist/browser/umd/upscaler.min.js";
 
-      // SIRALI YÜKLEME: Önce TFJS, Sonra Upscaler
+      // SIRALI YÜKLEME: TFJS -> Model -> Upscaler
       loadScriptWithFallback(tfPrimary, tfBackup)
-        .then(() => {
-          return loadScriptWithFallback(upPrimary, upBackup);
-        })
-        .then(() => {
-          resolve();
-        })
-        .catch(err => {
-          reject(err);
-        });
+        .then(() => loadScriptWithFallback(modelPrimary, modelBackup))
+        .then(() => loadScriptWithFallback(upPrimary, upBackup))
+        .then(() => resolve())
+        .catch(err => reject(err));
     });
   };
 
@@ -773,9 +774,8 @@ const App = () => {
 
     try {
       // 1. KÜTÜPHANE KONTROLÜ VE YÜKLEME
-      if (!window.Upscaler || !window.tf) {
-        // Kullanıcıya bilgi ver (Toast yerine ekrandaki progress bar'ı kullanabiliriz veya Toast geçebiliriz)
-        // Ancak burada setAiProgress(1) diyerek ekranda hareket başlatmak daha iyi.
+      // Modelin de yüklü olup olmadığına bakmalıyız
+      if (!window.Upscaler || !window.tf || !window['@upscalerjs/default-model']) {
         console.log("AI Modülleri Yükleniyor...");
         await loadAiLibrary();
       }
@@ -783,8 +783,10 @@ const App = () => {
       // Kütüphane yüklendi, şimdi işleme başla
       setAiProgress(5); // Başlangıç efekti
 
-      // BASİTLEŞTİRİLDİ: Parametre vermeden çağırınca default modeli (GANS) CDN'den kendi çeker.
-      const upscaler = new window.Upscaler();
+      // Model Tanımlama (V1.0.0+ için zorunlu)
+      const upscaler = new window.Upscaler({
+        model: window['@upscalerjs/default-model'],
+      });
 
       // ADIM 1: İlk Upscale (2x)
       setAiProgress(10);
