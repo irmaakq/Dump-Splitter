@@ -682,6 +682,10 @@ const App = () => {
       if (img) delete img.dataset.panStart;
     }
   };
+  // --- AI UPSCALE STATE ---
+  const [isAiUpscaling, setIsAiUpscaling] = useState(false);
+  const [aiProgress, setAiProgress] = useState(0);
+
   useEffect(() => {
     // 1. JSZip
     if (!window.JSZip) {
@@ -691,7 +695,23 @@ const App = () => {
       document.body.appendChild(script);
     }
 
-    // 2. Service Worker Registration
+    // 2. TensorFlow.js (Gerekli)
+    if (!window.tf) {
+      const scriptTF = document.createElement('script');
+      scriptTF.src = "https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js";
+      scriptTF.async = true;
+      document.body.appendChild(scriptTF);
+    }
+
+    // 3. UpscalerJS (Ana AI Kütüphanesi)
+    if (!window.Upscaler) {
+      const scriptUp = document.createElement('script');
+      scriptUp.src = "https://cdn.jsdelivr.net/npm/upscaler@latest/dist/browser/umd/upscaler.min.js";
+      scriptUp.async = true;
+      document.body.appendChild(scriptUp);
+    }
+
+    // 4. Service Worker Registration
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('/service-worker.js')
@@ -704,6 +724,107 @@ const App = () => {
       });
     }
   }, []);
+
+  // --- AI UPSCALE LOGIC ---
+  const handleAiUpscale = async (ratio) => { // ratio: 2 veya 4
+    if (!uploadedFile) return;
+    if (fileType === 'video') {
+      showToast("Video için AI Upscale henüz desteklenmiyor.", "error");
+      return;
+    }
+
+    // Kütüphane kontrolü
+    if (!window.Upscaler || !window.tf) {
+      showToast("Yapay Zeka Modülü Yükleniyor... Lütfen 5 saniye sonra tekrar deneyin.");
+      return;
+    }
+
+    setIsAiUpscaling(true);
+    setAiProgress(0);
+
+    try {
+      // Modeli seç (2x için default, 4x için x4 modelini kullanabiliriz ama basitlik için patch ile halledeceğiz veya default modeli kullanıp ratio'ya göre iterasyon yapabiliriz.
+      // UpscalerJS default modeli (ESRGAN-thick) 2x upscale yapar. 4x için işlemi 2 kere yapabiliriz veya 4x modelini yükleyebiliriz.
+      // Basitlik ve hız için: Default model (2x). Eğer 4x isteniyorsa çıktıyı alıp bir daha upscale edeceğiz (Chain).
+
+      const upscaler = new window.Upscaler({
+        model: window.Upscaler.models.default, // GANS (2x) usually
+      });
+
+      // ADIM 1: İlk Upscale (2x)
+      setAiProgress(10);
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      img.src = uploadedFile;
+
+      await new Promise(r => img.onload = r);
+
+      const dataUrl2x = await upscaler.upscale(img, {
+        patchSize: 64,
+        padding: 4,
+        progress: (amount) => {
+          // 0 ile 1.0 arasında gelir.
+          // 2x ise: %0 - %100 arası
+          // 4x ise: %0 - %50 arası (ilk adım)
+          const percentage = Math.round(amount * 100);
+          setAiProgress(ratio === 2 ? percentage : Math.floor(percentage / 2));
+        }
+      });
+
+      let finalUrl = dataUrl2x;
+
+      // ADIM 2: Eğer 4x istendiyse, sonucu tekrar upscale et
+      if (ratio === 4) {
+        setAiProgress(50);
+        const img2 = new Image();
+        img2.crossOrigin = "anonymous";
+        img2.src = dataUrl2x;
+        await new Promise(r => img2.onload = r);
+
+        finalUrl = await upscaler.upscale(img2, {
+          patchSize: 64,
+          padding: 4,
+          progress: (amount) => {
+            // %50 - %100 arası
+            const percentage = Math.round(amount * 50); // 0-50
+            setAiProgress(50 + percentage);
+          }
+        });
+      }
+
+      setAiProgress(100);
+
+      // İşlem Başarılı!
+      // Şimdi bu yeni URL'i sisteme "yeni dosya" gibi ekleyelim ama mevcutun üzerine yazsın istiyoruz.
+      // Aslında mantıklı olan: Mevcut dosya URL'ini güncellemek.
+
+      // 1. Blob'a çevir (URL sızıntısını önlemek için)
+      const res = await fetch(finalUrl);
+      const blob = await res.blob();
+      const newObjectUrl = URL.createObjectURL(blob); // Yeni temiz URL
+
+      setUploadedFile(newObjectUrl); // Aktif dosyayı değiştir
+
+      // FileList'i de güncelle ki thumbnaillerde görünsün
+      setFileList(prev => prev.map(f => {
+        if (f.url === uploadedFile) {
+          return { ...f, url: newObjectUrl };
+        }
+        return f;
+      }));
+
+      showToast(`Başarılı! Görüntü ${ratio}x boyutuna yükseltildi.`);
+
+    } catch (err) {
+      console.error(err);
+      showToast("Upscale Hatası: " + err.message, "error");
+    } finally {
+      setIsAiUpscaling(false);
+      setAiProgress(0);
+      // Zoom'u resetle ki devasa resmi görsünler
+      setZoom(50);
+    }
+  };
 
   const handleDockPointerDown = (e) => {
     if (e.target.closest('button') || e.target.closest('input')) return;
@@ -1684,6 +1805,38 @@ const App = () => {
                     ))}
                   </div>
                 </div>
+                {/* YENİ AI UPSCALE BÖLÜMÜ */}
+                <div className="p-5 bg-gradient-to-br from-blue-900/20 via-purple-900/20 to-pink-900/20 border border-white/10 rounded-[28px] space-y-4 relative overflow-hidden group/upscale">
+                  <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 opacity-50"></div>
+
+                  <div className="flex items-center gap-2 mb-2">
+                    <Sparkles size={16} className="text-pink-400 animate-pulse" />
+                    <span className="text-[12px] font-black text-white uppercase tracking-widest">AI SUPER UPSCALE</span>
+                  </div>
+
+                  <p className="text-[10px] text-gray-400 font-bold uppercase leading-relaxed">Bulanık fotoğrafları yapay zeka ile yeniden inşa et.</p>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      onClick={() => handleAiUpscale(2)}
+                      disabled={isAiUpscaling || fileType === 'video'}
+                      className="bg-black/40 hover:bg-white text-white hover:text-black border border-white/10 hover:border-white rounded-xl py-3 flex flex-col items-center justify-center transition-all group/btn"
+                    >
+                      <span className="text-lg font-black italic">2x</span>
+                      <span className="text-[9px] font-bold opacity-60 group-hover/btn:opacity-100 uppercase tracking-widest">Ratio: 200%</span>
+                    </button>
+
+                    <button
+                      onClick={() => handleAiUpscale(4)}
+                      disabled={isAiUpscaling || fileType === 'video'}
+                      className="bg-black/40 hover:bg-white text-white hover:text-black border border-white/10 hover:border-white rounded-xl py-3 flex flex-col items-center justify-center transition-all group/btn"
+                    >
+                      <span className="text-lg font-black italic">4x</span>
+                      <span className="text-[9px] font-bold opacity-60 group-hover/btn:opacity-100 uppercase tracking-widest">Ratio: 400%</span>
+                    </button>
+                  </div>
+                </div>
+
                 <div className="space-y-2 border-t border-white/5 pt-3"><FeatureToggle featureKey="ultraHd" state={ultraHdMode} onToggle={updateSetting} onInfo={setFeatureInfo} /></div>
                 <div className="space-y-3">
                   <span className="text-[12px] font-black text-gray-500 uppercase tracking-widest block">Parça Sayısı</span>
@@ -1840,25 +1993,47 @@ const App = () => {
             </div>
           </aside>
         </FadeInSection>
-      )}
+      )
+      }
 
-      {notification && (
-        <div className="fixed bottom-36 left-1/2 -translate-x-1/2 bg-white text-black px-12 py-5 rounded-[30px] font-black shadow-[0_30px_100px_rgba(0,0,0,0.5)] z-[200] flex items-center gap-4 animate-in slide-in-from-bottom-5 fade-in duration-300">
-          {notificationType === 'error' ? (
-            <X size={24} strokeWidth={3} className="text-red-500 shadow-xl scale-110" />
-          ) : (
-            <CheckCircle2 size={20} className="text-green-500 shadow-xl" />
-          )}
-          <span className="uppercase tracking-widest text-[10px] font-black">{notification}</span>
-        </div>
-      )}
+      {
+        notification && (
+          <div className="fixed bottom-36 left-1/2 -translate-x-1/2 bg-white text-black px-12 py-5 rounded-[30px] font-black shadow-[0_30px_100px_rgba(0,0,0,0.5)] z-[200] flex items-center gap-4 animate-in slide-in-from-bottom-5 fade-in duration-300">
+            {notificationType === 'error' ? (
+              <X size={24} strokeWidth={3} className="text-red-500 shadow-xl scale-110" />
+            ) : (
+              <CheckCircle2 size={20} className="text-green-500 shadow-xl" />
+            )}
+            <span className="uppercase tracking-widest text-[10px] font-black">{notification}</span>
+          </div>
+        )
+      }
+
+      {/* AI UPSCALE PROCESSING MODAL (FULL SCREEN) */}
+      {
+        (isAiUpscaling) && (
+          <div className="fixed inset-0 z-[250] bg-black/95 backdrop-blur-2xl flex flex-col items-center justify-center p-6 animate-in fade-in duration-500 cursor-wait">
+            <div className="relative">
+              <div className="w-32 h-32 rounded-full border-[8px] border-white/5 border-t-white animate-spin"></div>
+              <div className="absolute inset-0 flex items-center justify-center font-black text-2xl animate-pulse">{aiProgress}%</div>
+            </div>
+            <h2 className="text-3xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 uppercase tracking-tighter mt-12 mb-4 animate-pulse">Yapay Zeka Çalışıyor</h2>
+            <p className="text-gray-400 font-bold uppercase tracking-[0.3em] text-xs md:text-sm animate-bounce">Pikseller Yeniden İnşa Ediliyor...</p>
+            <div className="mt-12 w-full max-w-md bg-white/10 h-1.5 rounded-full overflow-hidden">
+              <div className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 transition-all duration-300 ease-out shadow-[0_0_20px_rgba(255,255,255,0.5)]" style={{ width: `${aiProgress}%` }}></div>
+            </div>
+            <p className="mt-6 text-gray-500 text-[10px] font-bold uppercase tracking-widest">Tahmini Süre: 10-30 Sn</p>
+          </div>
+        )
+      }
+
       <style>{`
         * { scrollbar-width: none; -ms-overflow-style: none; }
         *::-webkit-scrollbar { display: none; width: 0; background: transparent; }
         .custom-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         .custom-scrollbar::-webkit-scrollbar { width: 0px; background: transparent; }
       `}</style>
-    </div>
+    </div >
   );
 };
 
