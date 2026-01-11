@@ -533,6 +533,7 @@ const App = () => {
   const [page, setPage] = useState('landing');
   const [isProcessing, setIsProcessing] = useState(false);
   const [notification, setNotification] = useState(null);
+  const [notificationType, setNotificationType] = useState('success'); // 'success' | 'error'
   const [aiLogs, setAiLogs] = useState([]);
 
   // Sürükleme efekti için state
@@ -853,9 +854,13 @@ const App = () => {
     setFileType(fileItem.type);
   };
 
-  const showToast = (msg) => {
+  const showToast = (msg, type = 'success') => {
     setNotification(msg);
-    setTimeout(() => setNotification(null), 3000);
+    setNotificationType(type);
+    setTimeout(() => {
+      setNotification(null);
+      setNotificationType('success');
+    }, 3000);
   };
 
   const triggerFileInput = () => {
@@ -1307,15 +1312,25 @@ const App = () => {
     e.stopPropagation();
     setIsDragging(false); // GÜNCELLENDİ: State'i false yap
 
-    // 1. Klasör Kontrolü (Güvenlik Önlemi)
+    // 1. Klasör ve Dosya Tipi Kontrolü (Güvenlik Önlemi)
     const items = e.dataTransfer.items;
     if (items) {
       for (let i = 0; i < items.length; i++) {
         const item = items[i];
+
+        // A) Klasör Kontrolü
         if (item.webkitGetAsEntry) {
           const entry = item.webkitGetAsEntry();
           if (entry && entry.isDirectory) {
-            showToast("Klasör yükleme desteklenmiyor. Lütfen sadece video ya da fotoğraf sürükleyin.");
+            showToast("Lütfen sadece video ya da fotoğraf sürükleyin.", "error"); // Kırmızı X ile uyarı
+            return;
+          }
+        }
+
+        // B) Dosya Tipi Kontrolü (Herhangi biri bile hatalı olsa reddet)
+        if (item.kind === 'file') {
+          if (!item.type.startsWith('image/') && !item.type.startsWith('video/')) {
+            showToast("Lütfen sadece video ya da fotoğraf sürükleyin.", "error");
             return;
           }
         }
@@ -1827,7 +1842,16 @@ const App = () => {
         </FadeInSection>
       )}
 
-      {notification && (<div className="fixed bottom-36 left-1/2 -translate-x-1/2 bg-white text-black px-12 py-5 rounded-[30px] font-black shadow-[0_30px_100px_rgba(0,0,0,0.5)] z-[200] flex items-center gap-4 animate-in slide-in-from-bottom-5 fade-in duration-300"><CheckCircle2 size={20} className="text-green-500 shadow-xl" /><span className="uppercase tracking-widest text-[10px] font-black">{notification}</span></div>)}
+      {notification && (
+        <div className="fixed bottom-36 left-1/2 -translate-x-1/2 bg-white text-black px-12 py-5 rounded-[30px] font-black shadow-[0_30px_100px_rgba(0,0,0,0.5)] z-[200] flex items-center gap-4 animate-in slide-in-from-bottom-5 fade-in duration-300">
+          {notificationType === 'error' ? (
+            <X size={24} strokeWidth={3} className="text-red-500 shadow-xl scale-110" />
+          ) : (
+            <CheckCircle2 size={20} className="text-green-500 shadow-xl" />
+          )}
+          <span className="uppercase tracking-widest text-[10px] font-black">{notification}</span>
+        </div>
+      )}
       <style>{`
         * { scrollbar-width: none; -ms-overflow-style: none; }
         *::-webkit-scrollbar { display: none; width: 0; background: transparent; }
