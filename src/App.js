@@ -941,6 +941,7 @@ const App = () => {
     }
 
     setIsZipping(true);
+    // İlerleme çubuğunu sıfırla
     setZipProgress({ current: 0, total: fileList.length });
 
     const zip = new window.JSZip();
@@ -948,37 +949,38 @@ const App = () => {
 
     let processedCount = 0;
 
-    try {
-      for (let i = 0; i < fileList.length; i++) {
-        const fileItem = fileList[i];
-
-        setZipProgress({ current: processedCount + 1, total: fileList.length });
-
-        // 1. SADECE RESİM VE GEÇERLİ URL KONTROLÜ (Sessizce geç)
+    // --- YARDIMCI: DOKU İŞLEME (RETRY DESTEKLİ) ---
+    const processItem = async (fileItem, index, retryCount = 0) => {
+      try {
+        // 1. SADECE RESİM VE GEÇERLİ URL KONTROLÜ
         if (!fileItem || fileItem.type !== 'image' || !fileItem.url) {
-          processedCount++;
-          continue;
+          return;
         }
 
         const settings = fileItem.settings || DEFAULT_SETTINGS;
 
-        // 2. NEFES ALMA PAYI (CPU/RAM Soğutma)
-        await new Promise(r => setTimeout(r, 80));
-
-        // 3. RESİM İŞLEME (Asla Crash Etmez)
-        await new Promise((resolve) => {
+        // 2. RESİM YÜKLEME (Promise)
+        await new Promise((resolve, reject) => {
           const img = new Image();
 
+          // Zaman aşımı koruması (10 saniye içinde açılmazsa hata ver)
+          const timeoutTimer = setTimeout(() => {
+            img.src = "";
+            reject(new Error("Zaman Aşımı"));
+          }, 10000);
+
           img.onload = async () => {
+            clearTimeout(timeoutTimer);
             try {
               const w = img.width;
               const h = img.height;
 
               if (!w || !h) {
-                resolve();
+                reject(new Error("Boyut Hatası (0px)"));
                 return;
               }
 
+              // --- CANVAS İŞLEMLERİ (Aynen korundu) ---
               const scaleFactor = settings.ultraHdMode ? 2 : 1;
               const sW = Math.floor(w * scaleFactor);
               const sH = Math.floor(h * scaleFactor);
@@ -987,10 +989,10 @@ const App = () => {
               sourceCanvas.width = sW;
               sourceCanvas.height = sH;
 
+              // Mobile Memory Safe
               const sCtx = sourceCanvas.getContext('2d', { willReadFrequently: true });
-
               if (!sCtx) {
-                resolve();
+                reject(new Error("Canvas Oluşturulamadı"));
                 return;
               }
 
@@ -1008,6 +1010,7 @@ const App = () => {
               }
               sCtx.filter = 'none';
 
+              // --- PARÇALAMA DÖNGÜSÜ ---
               let rows = 1, cols = 1;
               if (settings.splitCount === 1) { rows = 1; cols = 1; }
               else if (settings.splitCount === 2) { rows = 2; cols = 1; }
@@ -1017,13 +1020,11 @@ const App = () => {
               const pW = Math.floor(sW / cols);
               const pH = Math.floor(sH / rows);
 
-              const imgFolder = folder.folder(`Image_${i + 1}`);
+              const imgFolder = folder.folder(`Image_${index + 1}`);
               let partIndex = 1;
 
-              // 4. PARÇALARI SIRAYLA OLUŞTUR (Memory Safe)
               for (let r = 0; r < rows; r++) {
                 for (let c = 0; c < cols; c++) {
-
                   const partCanvas = document.createElement('canvas');
                   partCanvas.width = pW;
                   partCanvas.height = pH;
@@ -1044,6 +1045,7 @@ const App = () => {
                         if (blob) {
                           imgFolder.file(`Part_${partIndex}.${settings.downloadFormat}`, blob);
                         }
+                        // Cleanup Part
                         partCanvas.width = 0;
                         partCanvas.height = 0;
                         resBlob();
@@ -1054,29 +1056,54 @@ const App = () => {
                 }
               }
 
+              // Cleanup Source
               sourceCanvas.width = 0;
               sourceCanvas.height = 0;
+              img.src = ""; // Clear mem
+              resolve();
 
             } catch (err) {
-              // Silent error
-            } finally {
-              img.src = "";
-              resolve();
+              reject(err);
             }
           };
 
           img.onerror = () => {
-            resolve();
+            clearTimeout(timeoutTimer);
+            reject(new Error("Resim Dosyası Açılamadı"));
           };
 
           img.src = fileItem.url;
         });
+      } catch (error) {
+        console.error(`Error processing item ${index}:`, error);
+        // RETRY LOGIC (1 Kere Tekrar Dene)
+        if (retryCount < 1) {
+          console.log(`Retrying item ${index}...`);
+          await new Promise(r => setTimeout(r, 1000)); // 1sn bekle ve tekrar dene
+          await processItem(fileItem, index, retryCount + 1);
+        } else {
+          // HATA RAPORU OLUŞTUR
+          const errorFolder = folder.folder(`HATA_Image_${index + 1}`);
+          errorFolder.file("Hata_Raporu.txt", `Bu dosya işlenirken bir hata oluştu.\nSebep: ${error.message}\nLütfen bu dosyayı tek başına indirmeyi deneyin.`);
+        }
+      }
+    };
+
+    try {
+      for (let i = 0; i < fileList.length; i++) {
+        // UI Güncelle
+        setZipProgress({ current: i + 1, total: fileList.length });
+
+        // 3. NEFES ALMA PAYI (300ms) - Arttırıldı
+        await new Promise(r => setTimeout(r, 300));
+
+        await processItem(fileList[i], i);
 
         processedCount++;
       }
 
       if (Object.keys(zip.files).length === 0) {
-        showToast("İndirilecek geçerli resim bulunamadı.");
+        showToast("İndirilecek dosya üretilemedi.");
       } else {
         const content = await zip.generateAsync({ type: "blob" });
         const link = document.createElement('a');
@@ -1086,13 +1113,14 @@ const App = () => {
         link.click();
         document.body.removeChild(link);
         setTimeout(() => URL.revokeObjectURL(link.href), 10000);
-        showToast("Arşiv başarıyla indirildi.");
+        showToast("İndirme tamamlandı! (Hata varsa ZIP içinde raporlanmıştır)");
       }
 
     } catch (globalError) {
-      showToast("Bir hata oluştu ama işlem kurtarıldı.");
+      showToast("Bir hata oluştu: " + globalError.message);
     } finally {
       setIsZipping(false);
+      setZipProgress({ current: 0, total: 0 }); // Reset
     }
   };
 
