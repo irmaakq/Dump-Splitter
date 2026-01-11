@@ -740,11 +740,11 @@ const App = () => {
       };
 
       // URL'ler
-      const tfPrimary = "https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.21.0/dist/tf.min.js";
-      const tfBackup = "https://unpkg.com/@tensorflow/tfjs@3.21.0/dist/tf.min.js";
+      const tfPrimary = "https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.20.0/dist/tf.min.js";
+      const tfBackup = "https://unpkg.com/@tensorflow/tfjs@4.20.0/dist/tf.min.js";
 
-      const upPrimary = "https://cdn.jsdelivr.net/npm/upscaler@0.13.2/dist/browser/umd/upscaler.min.js";
-      const upBackup = "https://unpkg.com/upscaler@0.13.2/dist/browser/umd/upscaler.min.js";
+      const upPrimary = "https://cdn.jsdelivr.net/npm/upscaler@latest/dist/browser/umd/upscaler.min.js";
+      const upBackup = "https://unpkg.com/upscaler@latest/dist/browser/umd/upscaler.min.js";
 
       // SIRALI YÜKLEME: Önce TFJS, Sonra Upscaler
       loadScriptWithFallback(tfPrimary, tfBackup)
