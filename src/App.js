@@ -703,7 +703,15 @@ const App = () => {
       document.body.appendChild(scriptTF);
     }
 
-    // 3. UpscalerJS (Ana AI Kütüphanesi)
+    // 3a. UpscalerJS Default Model (Gerekli)
+    if (!window['@upscalerjs/default-model']) {
+      const scriptModel = document.createElement('script');
+      scriptModel.src = "https://cdn.jsdelivr.net/npm/@upscalerjs/default-model@latest/dist/browser/umd/index.min.js";
+      scriptModel.async = true;
+      document.body.appendChild(scriptModel);
+    }
+
+    // 3b. UpscalerJS (Ana AI Kütüphanesi)
     if (!window.Upscaler) {
       const scriptUp = document.createElement('script');
       scriptUp.src = "https://cdn.jsdelivr.net/npm/upscaler@latest/dist/browser/umd/upscaler.min.js";
@@ -743,12 +751,13 @@ const App = () => {
     setAiProgress(0);
 
     try {
-      // Modeli seç (2x için default, 4x için x4 modelini kullanabiliriz ama basitlik için patch ile halledeceğiz veya default modeli kullanıp ratio'ya göre iterasyon yapabiliriz.
-      // UpscalerJS default modeli (ESRGAN-thick) 2x upscale yapar. 4x için işlemi 2 kere yapabiliriz veya 4x modelini yükleyebiliriz.
-      // Basitlik ve hız için: Default model (2x). Eğer 4x isteniyorsa çıktıyı alıp bir daha upscale edeceğiz (Chain).
+      // Modeli Hazırla
+      // CDN UMD kullanıldığında model window['@upscalerjs/default-model'] içinde olabilir.
+      // Eğer yoksa boş constructor deneriz (kendi yüklemeye çalışır).
+      const model = window['@upscalerjs/default-model'] || undefined;
 
       const upscaler = new window.Upscaler({
-        model: window.Upscaler.models.default, // GANS (2x) usually
+        model: model,
       });
 
       // ADIM 1: İlk Upscale (2x)
