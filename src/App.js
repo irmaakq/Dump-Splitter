@@ -1631,7 +1631,7 @@ const App = () => {
                   <span className="text-[12px] font-black text-gray-500 uppercase tracking-widest block">Parça Sayısı</span>
                   <div className="grid grid-cols-5 gap-2 w-full">
                     {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(num => (
-                      <button key={num} onClick={() => { skipFeedbackRef.current = true; updateSetting('splitCount', num); }} className={`aspect-square rounded-xl text-[12px] font-black flex items-center justify-center transition-all border ${splitCount === num ? 'bg-white text-black border-white shadow-[0_0_15px_rgba(255,255,255,0.3)] scale-105' : 'bg-white/5 border-white/10 text-gray-500 hover:bg-white/10 hover:text-white hover:border-white/30'}`}>{num}</button>
+                      <button key={num} onClick={() => { skipFeedbackRef.current = false; updateSetting('splitCount', num); }} className={`aspect-square rounded-xl text-[12px] font-black flex items-center justify-center transition-all border ${splitCount === num ? 'bg-white text-black border-white shadow-[0_0_15px_rgba(255,255,255,0.3)] scale-105' : 'bg-white/5 border-white/10 text-gray-500 hover:bg-white/10 hover:text-white hover:border-white/30'}`}>{num}</button>
                     ))}
                   </div>
                 </div>
