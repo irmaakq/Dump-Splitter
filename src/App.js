@@ -682,12 +682,7 @@ const App = () => {
       if (img) delete img.dataset.panStart;
     }
   };
-  // --- REFS ---
-  const upscalerRef = useRef(null); // AI Modeli için Singleton Ref
-  // --- AI UPSCALE STATE ---
-  const [isAiUpscaling, setIsAiUpscaling] = useState(false);
-  const [aiProgress, setAiProgress] = useState(0);
-  const [upscaleFactor, setUpscaleFactor] = useState(1);
+
 
   useEffect(() => {
     // 1. JSZip
@@ -712,188 +707,7 @@ const App = () => {
     }
   }, []);
 
-  // --- AI LIBRARY LOADER ---
-  const loadAiLibrary = () => {
-    return new Promise((resolve, reject) => {
-      // Zaten yüklüyse hemen dön
-      if (window.Upscaler && window.tf) {
-        resolve();
-        return;
-      }
 
-      // Helper function with fallback
-      const loadScriptWithFallback = (primarySrc, backupSrc) => {
-        return new Promise((res, rej) => {
-          const tryLoad = (src, isBackup = false) => {
-            const script = document.createElement('script');
-            script.src = src;
-            script.onload = () => res();
-            script.onerror = () => {
-              if (!isBackup) {
-                console.warn(`Primary CDN failed for ${src}, trying backup...`);
-                tryLoad(backupSrc, true);
-              } else {
-                rej(new Error(`Script yüklenemedi (Yedek dahil): ${src}`));
-              }
-            };
-            document.body.appendChild(script);
-          };
-          tryLoad(primarySrc);
-        });
-      };
-
-      // URL'ler
-      // 1. TensorFlow.js
-      const tfPrimary = "https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.20.0/dist/tf.min.js";
-      const tfBackup = "https://unpkg.com/@tensorflow/tfjs@4.20.0/dist/tf.min.js";
-
-      // 2. Default Model (Gerekli - v1.0.0+)
-      // package.json "umd:main": "dist/umd/index.min.js"
-      const modelPrimary = "https://cdn.jsdelivr.net/npm/@upscalerjs/default-model@latest/dist/umd/index.min.js";
-      const modelBackup = "https://unpkg.com/@upscalerjs/default-model@latest/dist/umd/index.min.js";
-
-      // 3. UpscalerJS Core
-      const upPrimary = "https://cdn.jsdelivr.net/npm/upscaler@latest/dist/browser/umd/upscaler.min.js";
-      const upBackup = "https://unpkg.com/upscaler@latest/dist/browser/umd/upscaler.min.js";
-
-      // SIRALI YÜKLEME: TFJS -> Model -> Upscaler
-      loadScriptWithFallback(tfPrimary, tfBackup)
-        .then(() => loadScriptWithFallback(modelPrimary, modelBackup))
-        .then(() => loadScriptWithFallback(upPrimary, upBackup))
-        .then(() => resolve())
-        .catch(err => reject(err));
-    });
-  };
-
-  // --- AI UPSCALE LOGIC ---
-  const handleAiUpscale = async (ratio) => { // ratio: 2 veya 4
-    if (isAiUpscaling) return; // Çift tıklamayı önle
-
-    if (upscaleFactor >= ratio) {
-      showToast(`Bu görsel zaten ${upscaleFactor}x kalitesinde (veya daha yüksek).`, "error");
-      return;
-    }
-
-    if (!uploadedFile) return;
-    if (fileType === 'video') {
-      showToast("Video için AI Upscale henüz desteklenmiyor.", "error");
-      return;
-    }
-
-    setIsAiUpscaling(true);
-    setAiProgress(0);
-
-    // Bloğu UI'ın güncellenmesi için bir sonraki tick'e at
-    await new Promise(r => setTimeout(r, 10));
-
-    let tensorInput = null;
-    let tensorResult1 = null;
-    let tensorResultFinal = null;
-    const tf = window.tf;
-
-    try {
-      // 1. KÜTÜPHANE KONTROLÜ VE YÜKLEME
-      if (!window.Upscaler || !tf || !window['@upscalerjs/default-model']) {
-        console.log("AI Modülleri Yükleniyor...");
-        await loadAiLibrary();
-      }
-
-      setAiProgress(5);
-
-      // 2. UPSCALER BAŞLATMA (Singleton Pattern - Ref Kullanarak)
-      // Eğer daha önce oluşturulduysa onu kullan, yoksa yenisini yarat ve sakla.
-      // Bu, "Failed to link vertex/fragment shaders" hatasını (WebGL context kaybını) önler.
-      if (!upscalerRef.current) {
-        upscalerRef.current = new window.Upscaler({
-          model: window['@upscalerjs/default-model'],
-        });
-      }
-
-      const upscaler = upscalerRef.current;
-
-      // ADIM 1: İlk Upscale (2x)
-      setAiProgress(10);
-
-      // Orijinal görseli yükle
-      const originalImage = new Image();
-      if (typeof uploadedFile === 'string') {
-        originalImage.src = uploadedFile;
-      } else {
-        originalImage.src = URL.createObjectURL(uploadedFile);
-      }
-      await new Promise((r) => (originalImage.onload = r));
-
-      // Görüntüyü Tensör'e çevir (GPU Belleği)
-      tensorInput = tf.browser.fromPixels(originalImage);
-
-      setAiProgress(20);
-
-      // İlk işlem (2x) -> Çıktı olarak Tensor al
-      tensorResult1 = await upscaler.upscale(tensorInput, {
-        patchSize: 64,
-        padding: 2,
-        output: 'tensor',
-        progress: (amount) => {
-          setAiProgress(Math.round(20 + (amount * 40)));
-        }
-      });
-
-      let finalTensor = tensorResult1;
-
-      // Eğer 4x isteniyorsa, sonucu tekrar işle (2x * 2x = 4x)
-      if (ratio === 4) {
-        setAiProgress(60);
-
-        // Önceki tensor'u girdi olarak kullan
-        tensorResultFinal = await upscaler.upscale(tensorResult1, {
-          patchSize: 64,
-          padding: 2,
-          output: 'tensor',
-          progress: (amount) => {
-            setAiProgress(Math.round(70 + (amount * 25)));
-          }
-        });
-
-        finalTensor = tensorResultFinal;
-      }
-
-      setAiProgress(95);
-
-      // Sonucu Canvas'a yazdır (toPixels)
-      const outputCanvas = document.createElement('canvas');
-      outputCanvas.width = finalTensor.shape[1];
-      outputCanvas.height = finalTensor.shape[0];
-
-      await tf.browser.toPixels(finalTensor, outputCanvas);
-
-      // Canvas'ı Blob'a çevir
-      const blob = await new Promise(resolve => outputCanvas.toBlob(resolve, uploadedFile.type, 1.0));
-      const newFile = new File([blob], `upscaled_${uploadedFile.name || 'image.png'}`, { type: uploadedFile.type });
-
-      setUploadedFile(newFile);
-      const newUrl = URL.createObjectURL(newFile);
-      setFileList([{ file: newFile, preview: newUrl }]);
-      setUpscaleFactor(ratio); // Yeni kalite seviyesini kaydet
-
-      showToast(`Görsel başarıyla ${ratio}x büyütüldü ve netleştirildi!`, "success");
-
-    } catch (error) {
-      console.error("Upscale Hatası:", error);
-      showToast(`Upscale Hatası: ${error.message || error}`, "error");
-
-      // Hata durumunda ref'i temizle ki bir dahakine temiz kurulum yapsın
-      upscalerRef.current = null;
-    } finally {
-      // TEMİZLİK: Hafızadaki Tensorları sil (Memory Leak Önleme)
-      if (tensorInput) tensorInput.dispose();
-      if (tensorResult1) tensorResult1.dispose();
-      // finalTensor referans oldugu icin dispose etmeye gerek yok ama tensorResultFinal yaratildiysa silinmeli
-      if (tensorResultFinal) tensorResultFinal.dispose();
-
-      setIsAiUpscaling(false); // Her durumda loading'i kapat
-      setAiProgress(0);
-    }
-  };
 
   const handleDockPointerDown = (e) => {
     if (e.target.closest('button') || e.target.closest('input')) return;
@@ -1877,34 +1691,7 @@ const App = () => {
                   </div>
                 </div>
                 {/* YENİ AI UPSCALE BÖLÜMÜ */}
-                <div className="p-5 bg-gradient-to-br from-blue-900/20 via-purple-900/20 to-pink-900/20 border border-white/10 rounded-[28px] space-y-4 relative overflow-hidden group/upscale">
-                  <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 opacity-50"></div>
 
-                  <div className="flex items-center gap-2 mb-2">
-                    <Sparkles size={16} className="text-pink-400 animate-pulse" />
-                    <span className="text-[12px] font-black text-white uppercase tracking-widest">AI SUPER UPSCALE</span>
-                  </div>
-
-                  <p className="text-[10px] text-gray-400 font-bold uppercase leading-relaxed">Bulanık fotoğrafları yapay zeka ile yeniden inşa et.</p>
-
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => handleAiUpscale(2)}
-                      disabled={isAiUpscaling}
-                      className="flex-1 bg-[#151515] border border-[#222] rounded-lg py-3 px-3 hover:border-purple-500/50 transition-all group flex flex-col items-center gap-2 relative overflow-hidden"
-                    >
-                      <span className="text-xs font-medium text-gray-400 group-hover:text-purple-400 transition-colors">2x (200%)</span>
-                      {/* ... icon ... */}
-                    </button>
-                    <button
-                      onClick={() => handleAiUpscale(4)}
-                      disabled={isAiUpscaling}
-                      className="flex-1 bg-[#151515] border border-[#222] rounded-lg py-3 px-3 hover:border-purple-500/50 transition-all group flex flex-col items-center gap-2 relative overflow-hidden"
-                    >
-                      <span className="text-xs font-medium text-gray-400 group-hover:text-purple-400 transition-colors">4x (400%)</span>
-                    </button>
-                  </div>
-                </div>
 
                 <div className="space-y-2 border-t border-white/5 pt-3"><FeatureToggle featureKey="ultraHd" state={ultraHdMode} onToggle={updateSetting} onInfo={setFeatureInfo} /></div>
                 <div className="space-y-3">
@@ -2080,24 +1867,7 @@ const App = () => {
 
       {/* AI UPSCALE PROCESSING MODAL (FULL SCREEN) */}
       {
-        (isAiUpscaling) && (
-          <div className="fixed inset-0 z-[250] bg-black/95 backdrop-blur-2xl flex flex-col items-center justify-center p-6 animate-in fade-in duration-500 cursor-wait">
-            <div className="relative">
-              <div className="w-32 h-32 rounded-full border-[8px] border-white/5 border-t-white animate-spin"></div>
-              <div className="absolute inset-0 flex items-center justify-center font-black text-2xl animate-pulse">{aiProgress}%</div>
-            </div>
-            <h2 className="text-3xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 uppercase tracking-tighter mt-12 mb-4 animate-pulse">
-              {aiProgress < 5 ? "Modül Yükleniyor..." : "Yapay Zeka Çalışıyor"}
-            </h2>
-            <p className="text-gray-400 font-bold uppercase tracking-[0.3em] text-xs md:text-sm animate-bounce">
-              {aiProgress < 5 ? "Gerekli dosyalar indiriliyor..." : "Pikseller Yeniden İnşa Ediliyor..."}
-            </p>
-            <div className="mt-12 w-full max-w-md bg-white/10 h-1.5 rounded-full overflow-hidden">
-              <div className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 transition-all duration-300 ease-out shadow-[0_0_20px_rgba(255,255,255,0.5)]" style={{ width: `${aiProgress}%` }}></div>
-            </div>
-            <p className="mt-6 text-gray-500 text-[10px] font-bold uppercase tracking-widest">Tahmini Süre: 10-30 Sn</p>
-          </div>
-        )
+
       }
 
       <style>{`
