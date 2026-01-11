@@ -1579,8 +1579,7 @@ const App = () => {
                       {splitSlides.length > 0 ? splitSlides.map((s) => (
                         <div key={`${uploadedFile}-${s.id}`} style={{ aspectRatio: s.aspectRatio, transform: `scale(${zoom / 100})`, transformOrigin: 'center center', transition: 'transform 0.2s' }} className="relative w-full max-w-[500px] h-auto max-h-[50vh] md:max-h-[70vh] bg-white/5 group hover:scale-[1.01] transition-all flex items-center justify-center snap-center rounded-2xl md:rounded-3xl overflow-hidden shadow-2xl">
                           <div
-                            className="relative w-full h-full touch-none"
-                            style={{ touchAction: 'none' }}
+                            className="relative w-full h-full"
                             onPointerDown={handlePointerDown}
                             onPointerMove={handlePointerMove}
                             onPointerUp={handlePointerUp}
