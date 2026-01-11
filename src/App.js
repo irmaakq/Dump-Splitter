@@ -718,21 +718,38 @@ const App = () => {
         return;
       }
 
-      // Helper function to load script
-      const loadScript = (src) => {
+      // Helper function with fallback
+      const loadScriptWithFallback = (primarySrc, backupSrc) => {
         return new Promise((res, rej) => {
-          const script = document.createElement('script');
-          script.src = src;
-          script.onload = () => res();
-          script.onerror = () => rej(new Error(`Script yüklenemedi: ${src}`));
-          document.body.appendChild(script);
+          const tryLoad = (src, isBackup = false) => {
+            const script = document.createElement('script');
+            script.src = src;
+            script.onload = () => res();
+            script.onerror = () => {
+              if (!isBackup) {
+                console.warn(`Primary CDN failed for ${src}, trying backup...`);
+                tryLoad(backupSrc, true);
+              } else {
+                rej(new Error(`Script yüklenemedi (Yedek dahil): ${src}`));
+              }
+            };
+            document.body.appendChild(script);
+          };
+          tryLoad(primarySrc);
         });
       };
 
-      // SIRALI YÜKLEME: Önce TFJS, Sonra Upscaler (jsDelivr kullanarak)
-      loadScript("https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.21.0/dist/tf.min.js")
+      // URL'ler
+      const tfPrimary = "https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.21.0/dist/tf.min.js";
+      const tfBackup = "https://unpkg.com/@tensorflow/tfjs@3.21.0/dist/tf.min.js";
+
+      const upPrimary = "https://cdn.jsdelivr.net/npm/upscaler@0.13.2/dist/browser/umd/upscaler.min.js";
+      const upBackup = "https://unpkg.com/upscaler@0.13.2/dist/browser/umd/upscaler.min.js";
+
+      // SIRALI YÜKLEME: Önce TFJS, Sonra Upscaler
+      loadScriptWithFallback(tfPrimary, tfBackup)
         .then(() => {
-          return loadScript("https://cdn.jsdelivr.net/npm/upscaler@0.13.2/dist/browser/umd/upscaler.min.js");
+          return loadScriptWithFallback(upPrimary, upBackup);
         })
         .then(() => {
           resolve();
