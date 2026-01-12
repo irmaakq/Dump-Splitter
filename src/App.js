@@ -1410,7 +1410,8 @@ const App = () => {
           setHdMode(DEFAULT_SETTINGS.hdMode);
           setOptimizeMode(DEFAULT_SETTINGS.optimizeMode);
           setSmartCrop(DEFAULT_SETTINGS.smartCrop);
-          setUltraHdSelection(DEFAULT_SETTINGS.ultraHdSelection);
+          setUltraHdMode(DEFAULT_SETTINGS.ultraHdMode);
+          setUltraHd4xMode(DEFAULT_SETTINGS.ultraHd4xMode);
 
           setSplitSlides([]);
           setIsProcessing(false);
