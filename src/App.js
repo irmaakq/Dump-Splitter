@@ -908,7 +908,6 @@ const App = () => {
 
       case 'autoEnhance': setAutoEnhance(value); break;
       case 'optimizeMode': setOptimizeMode(value); break;
-      case 'ultraHdSelection': setUltraHdSelection(value); break;
     }
 
     if (uploadedFile) {
