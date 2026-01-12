@@ -3,11 +3,11 @@
 // CLIENT-SIDE 4X UPSCALING WORKER (Production Grade)
 // Stack: TensorFlow.js + UpscalerJS + Tiled Inference Pipeline
 
-// 1. STABLE IMPORTS (No @latest)
+// 1. STABLE IMPORTS (Updated to working Unpkg paths)
 importScripts('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.17.0/dist/tf.min.js');
-importScripts('https://cdn.jsdelivr.net/npm/upscaler@0.13.2/dist/browser/umd/upscaler.min.js');
-importScripts('https://cdn.jsdelivr.net/npm/@upscalerjs/default-model@0.22.4/dist/umd/index.min.js');
-importScripts('https://cdn.jsdelivr.net/npm/@upscalerjs/esrgan-thick@0.22.4/dist/umd/models/esrgan-thick/src/umd.min.js');
+importScripts('https://unpkg.com/upscaler@latest/dist/browser/umd/upscaler.min.js');
+importScripts('https://unpkg.com/@upscalerjs/default-model@latest/dist/umd/index.min.js');
+importScripts('https://unpkg.com/@upscalerjs/esrgan-thick@latest/dist/umd/models/esrgan-thick/src/umd.min.js');
 
 // 2. CONFIGURATION
 const CONFIG = {
