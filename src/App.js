@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useUpscaler } from './src/hooks/useUpscaler';
 import {
   Upload, Minus, Plus, Image as ImageIcon, Video, Check,
   Sparkles,
@@ -546,6 +547,20 @@ const App = () => {
   const [notification, setNotification] = useState(null);
   const [notificationType, setNotificationType] = useState('success'); // 'success' | 'error'
   const [aiLogs, setAiLogs] = useState([]);
+
+  // --- HOOK INTEGRATION ---
+  const { upscaleImage, message: aiMessage, status: upscaleStatus, cancel: cancelUpscale } = useUpscaler();
+
+  // Sync Hook messages to UI Logs
+  useEffect(() => {
+    if (aiMessage) {
+      setAiLogs(prev => {
+        // Prevent duplicates
+        if (prev.length > 0 && prev[prev.length - 1] === aiMessage) return prev;
+        return [...prev, aiMessage];
+      });
+    }
+  }, [aiMessage]);
 
   // Sürükleme efekti için state
   const [isDragging, setIsDragging] = useState(false);
@@ -1598,87 +1613,42 @@ const App = () => {
         finalH = h;
 
         if ((ultraHdMode || ultraHd4xMode) && !forceStandard) {
-          if (!isSilent) setAiLogs(prev => [...prev, `AI Super Resolution (${ultraHd4xMode ? '4X' : '2X'}) başlatılıyor (Web Worker)...`]);
 
-          // 1. Worker Başlat (Veya Mevcut Olanı Al)
-          if (!aiWorkerRef.current) {
-            aiWorkerRef.current = new Worker('./aiWorker.js');
+          // --- AI HOOK INTEGRATION ---
+
+          // 1. Prepare Input (Blob for Video, URL/Blob for Image)
+          let inputSource = sourceUrl;
+          if (isVideo) {
+            const tempC = document.createElement('canvas');
+            tempC.width = w; tempC.height = h;
+            tempC.getContext('2d').drawImage(mediaElement, 0, 0);
+            // Convert canvas to blob for the worker
+            inputSource = await new Promise(r => tempC.toBlob(r));
           }
-          // Worker'a modeli ısıtması için sinyal gönder (Model Tipi ile)
-          const modelType = ultraHd4xMode ? '4x' : '2x';
-          aiWorkerRef.current.postMessage({ type: 'MakeModelReady', id: 'init', modelType });
 
-          // 2. Piksel Verisini Hazırla
-          const tempC = document.createElement('canvas');
-          tempC.width = w; tempC.height = h;
-          tempC.getContext('2d').drawImage(mediaElement, 0, 0);
-          const imageData = tempC.getContext('2d').getImageData(0, 0, w, h);
-
-          // 3. Worker'a Gönder ve Bekle (Promise Wrapper)
-          const resultData = await new Promise((resolve, reject) => {
-            const worker = aiWorkerRef.current;
-            const currentReqId = myId;
-
-            // Timeout Ekle (Model Tipine Göre Dinamik)
-            // 4X modeli çok ağır olduğu için 5 dakika (300s), 2X için 1 dakika (60s) veriyoruz
-            const timeoutDuration = ultraHd4xMode ? 300000 : 60000;
-
-            const timeoutId = setTimeout(() => {
-              worker.removeEventListener('message', handler);
-              worker.removeEventListener('error', errorHandler);
-              reject(new Error(`İşlem zaman aşımına uğradı (${timeoutDuration / 1000}sn). Cihazınız bu model için yetersiz olabilir.`));
-            }, timeoutDuration);
-
-            const errorHandler = (err) => {
-              clearTimeout(timeoutId);
-              worker.removeEventListener('message', handler);
-              worker.removeEventListener('error', errorHandler);
-              reject(new Error("Worker Yüklenemedi: " + (err.message || "Dosya Bulunamadı veya Erişim Hatası")));
-            };
-
-            const handler = (e) => {
-              const { type, id, message, result, error } = e.data;
-              // Sadece kendi işlemimize ait mesajları dinle
-              if (id !== currentReqId && id !== 'init') return;
-
-              if (type === 'progress') {
-                if (!isSilent) setAiLogs(prev => [...prev.slice(-2), message]);
-              } else if (type === 'complete') {
-                clearTimeout(timeoutId);
-                worker.removeEventListener('message', handler);
-                worker.removeEventListener('error', errorHandler);
-                resolve(result);
-              } else if (type === 'error') {
-                clearTimeout(timeoutId);
-                worker.removeEventListener('message', handler);
-                worker.removeEventListener('error', errorHandler);
-                reject(new Error(error));
-              }
-            };
-
-            worker.addEventListener('message', handler);
-            worker.addEventListener('error', errorHandler);
-            worker.postMessage({ type: 'Upscale', imageData, id: currentReqId, modelType: ultraHd4xMode ? '4x' : '2x' });
-          });
+          // 2. Call Hook (Handles Worker Lifecycle Internally)
+          const resultUrl = await upscaleImage(inputSource, ultraHd4xMode ? '4x' : '2x');
 
           if (myId !== processingIdRef.current) return;
 
-          // 4. Sonucu Canvas'a Bas
-          finalW = resultData.width;
-          finalH = resultData.height;
+          // 3. Process Result
+          const resImg = new Image();
+          resImg.src = resultUrl;
+          await new Promise((resolve, reject) => {
+            resImg.onload = resolve;
+            resImg.onerror = () => reject(new Error("Upscaled image failed to load"));
+          });
 
-          const finalCanvas = document.createElement('canvas');
-          finalCanvas.width = finalW;
-          finalCanvas.height = finalH;
-          const fCtx = finalCanvas.getContext('2d');
-          const finalImageData = new ImageData(new Uint8ClampedArray(resultData.data), finalW, finalH);
-          fCtx.putImageData(finalImageData, 0, 0);
+          finalW = resImg.width;
+          finalH = resImg.height;
 
           processingCanvas.width = finalW;
           processingCanvas.height = finalH;
-          processingCanvas.getContext('2d').drawImage(finalCanvas, 0, 0);
+          processingCanvas.getContext('2d').drawImage(resImg, 0, 0);
 
-          if (!isSilent) setAiLogs(prev => [...prev, `Upscale tamamlandı: ${finalW}x${finalH}`]);
+          // Cleanup result URL after drawing
+          setTimeout(() => URL.revokeObjectURL(resultUrl), 1000);
+
         } else {
           // No Upscale -> Draw directly to canvas
           processingCanvas.width = w;
