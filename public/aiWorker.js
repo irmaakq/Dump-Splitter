@@ -52,11 +52,13 @@ const initModel = async (modelType = '2x') => {
             if (!self.EsrganThick) {
                 console.log("Loading 4X Model Script...");
                 // Use JSDelivr for better stability
-                importScripts('https://cdn.jsdelivr.net/npm/@upscalerjs/esrgan-thick@latest/dist/umd/index.min.js');
+                importScripts('https://cdn.jsdelivr.net/npm/@upscalerjs/esrgan-thick@latest/dist/umd/models/esrgan-thick/src/umd.min.js');
             }
             // Check if loaded correctly
-            if (!self.EsrganThick) throw new Error("4X Model Script yüklendi ama 'EsrganThick' bulunamadı.");
-            selectedModel = self.EsrganThick;
+            if (!self.EsrganThick && !self.ESRGANThick) throw new Error("4X Model Script yüklendi ama 'EsrganThick' bulunamadı.");
+            const esrganLib = self.EsrganThick || self.ESRGANThick;
+            // The UMD bundle exports { ESRGANThick2x, ESRGANThick4x, ... }
+            selectedModel = esrganLib.ESRGANThick4x || esrganLib;
 
         } else {
             // 2X Default
