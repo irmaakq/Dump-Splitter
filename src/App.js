@@ -1696,7 +1696,11 @@ const App = () => {
           });
 
           // Her parçadan sonra UI'a nefes aldır (Donmayı önle)
-          await tf.nextFrame();
+          if (window.tf) {
+            await window.tf.nextFrame();
+          } else {
+            await new Promise(r => setTimeout(r, 0));
+          }
         }
       }
 
