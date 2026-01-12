@@ -1480,20 +1480,25 @@ const App = () => {
       cleanupCache(); // Ensure fresh start
     }
 
-    const isSilent = skipFeedbackRef.current || canUseCache;
+    const isSilent = skipFeedbackRef.current;
     if (!isSilent) {
       setIsProcessing(true);
       setAiLogs([]);
 
-      // Logları zamana yayarak göster
-      SPLITTER_STATUS_MSGS.forEach((msg, i) => {
-        setTimeout(() => {
-          if (myId === processingIdRef.current) setAiLogs(prev => [...prev.slice(-3), msg]);
-        }, i * 350);
-      });
-
-      // CRITICAL: UI'ın "Yükleniyor" ekranını çizmesi için bir nefes aldır
-      await new Promise(r => setTimeout(r, 100));
+      if (!canUseCache) {
+        // Logları zamana yayarak göster (Sadece yeni AI işlemlerinde)
+        SPLITTER_STATUS_MSGS.forEach((msg, i) => {
+          setTimeout(() => {
+            if (myId === processingIdRef.current) setAiLogs(prev => [...prev.slice(-3), msg]);
+          }, i * 350);
+        });
+        // UI'ın "Yükleniyor" ekranını çizmesi için bir nefes aldır
+        await new Promise(r => setTimeout(r, 150));
+        if (window.tf) await window.tf.nextFrame();
+      } else {
+        // Cache varsa anında hızlı feedback ver
+        setAiLogs(["Dinamik Bölme İşleniyor..."]);
+      }
     }
 
     try {
@@ -1557,6 +1562,7 @@ const App = () => {
 
           if (myId !== processingIdRef.current) { normalizedTensor.dispose(); return; }
           if (!isSilent) setAiLogs(prev => [...prev, "Pikseller analiz ediliyor..."]);
+          await tf.nextFrame();
 
           // 2.4 Run Inference (2x)
           let upscaledTensor = await upscaler.upscale(normalizedTensor, {
@@ -1566,6 +1572,7 @@ const App = () => {
           });
 
           normalizedTensor.dispose();
+          await tf.nextFrame();
 
           // 2.5 Convert Final Tensor back to Canvas (With Output Clipping)
           finalW = upscaledTensor.shape[1];
@@ -1579,6 +1586,7 @@ const App = () => {
           const outputClipped = tf.tidy(() => upscaledTensor.clipByValue(0, 1));
           await tf.browser.toPixels(outputClipped, finalCanvas);
           outputClipped.dispose();
+          await tf.nextFrame();
 
           processingCanvas.width = finalW;
           processingCanvas.height = finalH;
@@ -1686,6 +1694,9 @@ const App = () => {
             label: `Parça ${parts.length + 1}`,
             aspectRatio: pW / pH
           });
+
+          // Her parçadan sonra UI'a nefes aldır (Donmayı önle)
+          await tf.nextFrame();
         }
       }
 
@@ -1916,10 +1927,32 @@ const App = () => {
               </div>
             </div>
             <div className="p-6 lg:p-8 border-t border-white/5 hidden lg:block">
-              <button onClick={() => processSplit(uploadedFile, fileType === 'video')} disabled={isProcessing || !uploadedFile} className={`w-full py-4 lg:py-5 rounded-[24px] font-black text-xs transition-all shadow-2xl ${isProcessing || !uploadedFile ? 'bg-white/5 text-gray-600' : 'bg-white text-black hover:bg-gray-200 active:scale-95 uppercase tracking-widest'}`}>{isProcessing ? 'İŞLENİYOR...' : 'YENİDEN BÖL'}</button>
+              <button
+                onClick={() => {
+                  skipFeedbackRef.current = false;
+                  cleanupCache();
+                  setIsContentReady(false);
+                  processSplit(uploadedFile, fileType === 'video');
+                }}
+                disabled={!uploadedFile}
+                className={`w-full py-4 lg:py-5 rounded-[24px] font-black text-xs transition-all shadow-2xl ${!uploadedFile ? 'bg-white/5 text-gray-600' : 'bg-white text-black hover:bg-gray-200 active:scale-95 uppercase tracking-widest'}`}
+              >
+                {isProcessing ? 'İŞLENİYOR...' : 'YENİDEN BÖL'}
+              </button>
             </div>
             <div className="p-6 lg:hidden border-t border-white/5 pb-8">
-              <button onClick={() => processSplit(uploadedFile, fileType === 'video')} disabled={isProcessing || !uploadedFile} className={`w-full py-4 rounded-[24px] font-black text-xs transition-all shadow-2xl ${isProcessing || !uploadedFile ? 'bg-white/5 text-gray-600' : 'bg-white text-black hover:bg-gray-200 active:scale-95 uppercase tracking-widest'}`}>{isProcessing ? 'İŞLENİYOR...' : 'YENİDEN BÖL'}</button>
+              <button
+                onClick={() => {
+                  skipFeedbackRef.current = false;
+                  cleanupCache();
+                  setIsContentReady(false);
+                  processSplit(uploadedFile, fileType === 'video');
+                }}
+                disabled={!uploadedFile}
+                className={`w-full py-4 rounded-[24px] font-black text-xs transition-all shadow-2xl ${!uploadedFile ? 'bg-white/5 text-gray-600' : 'bg-white text-black hover:bg-gray-200 active:scale-95 uppercase tracking-widest'}`}
+              >
+                {isProcessing ? 'İŞLENİYOR...' : 'YENİDEN BÖL'}
+              </button>
             </div>
           </aside>
 
@@ -2000,7 +2033,7 @@ const App = () => {
                 </div>
               )}
               {isProcessing && (
-                <div className="absolute inset-0 z-[100] bg-black/40 backdrop-blur-xl flex flex-col items-center justify-center animate-in fade-in duration-500">
+                <div className="absolute inset-0 z-[100] bg-black/40 backdrop-blur-md flex flex-col items-center justify-center animate-in fade-in duration-500">
                   <div className="w-16 h-16 md:w-20 md:h-20 border-[6px] border-white/5 border-t-white rounded-[40px] animate-spin mb-8 md:mb-10 shadow-2xl" />
                   <div className="space-y-4 text-center max-w-xs">{aiLogs.slice(-2).map((log, i) => (<p key={i} className={`text-xs md:text-sm font-black uppercase tracking-[0.3em] italic leading-relaxed ${i === 1 ? 'text-white' : 'text-gray-500 opacity-50'}`}>{log}</p>))}</div>
                 </div>
