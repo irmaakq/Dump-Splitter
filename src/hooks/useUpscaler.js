@@ -63,7 +63,7 @@ export function useUpscaler() {
             try {
                 // Initialize Worker (v2 for optimized performance)
                 // Cache-busting (?v=timestamp) eklenerek tarayıcının eski sürümü tutması engellenir.
-                const workerUrl = `/aiWorker_v2.js?v=${Date.now()}`;
+                const workerUrl = `/aiWorker.js?v=${Date.now()}`;
                 const worker = new Worker(workerUrl);
                 workerRef.current = worker;
 
@@ -185,3 +185,4 @@ export function useUpscaler() {
         error
     };
 }
+
