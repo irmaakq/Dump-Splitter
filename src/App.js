@@ -1789,7 +1789,8 @@ const App = () => {
           }
 
           console.log("AI Worker terminated. Retrying with Standard Mode.");
-          showToast(`Cihazınız AI işlemini kaldıramadı (GPU/Bellek). Standart olarak devam ediliyor.`, "error");
+          // DEBUG: Show actual error to user for diagnosis
+          showToast(`AI Hatası: ${error.message} (Fallback Active)`, "error");
 
           // Give UI a moment to breathe then retry
           setTimeout(() => {
