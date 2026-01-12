@@ -841,12 +841,19 @@ const App = () => {
   const shouldResetList = useRef(false);
   const activeUrlsRef = useRef([]);
   const processingIdRef = useRef(0); // Concurrency control için
+  const processedCanvasRef = useRef(null); // AI/Enhance cache
+  const lastAiParamsRef = useRef(null); // Hangi ayarlarla AI yapıldı?
 
   // --- MEMORY CLEANUP HELPER ---
   const cleanupFile = useCallback((url) => {
     if (!url) return;
     URL.revokeObjectURL(url);
     activeUrlsRef.current = activeUrlsRef.current.filter(u => u !== url);
+  }, []);
+
+  const cleanupCache = useCallback(() => {
+    processedCanvasRef.current = null;
+    lastAiParamsRef.current = null;
   }, []);
 
   useEffect(() => {
@@ -935,6 +942,8 @@ const App = () => {
     setUploadedFile(fileItem.url);
     setFileType(fileItem.type);
     setUpscaleFactor(1); // Reset upscale status for new file
+    cleanupCache();      // Reset AI cache for new file
+    setAiLogs([]);       // Clear logs
   };
 
   const showToast = (msg, type = 'success') => {
@@ -979,6 +988,7 @@ const App = () => {
 
     // Clean up memory for the deleted file
     cleanupFile(uploadedFile);
+    cleanupCache();
 
     const newList = fileList.filter((_, i) => i !== currentIndex);
     setFileList(newList);
@@ -1450,167 +1460,196 @@ const App = () => {
     // Concurrency control: Stale işlemlerden kurtulmak için ID ata
     const myId = ++processingIdRef.current;
 
-    // YENİ UX: Eğer zaten bir fotoğraf yüklüyse ekranı tamamen karartma (siyah ekranı önle)
-    const isHardReset = !splitSlides || splitSlides.length === 0;
+    // AI Önbellek Kontrolü (Sadece parça sayısı değiştiyse AI'yı tekrar yapma)
+    const currentParams = JSON.stringify({
+      url: sourceUrl,
+      enhance: autoEnhance,
+      hd: hdMode,
+      opt: optimizeMode,
+      crop: smartCrop,
+      uhd: ultraHdMode
+    });
+
+    const canUseCache = processedCanvasRef.current && lastAiParamsRef.current === currentParams;
+
+    // YENİ UX: Eğer zaten bir fotoğraf yüklüyse ve cache yoksa ekranı tamamen karartma
+    const isHardReset = (!splitSlides || splitSlides.length === 0) && !canUseCache;
     if (isHardReset) {
       setIsContentReady(false);
       setSplitSlides([]);
+      cleanupCache(); // Ensure fresh start
     }
 
-    const isSilent = skipFeedbackRef.current;
+    const isSilent = skipFeedbackRef.current || canUseCache;
     if (!isSilent) {
       setIsProcessing(true);
       setAiLogs([]);
 
       // Logları zamana yayarak göster
       SPLITTER_STATUS_MSGS.forEach((msg, i) => {
-        setTimeout(() => setAiLogs(prev => [...prev.slice(-3), msg]), i * 350);
+        setTimeout(() => {
+          if (myId === processingIdRef.current) setAiLogs(prev => [...prev.slice(-3), msg]);
+        }, i * 350);
       });
 
       // CRITICAL: UI'ın "Yükleniyor" ekranını çizmesi için bir nefes aldır
       await new Promise(r => setTimeout(r, 100));
     }
 
-    // Gecikmeli Başlat (Fade-out efekti için)
-    await new Promise(r => setTimeout(r, 250));
-    if (!sourceUrl) {
-      setSplitSlides([]);
-      setIsContentReady(true);
-      return;
-    }
-
     try {
-      // --- MEDIA LOAD ---
-      const mediaElement = isVideo ? document.createElement('video') : new Image();
-      mediaElement.setAttribute('crossOrigin', 'anonymous');
-      mediaElement.src = sourceUrl;
+      let finalW, finalH, sourceCanvas;
 
-      await new Promise((resolveMedia, rejectMedia) => {
-        if (isVideo) {
-          mediaElement.muted = true;
-          // loadeddata -> currentTime -> seeked
-          mediaElement.onloadeddata = () => { mediaElement.currentTime = 0.5; };
-          mediaElement.onseeked = resolveMedia;
-          mediaElement.onerror = rejectMedia;
+      if (canUseCache) {
+        // --- CACHE HIT: Sadece Bölme İşlemi Yap ---
+        sourceCanvas = processedCanvasRef.current;
+        finalW = sourceCanvas.width;
+        finalH = sourceCanvas.height;
+      } else {
+        // --- CACHE MISS: Tüm Pipeline'ı Çalıştır ---
+
+        // Gecikmeli Başlat (Fade-out efekti için)
+        await new Promise(r => setTimeout(r, 200));
+
+        // --- MEDIA LOAD ---
+        const mediaElement = isVideo ? document.createElement('video') : new Image();
+        mediaElement.setAttribute('crossOrigin', 'anonymous');
+        mediaElement.src = sourceUrl;
+
+        await new Promise((resolveMedia, rejectMedia) => {
+          if (isVideo) {
+            mediaElement.muted = true;
+            // loadeddata -> currentTime -> seeked
+            mediaElement.onloadeddata = () => { mediaElement.currentTime = 0.5; };
+            mediaElement.onseeked = resolveMedia;
+            mediaElement.onerror = rejectMedia;
+          } else {
+            mediaElement.onload = resolveMedia;
+            mediaElement.onerror = rejectMedia;
+          }
+        });
+
+        const w = isVideo ? mediaElement.videoWidth : mediaElement.width;
+        const h = isVideo ? mediaElement.videoHeight : mediaElement.height;
+
+        // --- PIPELINE STEP 1: Determine Essentials ---
+        const upscaleFactor = ultraHdMode ? 2 : 1;
+        if (myId !== processingIdRef.current) return;
+        let processingCanvas = document.createElement('canvas'); // Temporary working canvas
+        finalW = w;
+        finalH = h;
+
+        if (ultraHdMode) {
+          if (!isSilent) setAiLogs(prev => [...prev, "AI Super Resolution (2x) başlatılıyor..."]);
+
+          // 2.1 Load Library
+          await loadAiLibrary();
+          const tf = window.tf;
+
+          // 2.2 Initialize Upscaler
+          const upscaler = new window.Upscaler({
+            model: window['@upscalerjs/default-model'],
+          });
+
+          // 2.3 Convert to Tensor & Normalize (CRITICAL FIX)
+          let rawPixels = tf.browser.fromPixels(mediaElement);
+          let normalizedTensor = tf.tidy(() => rawPixels.cast('float32').div(255.0).clipByValue(0, 1));
+          rawPixels.dispose();
+
+          if (myId !== processingIdRef.current) { normalizedTensor.dispose(); return; }
+          if (!isSilent) setAiLogs(prev => [...prev, "Pikseller analiz ediliyor..."]);
+
+          // 2.4 Run Inference (2x)
+          let upscaledTensor = await upscaler.upscale(normalizedTensor, {
+            patchSize: 64,
+            padding: 2,
+            output: 'tensor'
+          });
+
+          normalizedTensor.dispose();
+
+          // 2.5 Convert Final Tensor back to Canvas (With Output Clipping)
+          finalW = upscaledTensor.shape[1];
+          finalH = upscaledTensor.shape[0];
+
+          const finalCanvas = document.createElement('canvas');
+          finalCanvas.width = finalW;
+          finalCanvas.height = finalH;
+
+          // Model bazen 1.0'ın çok az üstünde değer üretebilir (örn: 1.009), clipping şart.
+          const outputClipped = tf.tidy(() => upscaledTensor.clipByValue(0, 1));
+          await tf.browser.toPixels(outputClipped, finalCanvas);
+          outputClipped.dispose();
+
+          processingCanvas.width = finalW;
+          processingCanvas.height = finalH;
+          const pCtx = processingCanvas.getContext('2d');
+          pCtx.drawImage(finalCanvas, 0, 0);
+
+          // Cleanup
+          upscaledTensor.dispose();
+
+          if (!isSilent) setAiLogs(prev => [...prev, `Upscale tamamlandı: ${finalW}x${finalH}`]);
         } else {
-          mediaElement.onload = resolveMedia;
-          mediaElement.onerror = rejectMedia;
+          // No Upscale -> Draw directly to canvas
+          processingCanvas.width = w;
+          processingCanvas.height = h;
+          const pCtx = processingCanvas.getContext('2d');
+          pCtx.drawImage(mediaElement, 0, 0);
         }
-      });
 
-      const w = isVideo ? mediaElement.videoWidth : mediaElement.width;
-      const h = isVideo ? mediaElement.videoHeight : mediaElement.height;
+        setMediaDimensions({ width: finalW, height: finalH });
 
-      // --- PIPELINE STEP 1: Determine Essentials ---
-      const upscaleFactor = ultraHdMode ? 2 : 1;
-      if (myId !== processingIdRef.current) return;
-      let processingCanvas = document.createElement('canvas'); // Temporary working canvas
-      let finalW = w;
-      let finalH = h;
+        // --- PIPELINE STEP 3: ENHANCE / PRE-PROCESS ---
+        sourceCanvas = document.createElement('canvas');
+        sourceCanvas.width = finalW;
+        sourceCanvas.height = finalH;
+        const sCtx = sourceCanvas.getContext('2d', { willReadFrequently: true });
 
-      if (ultraHdMode) {
-        if (!isSilent) setAiLogs(prev => [...prev, "AI Super Resolution (2x) başlatılıyor..."]);
+        // a) Smart Crop
+        if (smartCrop) {
+          const cropMargin = 0.02;
+          const srcX = finalW * cropMargin;
+          const srcY = finalH * cropMargin;
+          const srcW = finalW * (1 - 2 * cropMargin);
+          const srcH = finalH * (1 - 2 * cropMargin);
+          sCtx.drawImage(processingCanvas, srcX, srcY, srcW, srcH, 0, 0, finalW, finalH);
+        } else {
+          sCtx.drawImage(processingCanvas, 0, 0);
+        }
 
-        // 2.1 Load Library
-        await loadAiLibrary();
-        const tf = window.tf;
+        // b) HD Mode (Deblur / Sharpen)
+        // Artık HD Mode aktifse Sharpen filtresini uyguluyoruz
+        if (hdMode) {
+          applySharpen(sCtx, finalW, finalH, 0.7); // 0.7 intensity
+          if (!isSilent) setAiLogs(prev => [...prev, "Detail Reconstruction uygulandı."]);
+        }
 
-        // 2.2 Initialize Upscaler
-        const upscaler = new window.Upscaler({
-          model: window['@upscalerjs/default-model'],
-        });
+        // c) AI Enhance (Color Correction)
+        if (autoEnhance) {
+          // Bu CSS filtresi oldugu icin sCtx uzerinde drawImage yaparken veya sonrasinda 
+          // apply etmek icin: context'in filter ozelligini set edip kendisini kendisine cizdiririz.
+          const contrastVal = hdMode ? 1.15 : 1.1;
+          const saturateVal = hdMode ? 1.25 : 1.15;
 
-        // 2.3 Convert to Tensor & Normalize (CRITICAL FIX)
-        let rawPixels = tf.browser.fromPixels(mediaElement);
-        let normalizedTensor = tf.tidy(() => rawPixels.cast('float32').div(255.0).clipByValue(0, 1));
-        rawPixels.dispose();
+          // Mevcut içeriği temp canvas'a al
+          const tempC = document.createElement('canvas');
+          tempC.width = finalW;
+          tempC.height = finalH;
+          tempC.getContext('2d').drawImage(sourceCanvas, 0, 0);
 
-        if (myId !== processingIdRef.current) { normalizedTensor.dispose(); return; }
-        if (!isSilent) setAiLogs(prev => [...prev, "Pikseller analiz ediliyor..."]);
+          sCtx.filter = `contrast(${contrastVal}) saturate(${saturateVal}) brightness(1.05)`;
+          sCtx.drawImage(tempC, 0, 0);
+          sCtx.filter = 'none';
+        }
 
-        // 2.4 Run Inference (2x)
-        let upscaledTensor = await upscaler.upscale(normalizedTensor, {
-          patchSize: 64,
-          padding: 2,
-          output: 'tensor'
-        });
-
-        normalizedTensor.dispose();
-
-        // 2.5 Convert Final Tensor back to Canvas (With Output Clipping)
-        finalW = upscaledTensor.shape[1];
-        finalH = upscaledTensor.shape[0];
-
-        const finalCanvas = document.createElement('canvas');
-        finalCanvas.width = finalW;
-        finalCanvas.height = finalH;
-
-        // Model bazen 1.0'ın çok az üstünde değer üretebilir (örn: 1.009), clipping şart.
-        const outputClipped = tf.tidy(() => upscaledTensor.clipByValue(0, 1));
-        await tf.browser.toPixels(outputClipped, finalCanvas);
-        outputClipped.dispose();
-
-        processingCanvas.width = finalW;
-        processingCanvas.height = finalH;
-        const pCtx = processingCanvas.getContext('2d');
-        pCtx.drawImage(finalCanvas, 0, 0);
-
-        // Cleanup
-        upscaledTensor.dispose();
-
-        if (!isSilent) setAiLogs(prev => [...prev, `Upscale tamamlandı: ${finalW}x${finalH}`]);
-      } else {
-        // No Upscale -> Draw directly to canvas
-        processingCanvas.width = w;
-        processingCanvas.height = h;
-        const pCtx = processingCanvas.getContext('2d');
-        pCtx.drawImage(mediaElement, 0, 0);
+        // Sonucu Cache'e yaz
+        processedCanvasRef.current = sourceCanvas;
+        lastAiParamsRef.current = currentParams;
       }
 
+      // Pipeline Step 4 ve sonrası için değişkenleri hazırla
+      // sourceCanvas, finalW ve finalH zaten güncel
       setMediaDimensions({ width: finalW, height: finalH });
-
-      // --- PIPELINE STEP 3: ENHANCE / PRE-PROCESS ---
-      const sourceCanvas = document.createElement('canvas');
-      sourceCanvas.width = finalW;
-      sourceCanvas.height = finalH;
-      const sCtx = sourceCanvas.getContext('2d', { willReadFrequently: true });
-
-      // a) Smart Crop
-      if (smartCrop) {
-        const cropMargin = 0.02;
-        const srcX = finalW * cropMargin;
-        const srcY = finalH * cropMargin;
-        const srcW = finalW * (1 - 2 * cropMargin);
-        const srcH = finalH * (1 - 2 * cropMargin);
-        sCtx.drawImage(processingCanvas, srcX, srcY, srcW, srcH, 0, 0, finalW, finalH);
-      } else {
-        sCtx.drawImage(processingCanvas, 0, 0);
-      }
-
-      // b) HD Mode (Deblur / Sharpen)
-      // Artık HD Mode aktifse Sharpen filtresini uyguluyoruz
-      if (hdMode) {
-        applySharpen(sCtx, finalW, finalH, 0.7); // 0.7 intensity
-        if (!isSilent) setAiLogs(prev => [...prev, "Detail Reconstruction uygulandı."]);
-      }
-
-      // c) AI Enhance (Color Correction)
-      if (autoEnhance) {
-        // Bu CSS filtresi oldugu icin sCtx uzerinde drawImage yaparken veya sonrasinda 
-        // apply etmek icin: context'in filter ozelligini set edip kendisini kendisine cizdiririz.
-        const contrastVal = hdMode ? 1.15 : 1.1;
-        const saturateVal = hdMode ? 1.25 : 1.15;
-
-        // Mevcut içeriği temp canvas'a al
-        const tempC = document.createElement('canvas');
-        tempC.width = finalW;
-        tempC.height = finalH;
-        tempC.getContext('2d').drawImage(sourceCanvas, 0, 0);
-
-        sCtx.filter = `contrast(${contrastVal}) saturate(${saturateVal}) brightness(1.05)`;
-        sCtx.drawImage(tempC, 0, 0);
-        sCtx.filter = 'none';
-      }
 
       // --- PIPELINE STEP 4: SPLIT ---
       let parts = [];
@@ -1654,8 +1693,8 @@ const App = () => {
 
       if (myId === processingIdRef.current) {
         setIsProcessing(false);
-        if (!isSilent) {
-          showToast(`İşlem Tamamlandı! (${upscaleFactor > 1 ? upscaleFactor + 'x AI Upscale' : 'Standart'})`);
+        if (!isSilent && !canUseCache) {
+          showToast(`İşlem Tamamlandı! (${ultraHdMode ? '2x AI Upscale' : 'Standart'})`);
         }
         setIsContentReady(true);
       }
@@ -1869,15 +1908,6 @@ const App = () => {
                   <div className="grid grid-cols-5 gap-2 w-full">
                     {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(num => (
                       <button key={num} onClick={() => {
-                        // 1. ZORLA TEMİZLE VE LOADING AÇ
-                        setSplitSlides([]);
-                        setIsContentReady(false);
-                        setIsProcessing(true);
-
-                        // 2. Beklemeyi iptal et (animasyon görünsün)
-                        skipFeedbackRef.current = false;
-
-                        // 3. Ayarı güncelle (ProcessSplit zaten useEffect ile tetiklenecek ama biz önden hazırladık)
                         updateSetting('splitCount', num);
                       }} className={`aspect-square rounded-xl text-[12px] font-black flex items-center justify-center transition-all border ${splitCount === num ? 'bg-white text-black border-white shadow-[0_0_15px_rgba(255,255,255,0.3)] scale-105' : 'bg-white/5 border-white/10 text-gray-500 hover:bg-white/10 hover:text-white hover:border-white/30'}`}>{num}</button>
                     ))}
