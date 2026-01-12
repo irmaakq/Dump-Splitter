@@ -843,6 +843,7 @@ const App = () => {
   const processingIdRef = useRef(0); // Concurrency control için
   const processedCanvasRef = useRef(null); // AI/Enhance cache
   const lastAiParamsRef = useRef(null); // Hangi ayarlarla AI yapıldı?
+  const aiWorkerRef = useRef(null); // WEB WORKER REFERENCE
 
   // --- MEMORY CLEANUP HELPER ---
   const cleanupFile = useCallback((url) => {
@@ -854,6 +855,12 @@ const App = () => {
   const cleanupCache = useCallback(() => {
     processedCanvasRef.current = null;
     lastAiParamsRef.current = null;
+
+    // Worker'ı da temizle (hafızayı boşalt)
+    if (aiWorkerRef.current) {
+      aiWorkerRef.current.terminate();
+      aiWorkerRef.current = null;
+    }
   }, []);
 
   useEffect(() => {
@@ -861,6 +868,10 @@ const App = () => {
       // Cleanup all URLs on unmount
       activeUrlsRef.current.forEach(url => URL.revokeObjectURL(url));
       activeUrlsRef.current = [];
+
+      if (aiWorkerRef.current) {
+        aiWorkerRef.current.terminate();
+      }
     };
   }, []);
 
@@ -1544,57 +1555,62 @@ const App = () => {
         finalH = h;
 
         if (ultraHdMode) {
-          if (!isSilent) setAiLogs(prev => [...prev, "AI Super Resolution (2x) başlatılıyor..."]);
+          if (!isSilent) setAiLogs(prev => [...prev, "AI Super Resolution (2x) başlatılıyor (Web Worker)..."]);
 
-          // 2.1 Load Library
-          await loadAiLibrary();
-          const tf = window.tf;
+          // 1. Worker Başlat (Veya Mevcut Olanı Al)
+          if (!aiWorkerRef.current) {
+            aiWorkerRef.current = new Worker('./aiWorker.js');
+            // Worker'a modeli ısıtması için sinyal gönder
+            aiWorkerRef.current.postMessage({ type: 'MakeModelReady', id: 'init' });
+          }
 
-          // 2.2 Initialize Upscaler
-          const upscaler = new window.Upscaler({
-            model: window['@upscalerjs/default-model'],
+          // 2. Piksel Verisini Hazırla
+          const tempC = document.createElement('canvas');
+          tempC.width = w; tempC.height = h;
+          tempC.getContext('2d').drawImage(mediaElement, 0, 0);
+          const imageData = tempC.getContext('2d').getImageData(0, 0, w, h);
+
+          // 3. Worker'a Gönder ve Bekle (Promise Wrapper)
+          const resultData = await new Promise((resolve, reject) => {
+            const worker = aiWorkerRef.current;
+            const currentReqId = myId;
+
+            const handler = (e) => {
+              const { type, id, message, result, error } = e.data;
+              // Sadece kendi işlemimize ait mesajları dinle
+              if (id !== currentReqId && id !== 'init') return;
+
+              if (type === 'progress') {
+                if (!isSilent) setAiLogs(prev => [...prev.slice(-2), message]);
+              } else if (type === 'complete') {
+                worker.removeEventListener('message', handler);
+                resolve(result);
+              } else if (type === 'error') {
+                worker.removeEventListener('message', handler);
+                reject(new Error(error));
+              }
+            };
+
+            worker.addEventListener('message', handler);
+            worker.postMessage({ type: 'Upscale', imageData, id: currentReqId }); // imageData kopyalanacak, Transferable kullanmak için buffer'ı ayırmak lazım ama şimdilik güvenli kopya yeterli.
           });
 
-          // 2.3 Convert to Tensor & Normalize (CRITICAL FIX)
-          let rawPixels = tf.browser.fromPixels(mediaElement);
-          let normalizedTensor = tf.tidy(() => rawPixels.cast('float32').div(255.0).clipByValue(0, 1));
-          rawPixels.dispose();
+          if (myId !== processingIdRef.current) return;
 
-          if (myId !== processingIdRef.current) { normalizedTensor.dispose(); return; }
-          if (!isSilent) setAiLogs(prev => [...prev, "Pikseller analiz ediliyor..."]);
-          await tf.nextFrame();
-
-          // 2.4 Run Inference (2x)
-          let upscaledTensor = await upscaler.upscale(normalizedTensor, {
-            patchSize: 64,
-            padding: 2,
-            output: 'tensor'
-          });
-
-          normalizedTensor.dispose();
-          await tf.nextFrame();
-
-          // 2.5 Convert Final Tensor back to Canvas (With Output Clipping)
-          finalW = upscaledTensor.shape[1];
-          finalH = upscaledTensor.shape[0];
+          // 4. Sonucu Canvas'a Bas
+          finalW = resultData.width;
+          finalH = resultData.height;
 
           const finalCanvas = document.createElement('canvas');
           finalCanvas.width = finalW;
           finalCanvas.height = finalH;
-
-          // Model bazen 1.0'ın çok az üstünde değer üretebilir (örn: 1.009), clipping şart.
-          const outputClipped = tf.tidy(() => upscaledTensor.clipByValue(0, 1));
-          await tf.browser.toPixels(outputClipped, finalCanvas);
-          outputClipped.dispose();
-          await tf.nextFrame();
+          const fCtx = finalCanvas.getContext('2d');
+          const finalImageData = new ImageData(new Uint8ClampedArray(resultData.data), finalW, finalH);
+          fCtx.putImageData(finalImageData, 0, 0);
 
           processingCanvas.width = finalW;
           processingCanvas.height = finalH;
-          const pCtx = processingCanvas.getContext('2d');
-          pCtx.drawImage(finalCanvas, 0, 0);
-
-          // Cleanup
-          upscaledTensor.dispose();
+          processingCanvas.getContext('2d').drawImage(finalCanvas, 0, 0);
 
           if (!isSilent) setAiLogs(prev => [...prev, `Upscale tamamlandı: ${finalW}x${finalH}`]);
         } else {
