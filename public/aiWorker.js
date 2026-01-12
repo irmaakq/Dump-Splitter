@@ -110,9 +110,9 @@ const processTiled = async (imageData, modelType, id) => {
 
             if (tileW <= 0 || tileH <= 0) continue;
 
-            // 2. Extract Tile Tensor
+            // 2. Extract Tile Tensor (Normalize to 0-1 for Model)
             const tileTensor = tf.tidy(() => {
-                return fullTensor.slice([y1, x1, 0], [tileH, tileW, 3]);
+                return fullTensor.slice([y1, x1, 0], [tileH, tileW, 3]).div(255.0);
             });
 
             // 3. Inference
