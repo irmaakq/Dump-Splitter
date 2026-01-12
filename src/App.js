@@ -926,10 +926,15 @@ const App = () => {
       }));
     }
 
-    // Ultra HD açılıyorsa feedback ver, kapanıyorsa sessizce yap ki takılma hissedilmesin
-    if ((key === 'ultraHd' || key === 'ultraHdMode') && !!value) {
+    // GÜNCELLENDİ: Ultra HD değiştiğinde HER ZAMAN feedback ver (Açılırken de kapanırken de)
+    if (key === 'ultraHd' || key === 'ultraHdMode') {
       skipFeedbackRef.current = false;
-    } else {
+    }
+    // GÜNCELLENDİ: Split count değiştiğinde de feedback ver (Yumuşak geçiş için)
+    else if (key === 'splitCount') {
+      skipFeedbackRef.current = false;
+    }
+    else {
       skipFeedbackRef.current = true;
     }
   };
@@ -1497,8 +1502,16 @@ const App = () => {
       setAiLogs([]);
 
       if (!canUseCache) {
-        // Logları zamana yayarak göster (Sadece yeni AI işlemlerinde)
-        SPLITTER_STATUS_MSGS.forEach((msg, i) => {
+        // Logları duruma göre seç
+        let msgs = SPLITTER_STATUS_MSGS;
+
+        // Eğer Ultra HD kapalıysa (yani kapatılıyorsa veya normal açılışsa) daha sade mesajlar göster
+        if (!ultraHdMode) {
+          msgs = ["Ultra HD Kapatılıyor...", "Standart Görünüm Hazırlanıyor..."];
+        }
+
+        // Logları zamana yayarak göster
+        msgs.forEach((msg, i) => {
           setTimeout(() => {
             if (myId === processingIdRef.current) setAiLogs(prev => [...prev.slice(-3), msg]);
           }, i * 350);
@@ -1507,8 +1520,12 @@ const App = () => {
         await new Promise(r => setTimeout(r, 150));
         if (window.tf) await window.tf.nextFrame();
       } else {
-        // Cache varsa anında hızlı feedback ver
-        setAiLogs(["Dinamik Bölme İşleniyor..."]);
+        // --- CACHE HIT (Yumuşak Geçiş & Split Count Değişimi) ---
+        setAiLogs(["Görünüm Düzenleniyor..."]);
+
+        // YUMUŞAK GEÇİŞ GECİKMESİ (Smooth Transition)
+        // Kullanıcı anlık 'snap' yerine şık bir bekleme istediği için 400ms bekletiyoruz.
+        await new Promise(r => setTimeout(r, 400));
       }
     }
 
