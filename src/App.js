@@ -1495,7 +1495,7 @@ const App = () => {
     }
   }, [splitCount, autoEnhance, hdMode, optimizeMode, smartCrop, downloadFormat, page, uploadedFile, ultraHdMode, ultraHd4xMode]);
 
-  const processSplit = async (sourceUrl, isVideo) => {
+  const processSplit = async (sourceUrl, isVideo, forceStandard = false) => {
     if (!sourceUrl) return;
 
     // Concurrency control: Stale işlemlerden kurtulmak için ID ata
@@ -1597,7 +1597,7 @@ const App = () => {
         finalW = w;
         finalH = h;
 
-        if (ultraHdMode || ultraHd4xMode) {
+        if ((ultraHdMode || ultraHd4xMode) && !forceStandard) {
           if (!isSilent) setAiLogs(prev => [...prev, `AI Super Resolution (${ultraHd4xMode ? '4X' : '2X'}) başlatılıyor (Web Worker)...`]);
 
           // 1. Worker Başlat (Veya Mevcut Olanı Al)
@@ -1619,12 +1619,15 @@ const App = () => {
             const worker = aiWorkerRef.current;
             const currentReqId = myId;
 
-            // Timeout Ekle (45 Saniye)
+            // Timeout Ekle (Model Tipine Göre Dinamik)
+            // 4X modeli çok ağır olduğu için 5 dakika (300s), 2X için 1 dakika (60s) veriyoruz
+            const timeoutDuration = ultraHd4xMode ? 300000 : 60000;
+
             const timeoutId = setTimeout(() => {
               worker.removeEventListener('message', handler);
               worker.removeEventListener('error', errorHandler);
-              reject(new Error("İşlem zaman aşımına uğradı. (Worker Yanıt Vermedi)"));
-            }, 45000);
+              reject(new Error(`İşlem zaman aşımına uğradı (${timeoutDuration / 1000}sn). Cihazınız bu model için yetersiz olabilir.`));
+            }, timeoutDuration);
 
             const errorHandler = (err) => {
               clearTimeout(timeoutId);
@@ -1799,6 +1802,33 @@ const App = () => {
     } catch (error) {
       console.error("Pipeline Error:", error);
       if (myId === processingIdRef.current) {
+
+        // --- AUTO-FALLBACK TO STANDARD MODE ---
+        if ((ultraHdMode || ultraHd4xMode) && !forceStandard) {
+          console.warn("AI Failure detected. Falling back to Standard Mode...");
+          if (!isSilent) setAiLogs(prev => [...prev, "AI Başarısız. Standart moda geçiliyor..."]);
+
+          // 1. Kill the potentially stuck worker
+          if (aiWorkerRef.current) {
+            aiWorkerRef.current.terminate();
+            aiWorkerRef.current = null;
+          }
+
+          // 2. Temporarily disable AI flags for this run
+          // We don't change state (ultraHdMode) so the UI toggle stays on, 
+          // but we process this specific request as standard.
+          // However, to avoid confusion, it might be better to turn them off or just process once.
+          // Let's recursively call with forceStandard = true.
+
+          showToast(`AI Yetersiz Bellek/Hata. Standart Kaliteye dönüldü.`, "error");
+
+          // Give UI a moment to breathe then retry
+          setTimeout(() => {
+            processSplit(sourceUrl, isVideo, true);
+          }, 500);
+          return;
+        }
+
         setIsProcessing(false);
         setIsContentReady(true);
         showToast(`İşlem sırasında hata: ${error.message.toUpperCase()}`, "error");
