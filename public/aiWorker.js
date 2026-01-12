@@ -10,11 +10,11 @@ importScripts('https://unpkg.com/upscaler@0.13.3/dist/browser/umd/upscaler.min.j
 importScripts('https://unpkg.com/@upscalerjs/default-model@0.1.0/dist/umd/index.min.js');
 importScripts('https://unpkg.com/@upscalerjs/esrgan-thick@0.1.0/dist/umd/models/esrgan-thick/src/umd.min.js');
 
-// 2. CONFIGURATION (Ayarlar - OPTİMİZE EDİLMİŞ VERSİYON)
+// 2. CONFIGURATION (Ayarlar - ULTRA STABİLİTE)
 const CONFIG = {
-    TILE_SIZE: 192,      // 64/128 küçük kaldığı için overhead (kenar işlem yükü) şişti. 192 ile dengeliyoruz.
-    PADDING: 24,         // 32 yerine 24 yapıyoruz (Yeterli ve daha hafif).
-    DELAY_MS: 50,        // Tile büyüdüğü için işlem sürecek, bekleme süresini 50'ye çektik (Akıcılık için).
+    TILE_SIZE: 128,      // 128px ideal denge.
+    PADDING: 12,         // ÖNEMLİ: Padding 32 çok fazlaydı (RAM şişiriyordu). 12px (Input) -> 48px (Output) overlap yeterli.
+    DELAY_MS: 100,       // GPU dinlendirme.
     TENSOR_CLEANUP: true
 };
 
@@ -84,7 +84,12 @@ const processTiled = async (imageData, modelType, id) => {
     const outH = h * scale;
 
     // Sonuç için bellek ayır (Arabellek yok, direkt hedef buffer)
-    const finalBuffer = new Uint8ClampedArray(outW * outH * 4);
+    let finalBuffer;
+    try {
+        finalBuffer = new Uint8ClampedArray(outW * outH * 4);
+    } catch (e) {
+        throw new Error(`Bellek Hatası: Çıktı resmi çok büyük (${outW}x${outH}). Lütfen daha küçük bir resim ile deneyin.`);
+    }
 
     // Grid (Izgara) Hesaplaması
     const cols = Math.ceil(w / CONFIG.TILE_SIZE);
