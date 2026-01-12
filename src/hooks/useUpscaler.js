@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 
 /**
  * @typedef {'2x' | '4x'} UpscaleType
@@ -16,7 +16,8 @@ import { useState, useRef, useCallback } from 'react';
 
 /**
  * Hook for Client-Side 4X/2X Upscaling
- * Connects to aiWorker.js (in root/public)
+ * Connects to aiWorker_v2.js (in root/public)
+ * GÜNCELLEME: Worker v2 bağlantısı ve hata yönetimi iyileştirildi.
  */
 export function useUpscaler() {
     const [status, setStatus] = useState('idle');
@@ -28,12 +29,19 @@ export function useUpscaler() {
     // Worker reference to persist across renders
     const workerRef = useRef(null);
 
+    // Temizlik Fonksiyonu (Bellek Sızıntısını Önler)
     const cleanup = useCallback(() => {
         if (workerRef.current) {
+            console.log("Hook: Worker sonlandırılıyor...");
             workerRef.current.terminate();
             workerRef.current = null;
         }
     }, []);
+
+    // Bileşen unmount olduğunda temizle
+    useEffect(() => {
+        return () => cleanup();
+    }, [cleanup]);
 
     const cancel = useCallback(() => {
         cleanup();
@@ -53,15 +61,18 @@ export function useUpscaler() {
 
         return new Promise((resolve, reject) => {
             try {
-                // Initialize Worker
-                // aiWorker.js public folder içinde olduğu için kök dizinden çağırıyoruz
-                const worker = new Worker('/aiWorker.js');
+                // Initialize Worker (v2 for optimized performance)
+                // Cache-busting (?v=timestamp) eklenerek tarayıcının eski sürümü tutması engellenir.
+                const workerUrl = `/aiWorker_v2.js?v=${Date.now()}`;
+                const worker = new Worker(workerUrl);
                 workerRef.current = worker;
 
-                // 1. Prepare Image (File -> ImageBitmap/ImageData)
+                // 1. Resmi Hazırla (File -> ImageBitmap/ImageData)
                 const img = new Image();
                 if (typeof file === 'string') {
                     img.src = file;
+                    // Cross-origin sorunlarını önlemek için
+                    img.crossOrigin = "anonymous";
                 } else {
                     img.src = URL.createObjectURL(file);
                 }
@@ -72,6 +83,13 @@ export function useUpscaler() {
                     canvas.width = img.width;
                     canvas.height = img.height;
                     const ctx = canvas.getContext('2d');
+                    if (!ctx) {
+                        const e = new Error("Canvas context oluşturulamadı.");
+                        setError(e);
+                        reject(e);
+                        return;
+                    }
+
                     ctx.drawImage(img, 0, 0);
                     const imageData = ctx.getImageData(0, 0, img.width, img.height);
 
@@ -87,12 +105,14 @@ export function useUpscaler() {
                 };
 
                 img.onerror = () => {
-                    const err = new Error("Fotoğraf yüklenemedi.");
+                    const err = new Error("Fotoğraf yüklenemedi veya bozuk.");
                     setError(err);
+                    setStatus('error');
+                    cleanup();
                     reject(err);
                 };
 
-                // Handle Worker Messages
+                // Handle Worker Messages (Worker'dan gelen yanıtlar)
                 worker.onmessage = (e) => {
                     const { type, message: msg, result, error: workerErr, progress: progVal } = e.data;
 
@@ -101,10 +121,10 @@ export function useUpscaler() {
                         if (progVal !== undefined) setProgress(progVal);
                     }
                     else if (type === 'complete') {
-                        // Success!
+                        // Başarılı!
                         const { width, height, data } = result;
 
-                        // Reconstruct Image from raw pixels
+                        // Raw piksel verisinden tekrar resim oluştur
                         const finalCanvas = document.createElement('canvas');
                         finalCanvas.width = width;
                         finalCanvas.height = height;
@@ -114,11 +134,17 @@ export function useUpscaler() {
 
                         // Export to Blob/URL
                         finalCanvas.toBlob((blob) => {
+                            if (!blob) {
+                                const e = new Error("Blob oluşturulamadı.");
+                                setError(e);
+                                reject(e);
+                                return;
+                            }
                             const url = URL.createObjectURL(blob);
                             setResultImage(url);
                             setStatus('complete');
                             setMessage('İşlem Tamamlandı!');
-                            cleanup(); // Terminate worker to free RAM
+                            cleanup(); // İş bitti, worker'ı kapat (RAM Tasarrufu)
                             resolve(url);
                         }, 'image/png');
                     }
@@ -132,7 +158,8 @@ export function useUpscaler() {
                 };
 
                 worker.onerror = (e) => {
-                    const err = new Error("Worker başlatılamadı veya çöktü. (aiWorker.js bulunamadı?)");
+                    console.error("Worker Hatası:", e);
+                    const err = new Error("Arkaplan işlemi çöktü (Bellek yetersiz olabilir).");
                     setError(err);
                     setStatus('error');
                     cleanup();
