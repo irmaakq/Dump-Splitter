@@ -3,10 +3,10 @@
 // AI WORKER - Handles heavy TensorFlow.js / Upscaler.js operations
 // This runs in a separate thread to prevent UI freezing.
 
-// Import libraries from CDN since we are in a simple environment
-importScripts('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.10.0/dist/tf.min.js');
-importScripts('https://cdn.jsdelivr.net/npm/@upscalerjs/default-model@latest/dist/browser/index.js');
-importScripts('https://cdn.jsdelivr.net/npm/upscaler@latest/dist/browser/index.js');
+// Import libraries from UNPKG (More stable for UMD builds)
+importScripts('https://unpkg.com/@tensorflow/tfjs@4.17.0/dist/tf.min.js');
+importScripts('https://unpkg.com/@upscalerjs/default-model@latest/dist/umd/index.min.js');
+importScripts('https://unpkg.com/upscaler@latest/dist/browser/umd/upscaler.min.js');
 
 let upscaler = null;
 
@@ -82,9 +82,6 @@ self.onmessage = async (e) => {
             };
 
             self.postMessage({ type: 'complete', result: msgData, id }, [data.buffer]);
-
-            // Cleanup memory aggressive
-            // tf.disposeVariables(); // Be careful with this if model weights are variables
         }
 
     } catch (error) {
