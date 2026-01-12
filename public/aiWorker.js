@@ -2,29 +2,31 @@
 
 // CLIENT-SIDE 4X UPSCALING WORKER (Production Grade)
 // Stack: TensorFlow.js + UpscalerJS + Tiled Inference Pipeline
+// Güncelleme: GPU Kilidini açmak için gecikme eklendi ve Grid Artifacts için Padding arttırıldı.
 
-// 1. STABLE IMPORTS (Updated to working Unpkg paths)
+// 1. STABLE IMPORTS (Sabit Versiyonlar - Kararlılık İçin)
 importScripts('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.17.0/dist/tf.min.js');
-importScripts('https://unpkg.com/upscaler@latest/dist/browser/umd/upscaler.min.js');
-importScripts('https://unpkg.com/@upscalerjs/default-model@latest/dist/umd/index.min.js');
-importScripts('https://unpkg.com/@upscalerjs/esrgan-thick@latest/dist/umd/models/esrgan-thick/src/umd.min.js');
+importScripts('https://unpkg.com/upscaler@0.13.3/dist/browser/umd/upscaler.min.js');
+importScripts('https://unpkg.com/@upscalerjs/default-model@0.1.0/dist/umd/index.min.js');
+importScripts('https://unpkg.com/@upscalerjs/esrgan-thick@0.1.0/dist/umd/models/esrgan-thick/src/umd.min.js');
 
-// 2. CONFIGURATION
+// 2. CONFIGURATION (Ayarlar)
 const CONFIG = {
-    TILE_SIZE: 128,      // 128x128 chunks (Safe for 8GB RAM)
-    PADDING: 16,         // Overlap to prevent seam artifacts
-    TENSOR_CLEANUP: true // Aggressive memory cleanup
+    TILE_SIZE: 128,      // 128x128 Parça Boyutu (8GB RAM için güvenli)
+    PADDING: 32,         // 32px Bindirme Payı (Grid izlerini yok etmek için arttırıldı)
+    DELAY_MS: 100,       // Her parçadan sonra 100ms bekle (GPU'yu kilitlememek ve YouTube'un donmaması için)
+    TENSOR_CLEANUP: true // Agresif bellek temizliği
 };
 
-// 3. STATE
+// 3. STATE (Durum)
 let upscaler4x = null;
 let upscaler2x = null;
 let isWarmedUp = false;
 
-// --- INITIALIZATION & WARMUP ---
+// --- INITIALIZATION & WARMUP (Başlatma ve Isınma) ---
 
 const initModels = async (type) => {
-    // Check if valid type
+    // Geçerli tip kontrolü
     if (type !== '4x' && type !== '2x') throw new Error("Geçersiz model tipi.");
 
     await tf.setBackend('webgl');
@@ -32,7 +34,7 @@ const initModels = async (type) => {
 
     if (type === '4x') {
         if (!upscaler4x) {
-            console.log("Worker: Loading 4X Model (ESRGAN)...");
+            console.log("Worker: 4X Model Yükleniyor (ESRGAN)...");
             const esrganLib = self.EsrganThick || self.ESRGANThick;
             if (!esrganLib) throw new Error("4X Kütüphanesi Yüklenemedi.");
 
@@ -43,7 +45,7 @@ const initModels = async (type) => {
         }
     } else {
         if (!upscaler2x) {
-            console.log("Worker: Loading 2X Model (Default)...");
+            console.log("Worker: 2X Model Yükleniyor (Default)...");
             upscaler2x = new Upscaler({
                 model: self.DefaultUpscalerJSModel,
             });
@@ -55,51 +57,52 @@ const initModels = async (type) => {
 const warmup = async (model) => {
     if (isWarmedUp) return;
     try {
-        console.log("Worker: Warming up GPU shaders...");
-        // 1x1 dummy inference to compile shaders
+        console.log("Worker: GPU shaderları ısınıyor...");
+        // Shaderları derlemek için boş bir 1x1 işlem yap
         const dummy = tf.zeros([1, 16, 16, 3]);
         await model.upscale(dummy);
         dummy.dispose();
         isWarmedUp = true;
-        console.log("Worker: Warmup complete.");
+        console.log("Worker: Isınma tamamlandı.");
     } catch (e) {
-        console.warn("Worker: Warmup warning:", e);
+        console.warn("Worker: Isınma uyarısı:", e);
     }
 };
 
-// --- TILED INFERENCE PIPELINE ---
+// --- TILED INFERENCE PIPELINE (Parçalı İşleme Motoru) ---
 
 const processTiled = async (imageData, modelType, id) => {
     const upscaler = modelType === '4x' ? upscaler4x : upscaler2x;
     const scale = modelType === '4x' ? 4 : 2;
 
-    // Create Tensor from raw pixel data
+    // Ham piksel verisinden Tensor oluştur
     const fullTensor = tf.browser.fromPixels(imageData);
     const [h, w] = fullTensor.shape;
 
-    // Output dimensions
+    // Çıktı boyutları
     const outW = w * scale;
     const outH = h * scale;
 
-    // Pre-allocate buffer for result (No intermediate large tensors)
+    // Sonuç için bellek ayır (Arabellek yok, direkt hedef buffer)
     const finalBuffer = new Uint8ClampedArray(outW * outH * 4);
 
-    // Grid Calculation
+    // Grid (Izgara) Hesaplaması
     const cols = Math.ceil(w / CONFIG.TILE_SIZE);
     const rows = Math.ceil(h / CONFIG.TILE_SIZE);
     const totalTiles = cols * rows;
 
     let processed = 0;
 
-    // --- MAIN TILING LOOP ---
+    // --- ANA DÖNGÜ (MAIN TILING LOOP) ---
     for (let r = 0; r < rows; r++) {
         for (let c = 0; c < cols; c++) {
             processed++;
 
-            // 1. Calculate Input Bounds (with Padding)
+            // 1. Giriş Sınırlarını Hesapla (Padding Dahil)
             const srcX = c * CONFIG.TILE_SIZE;
             const srcY = r * CONFIG.TILE_SIZE;
 
+            // Padding eklenmiş koordinatlar (Görüntü dışına taşmayacak şekilde clamp edilir)
             const x1 = Math.max(0, srcX - CONFIG.PADDING);
             const y1 = Math.max(0, srcY - CONFIG.PADDING);
             const x2 = Math.min(w, srcX + CONFIG.TILE_SIZE + CONFIG.PADDING);
@@ -110,95 +113,93 @@ const processTiled = async (imageData, modelType, id) => {
 
             if (tileW <= 0 || tileH <= 0) continue;
 
-            // 2. Extract Tile Tensor (Normalize to 0-1 and CLIP strictly)
+            // 2. Parça Tensorunu Çıkar (0-1 Aralığına Normalleştir)
             const tileTensor = tf.tidy(() => {
                 return fullTensor
                     .slice([y1, x1, 0], [tileH, tileW, 3])
                     .div(255.0)
-                    .clipByValue(0.0, 1.0); // Force strict 0-1 range
+                    .clipByValue(0.0, 1.0); // Kesin 0-1 aralığı
             });
 
-            // DEBUG: Check range
-            /*
-            const minVal = tileTensor.min().dataSync()[0];
-            const maxVal = tileTensor.max().dataSync()[0];
-            if (maxVal > 1.0 || minVal < 0.0) {
-                 console.warn(`Tile ${r},${c} OOB: [${minVal}, ${maxVal}]`);
-            }
-            */
-
-            // 3. Inference
+            // 3. Yapay Zeka İşlemi (Inference)
             let upscaledTensor;
             try {
                 upscaledTensor = await upscaler.upscale(tileTensor, {
                     output: 'tensor',
-                    patchSize: undefined, // Manual tiling handles this
+                    patchSize: undefined, // Manuel olarak böldüğümüz için kütüphane bölmesin
                     padding: 0
                 });
             } catch (err) {
-                // Determine if it's a range error
                 const min = tileTensor.min().dataSync()[0];
                 const max = tileTensor.max().dataSync()[0];
-                tileTensor.dispose();
-                throw new Error(`Upscale Fail (Tile ${r},${c}): ${err.message} [Input Range: ${min.toFixed(4)} - ${max.toFixed(4)}]`);
+                tileTensor.dispose(); // Hata durumunda da temizle
+                throw new Error(`Upscale Hatası (Parça ${r},${c}): ${err.message}`);
             }
 
-            // 4. Download to CPU (GPU -> CPU Sync) with AUTO-RANGE FIX
+            // 4. Tensörü İndir ve Piksel Verisine Çevir (AUTO-RANGE FIX DAHİL)
             const tileBytes = await tf.tidy(() => {
-                // AUTO-RANGE FIX (Updated: Mean-based Detection)
-                // PREVIOUS BUG: Single outlier (e.g. 2.0) caused max > 1.5,
-                // treating 0-1 float data as 0-255 int, resulting in all-black image.
+                // SİYAH EKRAN SORUNU ÇÖZÜMÜ:
+                // Max değerine bakmak yerine ortalamaya (Mean) bakıyoruz.
+                // Tek bir pikselin sapması yüzünden tüm resmi karartmamak için en güvenlisi bu.
 
                 const meanVal = upscaledTensor.mean().dataSync()[0];
-
                 let safeTensor;
-                // Heuristic: 0-255 images usually have mean > 50. 
-                // 0-1 images have mean around 0.5.
-                // Threshold of 1.0 is extremely safe.
+
+                // Eğer ortalama 1.0'dan büyükse bu kesinlikle 0-255 aralığındadır.
                 if (meanVal > 1.0) {
-                    // Case: 0-255 Range
                     safeTensor = upscaledTensor.clipByValue(0, 255).toInt();
                 } else {
-                    // Case: 0-1 Range
+                    // Değilse 0-1 aralığındadır.
                     safeTensor = upscaledTensor.clipByValue(0.0, 1.0);
                 }
 
                 return tf.browser.toPixels(safeTensor);
             });
 
-            // 5. Cleanup (Crucial for 8GB RAM constraint)
+            // 5. Temizlik (Memory Leak Önlemi)
             tileTensor.dispose();
             upscaledTensor.dispose();
 
-            // 6. Stitching (Crop padding and place in buffer)
-            // Determine valid region in Input Space
+            // 6. Birleştirme (Stitching - Overlap & Crop)
+            // Gelen veri paddingli ve büyük. Sadece ortadaki "temiz" kısmı alacağız.
+
+            // Input uzayındaki geçerli (clean) başlangıç ofseti
             const validInX = (srcX - x1);
             const validInY = (srcY - y1);
+
+            // Input uzayındaki geçerli genişlik/yükseklik
             const validW = Math.min(CONFIG.TILE_SIZE, w - srcX);
             const validH = Math.min(CONFIG.TILE_SIZE, h - srcY);
 
-            // Map to Output Space
+            // Output uzayına (scale ile çarpılmış) çevir
             const targetX = srcX * scale;
             const targetY = srcY * scale;
-            const upscaledTileW = tileW * scale;
 
+            const upscaledTileW = tileW * scale; // Upscaled ham genişlik
+
+            // Kopyalanacak blok boyutları
             const writeW = validW * scale;
             const writeH = validH * scale;
+
+            // Kaynaktan okunacak başlangıç ofsetleri
             const readOffX = validInX * scale;
             const readOffY = validInY * scale;
 
-            // Copy Row-by-Row
+            // Satır satır kopyala (Hızlı Bellek Bloğu İşlemi)
             for (let row = 0; row < writeH; row++) {
+                // Kaynakta satır başı: (Y ofseti + satır) * genişlik + X ofseti
                 const srcIdx = ((readOffY + row) * upscaledTileW + readOffX) * 4;
+
+                // Hedefte satır başı: (Y hedef + satır) * ana genişlik + X hedef
                 const dstIdx = ((targetY + row) * outW + targetX) * 4;
 
-                // Fast Memory Block Copy
+                // ArrayBuffer kopyalama (En hızlı yöntem)
                 const line = tileBytes.subarray(srcIdx, srcIdx + (writeW * 4));
                 finalBuffer.set(line, dstIdx);
             }
         }
 
-        // Report Progress (Throttled: Once per row)
+        // İlerlemeyi Bildir (Satır başına 1 kere - UI'ı yormamak için)
         const percent = Math.round((processed / totalTiles) * 100);
         self.postMessage({
             type: 'progress',
@@ -207,13 +208,15 @@ const processTiled = async (imageData, modelType, id) => {
             id
         });
 
-        // Yield to Event Loop (Keep browser responsive)
-        await new Promise(resolve => setTimeout(resolve, 0));
+        // 7. GPU VE CPU NEFES ALMA MOLASI (ANTI-FREEZE)
+        // Buradaki 100ms gecikme, tarayıcının araya girip render yapmasına
+        // ve YouTube videosunun akmasına izin verir.
+        await new Promise(resolve => setTimeout(resolve, CONFIG.DELAY_MS));
     }
 
     fullTensor.dispose();
 
-    // Force Garbage Collection hint (browser dependent, but good practice in lengthy tasks)
+    // Çöp Toplayıcıya İpucu (Garbage Collection)
     if (CONFIG.TENSOR_CLEANUP) {
         tf.disposeVariables();
     }
@@ -225,7 +228,7 @@ const processTiled = async (imageData, modelType, id) => {
     };
 };
 
-// --- WORKER MESSAGING ---
+// --- WORKER MESSAGING (Mesajlaşma) ---
 
 self.onmessage = async (e) => {
     const { type, imageData, id, modelType } = e.data;
@@ -249,16 +252,16 @@ self.onmessage = async (e) => {
             const result = await processTiled(imageData, target, id);
             const end = performance.now();
 
-            console.log(`Worker: Upscale finished in ${((end - start) / 1000).toFixed(2)}s`);
+            console.log(`Worker: İşlem tamamlandı. Süre: ${((end - start) / 1000).toFixed(2)}s`);
 
-            // Zero-copy transfer of large buffer
+            // Büyük veriyi kopyalamadan (Zero-copy) transfer et
             self.postMessage(
                 { type: 'complete', result, id },
                 [result.data.buffer]
             );
         }
     } catch (err) {
-        console.error("Worker Error:", err);
+        console.error("Worker Hatası:", err);
         self.postMessage({ type: 'error', error: err.message, id });
     }
 };
