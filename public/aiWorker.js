@@ -10,12 +10,12 @@ importScripts('https://unpkg.com/upscaler@0.13.3/dist/browser/umd/upscaler.min.j
 importScripts('https://unpkg.com/@upscalerjs/default-model@0.1.0/dist/umd/index.min.js');
 importScripts('https://unpkg.com/@upscalerjs/esrgan-thick@0.1.0/dist/umd/models/esrgan-thick/src/umd.min.js');
 
-// 2. CONFIGURATION (Ayarlar)
+// 2. CONFIGURATION (Ayarlar - RAM DOSTU VERSİYON)
 const CONFIG = {
-    TILE_SIZE: 128,      // 128x128 Parça Boyutu (8GB RAM için güvenli)
-    PADDING: 32,         // 32px Bindirme Payı (Grid izlerini yok etmek için arttırıldı)
-    DELAY_MS: 100,       // Her parçadan sonra 100ms bekle (GPU'yu kilitlememek ve YouTube'un donmaması için)
-    TENSOR_CLEANUP: true // Agresif bellek temizliği
+    TILE_SIZE: 64,       // ÖNEMLİ: 128 yerine 64 yapıyoruz. (Parçaları küçültüyoruz ki RAM şişmesin)
+    PADDING: 24,         // 32 yerine 24 yapıyoruz. (Çizgileri yok etmeye yeter ama RAM'i patlatmaz)
+    DELAY_MS: 150,       // 100 yerine 150 yapıyoruz. (GPU'ya daha fazla nefes alma payı veriyoruz)
+    TENSOR_CLEANUP: true // Agresif bellek temizliği açık kalsın
 };
 
 // 3. STATE (Durum)
