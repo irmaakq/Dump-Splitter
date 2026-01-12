@@ -6,7 +6,7 @@
 // Import libraries from UNPKG (More stable for UMD builds)
 importScripts('https://unpkg.com/@tensorflow/tfjs@4.17.0/dist/tf.min.js');
 importScripts('https://unpkg.com/@upscalerjs/default-model@latest/dist/umd/index.min.js');
-importScripts('https://unpkg.com/@upscalerjs/esrgan-thick@latest/4x/dist/index.min.js');
+importScripts('https://unpkg.com/@upscalerjs/esrgan-thick@latest/dist/umd/index.min.js'); // Fixed path
 importScripts('https://unpkg.com/upscaler@latest/dist/browser/umd/upscaler.min.js');
 
 let upscaler = null;
