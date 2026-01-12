@@ -112,8 +112,8 @@ const FEATURE_DETAILS = {
     title: "ULTRA HD (AI SR)",
     icon: Zap,
     color: "text-yellow-400",
-    shortDesc: "Gerçek AI Super Resolution (2x / 4x) uygular.",
-    desc: "Derin Öğrenme (Deep Learning) tabanlı Super Resolution modeli çalıştırır. Pikselleri sadece büyütmez, eksik detayları 'tahmin ederek' yeniden çizer. (4X modu daha detaylıdır ancak işlem süresi artabilir)."
+    shortDesc: "Gerçek AI Super Resolution (2x) uygular.",
+    desc: "Derin Öğrenme (Deep Learning) tabanlı Super Resolution modeli çalıştırır. Pikselleri sadece büyütmez, eksik detayları 'tahmin ederek' yeniden çizer."
   },
   ultraHd4x: {
     title: "4X SUPER RESOLUTION",
@@ -916,12 +916,12 @@ const App = () => {
       case 'hdMode': setHdMode(value); stateKey = 'hdMode'; break;
       case 'optimize': setOptimizeMode(value); stateKey = 'optimizeMode'; break;
       case 'smartCrop': setSmartCrop(value); stateKey = 'smartCrop'; break;
-      case 'ultraHdMode':
+      case 'ultraHd':
         setUltraHdMode(value);
         if (value) setUltraHd4xMode(false); // Mutual exclusion: Turn off 4X
         stateKey = 'ultraHdMode';
         break;
-      case 'ultraHd4xMode':
+      case 'ultraHd4x':
         setUltraHd4xMode(value);
         if (value) setUltraHdMode(false); // Mutual exclusion: Turn off 2X
         stateKey = 'ultraHd4xMode';
@@ -947,7 +947,7 @@ const App = () => {
     }
 
     // GÜNCELLENDİ: Ultra HD değiştiğinde HER ZAMAN feedback ver
-    if (key === 'ultraHdMode' || key === 'ultraHd4xMode') {
+    if (key === 'ultraHd' || key === 'ultraHd4x') {
       skipFeedbackRef.current = false;
     }
     // GÜNCELLENDİ: Split count değiştiğinde de feedback ver (Yumuşak geçiş için)
@@ -1707,7 +1707,7 @@ const App = () => {
         // b) HD Mode (Deblur / Sharpen)
         // Artık HD Mode aktifse Sharpen filtresini uyguluyoruz
         if (hdMode) {
-          applySharpen(sCtx, finalW, finalH, 0.7); // 0.7 intensity
+          applySharpen(sCtx, finalW, finalH, 1.1); // Stronger intensity (User feedback)
           if (!isSilent) setAiLogs(prev => [...prev, "Detail Reconstruction uygulandı."]);
         }
 
