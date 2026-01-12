@@ -10,11 +10,12 @@ importScripts('https://unpkg.com/upscaler@latest/dist/browser/umd/upscaler.min.j
 importScripts('https://unpkg.com/@upscalerjs/default-model@latest/dist/umd/index.min.js');
 importScripts('https://unpkg.com/@upscalerjs/esrgan-thick@latest/dist/umd/models/esrgan-thick/src/umd.min.js');
 
-// 2. CONFIGURATION (Ayarlar - ULTRA STABİLITE)
+// 2. CONFIGURATION (Ayarlar - KALİTE & STABİLİTE DENGESİ)
 const CONFIG = {
     TILE_SIZE: 128,      // 128px ideal denge.
-    PADDING: 12,         // RAM Dostu Padding (12px input -> 48px output kafi).
-    DELAY_MS: 50,        // GPU dinlendirme (50ms yeterli).
+    PADDING: 24,         // KALİTE İÇİN: 12px yetersiz geldi, 24px'e çıkardık.
+    // (GPU modu optimize olduğu için RAM sorunu yaratmaz).
+    DELAY_MS: 50,        // GPU dinlendirme.
     TENSOR_CLEANUP: true
 };
 
