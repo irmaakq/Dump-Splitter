@@ -1450,14 +1450,17 @@ const App = () => {
     // Concurrency control: Stale işlemlerden kurtulmak için ID ata
     const myId = ++processingIdRef.current;
 
-    // 1. ANINDA GİZLE VE TEMİZLE
-    setIsContentReady(false);
+    // YENİ UX: Eğer zaten bir fotoğraf yüklüyse ekranı tamamen karartma (siyah ekranı önle)
+    const isHardReset = !splitSlides || splitSlides.length === 0;
+    if (isHardReset) {
+      setIsContentReady(false);
+      setSplitSlides([]);
+    }
 
     const isSilent = skipFeedbackRef.current;
     if (!isSilent) {
       setIsProcessing(true);
       setAiLogs([]);
-      setSplitSlides([]); // Eski slaytları temizle
 
       // Logları zamana yayarak göster
       SPLITTER_STATUS_MSGS.forEach((msg, i) => {
@@ -1967,9 +1970,9 @@ const App = () => {
                 </div>
               )}
               {isProcessing && (
-                <div className="absolute inset-0 z-[100] bg-black/98 backdrop-blur-3xl flex flex-col items-center justify-center">
+                <div className="absolute inset-0 z-[100] bg-black/40 backdrop-blur-xl flex flex-col items-center justify-center animate-in fade-in duration-500">
                   <div className="w-16 h-16 md:w-20 md:h-20 border-[6px] border-white/5 border-t-white rounded-[40px] animate-spin mb-8 md:mb-10 shadow-2xl" />
-                  <div className="space-y-4 text-center">{aiLogs.map((log, i) => (<p key={i} className="text-xs md:text-sm font-black text-gray-400 px-10 uppercase tracking-[0.3em] italic">{log}</p>))}</div>
+                  <div className="space-y-4 text-center max-w-xs">{aiLogs.slice(-2).map((log, i) => (<p key={i} className={`text-xs md:text-sm font-black uppercase tracking-[0.3em] italic leading-relaxed ${i === 1 ? 'text-white' : 'text-gray-500 opacity-50'}`}>{log}</p>))}</div>
                 </div>
               )}
             </div>
