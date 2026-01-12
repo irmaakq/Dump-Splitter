@@ -111,48 +111,123 @@ self.onmessage = async (e) => {
             // 3. Inference
             self.postMessage({ type: 'progress', message: `AI İyileştirme Uygulanıyor (${targetType.toUpperCase()})...`, id });
 
-            // 4X models benefit from smaller patches to avoid OOM
-            const patchSize = targetType === '4x' ? 32 : 64;
-            const padding = 2;
+            // 4. Inference & Stitching (MANUAL TILING FOR BOTH 2X & 4X)
+            // This ensures consistent low-memory usage and stability for all modes.
 
-            let upscaledTensor;
-            try {
-                upscaledTensor = await upscaler.upscale(normalized, {
-                    patchSize,
-                    padding,
-                    output: 'tensor',
-                    awaitNextFrame: true // Unblock UI thread
-                });
-            } catch (upscaleErr) {
-                // If 4X fails with OOM, throw specific error
-                throw new Error("Upscale İşlemi Başarısız (Bellek yetersiz olabilir): " + upscaleErr.message);
-            } finally {
-                if (!normalized.isDisposed) normalized.dispose();
+            let finalDataEncoded;
+            let outW, outH;
+
+            const scale = targetType === '4x' ? 4 : 2;
+            const tileInputSize = 64; // Small tiles to keep RAM low
+            const pad = 6; // Overlap
+
+            const [h, w] = normalized.shape;
+            outW = w * scale;
+            outH = h * scale;
+
+            // Allocate CPU buffer for result
+            finalDataEncoded = new Uint8ClampedArray(outW * outH * 4);
+
+            const numCols = Math.ceil(w / tileInputSize);
+            const numRows = Math.ceil(h / tileInputSize);
+            const totalTiles = numCols * numRows;
+            let processedTiles = 0;
+
+            for (let r = 0; r < numRows; r++) {
+                for (let c = 0; c < numCols; c++) {
+                    processedTiles++;
+                    // Report progress
+                    if (processedTiles % 5 === 0 || processedTiles === totalTiles) {
+                        self.postMessage({ type: 'progress', message: `İşleniyor (%${Math.round((processedTiles / totalTiles) * 100)})`, id });
+                        // Breath for GC and UI responsiveness
+                        await new Promise(res => setTimeout(res, 5));
+                    }
+
+                    // Calculate Input Coordinates with Padding
+                    const startX = c * tileInputSize;
+                    const startY = r * tileInputSize;
+
+                    // Input bounds including padding
+                    const x1 = Math.max(0, startX - pad);
+                    const y1 = Math.max(0, startY - pad);
+                    const x2 = Math.min(w, startX + tileInputSize + pad);
+                    const y2 = Math.min(h, startY + tileInputSize + pad);
+
+                    const tileW = x2 - x1;
+                    const tileH = y2 - y1;
+
+                    // Slice Input Logic
+                    const tileTensor = tf.tidy(() => {
+                        return normalized.slice([y1, x1, 0], [tileH, tileW, 3]);
+                    });
+
+                    // Upscale Tile
+                    const upscaledTile = await upscaler.upscale(tileTensor, {
+                        output: 'tensor',
+                        patchSize: undefined, // Already manually tiled
+                        padding: 0
+                    });
+
+                    // Convert to pixels immediately
+                    const tilePixels = await tf.browser.toPixels(upscaledTile);
+
+                    // Dispose Tensors
+                    tileTensor.dispose();
+                    upscaledTile.dispose();
+
+                    // --- CPU Stitching Logic ---
+                    // Determine valid output region (removing padding)
+                    // Input-space offsets relative to the tile we extracted
+                    const validInX = (startX - x1);
+                    const validInY = (startY - y1);
+                    const validInW = Math.min(tileInputSize, w - startX);
+                    const validInH = Math.min(tileInputSize, h - startY);
+
+                    // Scale to Output-space
+                    const validOutX = validInX * scale;
+                    const validOutY = validInY * scale;
+                    const validOutW = validInW * scale;
+                    const validOutH = validInH * scale;
+
+                    const upscaledTileW = tileW * scale;
+
+                    // Copy row by row from tilePixels to finalDataEncoded
+                    const targetStartX = startX * scale;
+                    const targetStartY = startY * scale;
+
+                    for (let row = 0; row < validOutH; row++) {
+                        const srcRow = validOutY + row;
+                        const srcColStart = validOutX;
+
+                        const srcIndex = (srcRow * upscaledTileW + srcColStart) * 4;
+                        const destRow = targetStartY + row;
+                        const destColStart = targetStartX;
+                        const destIndex = (destRow * outW + destColStart) * 4;
+
+                        // Copy line
+                        const lineBytes = validOutW * 4;
+                        finalDataEncoded.set(
+                            tilePixels.subarray(srcIndex, srcIndex + lineBytes),
+                            destIndex
+                        );
+                    }
+                }
             }
 
-            // 4. Post-process
+            normalized.dispose();
+
+            // 4. Send Result
             self.postMessage({ type: 'progress', message: 'Sonuç Oluşturuluyor...', id });
 
-            const clipped = tf.tidy(() => upscaledTensor.clipByValue(0, 1));
-            const finalTensor = tf.tidy(() => clipped.mul(255.0).cast('int32'));
-
-            // Dispose intermediate tensors immediately
-            if (!upscaledTensor.isDisposed) upscaledTensor.dispose();
-            if (!clipped.isDisposed) clipped.dispose();
-
-            const [height, width] = finalTensor.shape;
-            const data = await tf.browser.toPixels(finalTensor);
-            if (!finalTensor.isDisposed) finalTensor.dispose();
-
             const msgData = {
-                width,
-                height,
-                data
+                width: outW,
+                height: outH,
+                data: finalDataEncoded
             };
 
             // Transfer buffer for performance
             try {
-                self.postMessage({ type: 'complete', result: msgData, id }, [data.buffer]);
+                self.postMessage({ type: 'complete', result: msgData, id }, [finalDataEncoded.buffer]);
             } catch (transferErr) {
                 self.postMessage({ type: 'complete', result: msgData, id });
             }
