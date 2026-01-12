@@ -1467,7 +1467,7 @@ const App = () => {
     if (page === 'editor' && uploadedFile) {
       processSplit(uploadedFile, fileType === 'video');
     }
-  }, [splitCount, autoEnhance, hdMode, optimizeMode, smartCrop, downloadFormat, page, uploadedFile, ultraHdMode]);
+  }, [splitCount, autoEnhance, hdMode, optimizeMode, smartCrop, downloadFormat, page, uploadedFile, ultraHdSelection]);
 
   const processSplit = async (sourceUrl, isVideo) => {
     if (!sourceUrl) return;
