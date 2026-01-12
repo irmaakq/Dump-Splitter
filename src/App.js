@@ -1575,6 +1575,20 @@ const App = () => {
             const worker = aiWorkerRef.current;
             const currentReqId = myId;
 
+            // Timeout Ekle (45 Saniye)
+            const timeoutId = setTimeout(() => {
+              worker.removeEventListener('message', handler);
+              worker.removeEventListener('error', errorHandler);
+              reject(new Error("İşlem zaman aşımına uğradı. (Worker Yanıt Vermedi)"));
+            }, 45000);
+
+            const errorHandler = (err) => {
+              clearTimeout(timeoutId);
+              worker.removeEventListener('message', handler);
+              worker.removeEventListener('error', errorHandler);
+              reject(new Error("Worker Yüklenemedi: " + (err.message || "Dosya Bulunamadı veya Erişim Hatası")));
+            };
+
             const handler = (e) => {
               const { type, id, message, result, error } = e.data;
               // Sadece kendi işlemimize ait mesajları dinle
@@ -1583,16 +1597,21 @@ const App = () => {
               if (type === 'progress') {
                 if (!isSilent) setAiLogs(prev => [...prev.slice(-2), message]);
               } else if (type === 'complete') {
+                clearTimeout(timeoutId);
                 worker.removeEventListener('message', handler);
+                worker.removeEventListener('error', errorHandler);
                 resolve(result);
               } else if (type === 'error') {
+                clearTimeout(timeoutId);
                 worker.removeEventListener('message', handler);
+                worker.removeEventListener('error', errorHandler);
                 reject(new Error(error));
               }
             };
 
             worker.addEventListener('message', handler);
-            worker.postMessage({ type: 'Upscale', imageData, id: currentReqId }); // imageData kopyalanacak, Transferable kullanmak için buffer'ı ayırmak lazım ama şimdilik güvenli kopya yeterli.
+            worker.addEventListener('error', errorHandler);
+            worker.postMessage({ type: 'Upscale', imageData, id: currentReqId });
           });
 
           if (myId !== processingIdRef.current) return;
