@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useUpscaler } from './src/hooks/useUpscaler';
+import { useUpscaler } from './hooks/useUpscaler';
 import {
   Upload, Minus, Plus, Image as ImageIcon, Video, Check,
   Sparkles,
