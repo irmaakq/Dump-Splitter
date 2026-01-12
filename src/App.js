@@ -1788,7 +1788,8 @@ const App = () => {
       if (myId === processingIdRef.current) {
         setIsProcessing(false);
         if (!isSilent && !canUseCache) {
-          showToast(`İşlem Tamamlandı! (${ultraHdMode || ultraHd4xMode ? `AI Upscale ${ultraHd4xMode ? '4X' : '2X'}` : 'Standart'})`);
+          const modeText = ultraHd4xMode ? "AI Upscale 4X" : (ultraHdMode ? "AI Upscale 2X" : "Standart");
+          showToast(`İşlem Tamamlandı! (${modeText})`);
         }
         setIsContentReady(true);
       }
