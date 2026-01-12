@@ -60,6 +60,9 @@ const initModel = async (modelType = '2x') => {
             // The UMD bundle exports { ESRGANThick2x, ESRGANThick4x, ... }
             selectedModel = esrganLib.ESRGANThick4x || esrganLib;
 
+            // Explicit check to ensure we aren't using a null/undefined model
+            if (!selectedModel) throw new Error("4X Model Nesnesi Bulunamadı.");
+
         } else {
             // 2X Default
             if (!self.DefaultUpscalerJSModel) {
@@ -108,29 +111,38 @@ self.onmessage = async (e) => {
             // 3. Inference
             self.postMessage({ type: 'progress', message: `AI İyileştirme Uygulanıyor (${targetType.toUpperCase()})...`, id });
 
-            // 4X models benefit from smaller patches
+            // 4X models benefit from smaller patches to avoid OOM
             const patchSize = targetType === '4x' ? 32 : 64;
-            const padding = targetType === '4x' ? 2 : 2;
+            const padding = 2;
 
-            const upscaledTensor = await upscaler.upscale(normalized, {
-                patchSize,
-                padding,
-                output: 'tensor'
-            });
-
-            normalized.dispose();
+            let upscaledTensor;
+            try {
+                upscaledTensor = await upscaler.upscale(normalized, {
+                    patchSize,
+                    padding,
+                    output: 'tensor',
+                    awaitNextFrame: true // Unblock UI thread
+                });
+            } catch (upscaleErr) {
+                // If 4X fails with OOM, throw specific error
+                throw new Error("Upscale İşlemi Başarısız (Bellek yetersiz olabilir): " + upscaleErr.message);
+            } finally {
+                if (!normalized.isDisposed) normalized.dispose();
+            }
 
             // 4. Post-process
             self.postMessage({ type: 'progress', message: 'Sonuç Oluşturuluyor...', id });
 
             const clipped = tf.tidy(() => upscaledTensor.clipByValue(0, 1));
             const finalTensor = tf.tidy(() => clipped.mul(255.0).cast('int32'));
-            upscaledTensor.dispose();
-            clipped.dispose();
+
+            // Dispose intermediate tensors immediately
+            if (!upscaledTensor.isDisposed) upscaledTensor.dispose();
+            if (!clipped.isDisposed) clipped.dispose();
 
             const [height, width] = finalTensor.shape;
             const data = await tf.browser.toPixels(finalTensor);
-            finalTensor.dispose();
+            if (!finalTensor.isDisposed) finalTensor.dispose();
 
             const msgData = {
                 width,
