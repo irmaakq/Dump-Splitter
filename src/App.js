@@ -1707,7 +1707,7 @@ const App = () => {
         // b) HD Mode (Deblur / Sharpen)
         // Artık HD Mode aktifse Sharpen filtresini uyguluyoruz
         if (hdMode) {
-          applySharpen(sCtx, finalW, finalH, 1.1); // Stronger intensity (User feedback)
+          applySharpen(sCtx, finalW, finalH, 0.7); // 0.7 intensity
           if (!isSilent) setAiLogs(prev => [...prev, "Detail Reconstruction uygulandı."]);
         }
 
