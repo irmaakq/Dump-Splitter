@@ -118,7 +118,8 @@ self.onmessage = async (e) => {
             let outW, outH;
 
             const scale = targetType === '4x' ? 4 : 2;
-            const tileInputSize = 64; // Small tiles to keep RAM low
+            // 64 is too small and causes jitter/overhead. 128 is a safe balance (128x128 input -> 512x512 output).
+            const tileInputSize = 128;
             const pad = 6; // Overlap
 
             const [h, w] = normalized.shape;
@@ -136,11 +137,12 @@ self.onmessage = async (e) => {
             for (let r = 0; r < numRows; r++) {
                 for (let c = 0; c < numCols; c++) {
                     processedTiles++;
-                    // Report progress
-                    if (processedTiles % 5 === 0 || processedTiles === totalTiles) {
-                        self.postMessage({ type: 'progress', message: `İşleniyor (%${Math.round((processedTiles / totalTiles) * 100)})`, id });
+                    // Report progress less frequently to save UI thread
+                    const progressPercent = Math.round((processedTiles / totalTiles) * 100);
+                    if (processedTiles % 2 === 0 || processedTiles === totalTiles) { // Every 2 tiles is fine for 128px
+                        self.postMessage({ type: 'progress', message: `İşleniyor (%${progressPercent})`, id });
                         // Breath for GC and UI responsiveness
-                        await new Promise(res => setTimeout(res, 5));
+                        await new Promise(res => setTimeout(res, 2));
                     }
 
                     // Calculate Input Coordinates with Padding
@@ -162,11 +164,17 @@ self.onmessage = async (e) => {
                     });
 
                     // Upscale Tile
-                    const upscaledTile = await upscaler.upscale(tileTensor, {
-                        output: 'tensor',
-                        patchSize: undefined, // Already manually tiled
-                        padding: 0
-                    });
+                    let upscaledTile;
+                    try {
+                        upscaledTile = await upscaler.upscale(tileTensor, {
+                            output: 'tensor',
+                            patchSize: undefined, // Already manually tiled
+                            padding: 0
+                        });
+                    } catch (tileErr) {
+                        tileTensor.dispose();
+                        throw new Error(`Tile Hatası (${r},${c}): ${tileErr.message}`);
+                    }
 
                     // Convert to pixels immediately
                     const tilePixels = await tf.browser.toPixels(upscaledTile);
