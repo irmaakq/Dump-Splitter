@@ -1,247 +1,170 @@
 /* eslint-disable no-restricted-globals */
 
-// AI WORKER - Handles heavy TensorFlow.js / Upscaler.js operations
-// Uses Lazy Loading to prevent one broken model from crashing the entire worker.
+// AI WORKER - TILE BASED ARCHITECTURE (TFJS)
+// Solves RAM/GPU Crashes by processing images in small chunks.
+// No manual downloads required.
 
-let upscaler = null;
-let currentModelType = null; // '2x' or '4x'
-let tfLoaded = false;
-let upscalerLoaded = false;
+importScripts('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.17.0/dist/tf.min.js');
+importScripts('https://cdn.jsdelivr.net/npm/upscaler@latest/dist/browser/umd/upscaler.min.js');
+importScripts('https://cdn.jsdelivr.net/npm/@upscalerjs/default-model@latest/dist/umd/index.min.js');
+importScripts('https://cdn.jsdelivr.net/npm/@upscalerjs/esrgan-thick@latest/dist/umd/models/esrgan-thick/src/umd.min.js');
 
-// 1. Core Libraries (Load these immediately or on first use)
-const loadCore = () => {
-    if (tfLoaded && upscalerLoaded) return;
+let upscaler4x = null;
+let upscaler2x = null;
 
+// --- CONFIG ---
+const TILE_SIZE = 128; // 128x128 input tiles -> Stable performance
+const PAD = 16;        // Padding to avoid seams
+
+// --- INIT ---
+
+const initModels = async (type) => {
     try {
-        if (!self.tf) {
-            importScripts('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.17.0/dist/tf.min.js');
-            tfLoaded = true;
-        }
-        if (!self.Upscaler) {
-            importScripts('https://cdn.jsdelivr.net/npm/upscaler@latest/dist/browser/umd/upscaler.min.js');
-            upscalerLoaded = true;
-        }
-    } catch (e) {
-        throw new Error("Temel AI Kütüphaneleri (TensorFlow/Upscaler) Yüklenemedi: " + e.message);
-    }
-};
-
-// 2. Model Specific Loading
-const initModel = async (modelType = '2x') => {
-    try {
-        loadCore(); // Ensure core is ready
-
-        // If we already have the correct model loaded, do nothing
-        if (upscaler && currentModelType === modelType) return;
-
-        // Dispose previous model if exists
-        if (upscaler) {
-            try {
-                await tf.disposeVariables();
-            } catch (e) { console.warn("Cleanup warning:", e); }
-            upscaler = null;
-        }
-
         await tf.setBackend('webgl');
         await tf.ready();
 
-        let selectedModel;
-
-        // Dynamically load the requested model script
-        if (modelType === '4x') {
-            if (!self.EsrganThick) {
-                console.log("Loading 4X Model Script...");
-                // Use JSDelivr for better stability
-                importScripts('https://cdn.jsdelivr.net/npm/@upscalerjs/esrgan-thick@latest/dist/umd/models/esrgan-thick/src/umd.min.js');
-            }
-            // Check if loaded correctly
-            if (!self.EsrganThick && !self.ESRGANThick) throw new Error("4X Model Script yüklendi ama 'EsrganThick' bulunamadı.");
+        if (type === '4x' && !upscaler4x) {
+            console.log("Loading 4X Model...");
             const esrganLib = self.EsrganThick || self.ESRGANThick;
-            // The UMD bundle exports { ESRGANThick2x, ESRGANThick4x, ... }
-            selectedModel = esrganLib.ESRGANThick4x || esrganLib;
+            if (!esrganLib) throw new Error("4X Kütüphanesi Yüklenemedi (İnternet bağlantınızı kontrol edin)");
 
-            // Explicit check to ensure we aren't using a null/undefined model
-            if (!selectedModel) throw new Error("4X Model Nesnesi Bulunamadı.");
-
-        } else {
-            // 2X Default
-            if (!self.DefaultUpscalerJSModel) {
-                console.log("Loading 2X Model Script...");
-                importScripts('https://cdn.jsdelivr.net/npm/@upscalerjs/default-model@latest/dist/umd/index.min.js');
-            }
-            if (!self.DefaultUpscalerJSModel) throw new Error("2X Model Script yüklendi ama 'DefaultUpscalerJSModel' bulunamadı.");
-            selectedModel = self.DefaultUpscalerJSModel;
+            upscaler4x = new Upscaler({
+                model: esrganLib.ESRGANThick4x || esrganLib,
+            });
         }
 
-        upscaler = new Upscaler({
-            model: selectedModel,
-        });
-
-        currentModelType = modelType;
-        console.log(`AI Worker: Model Initialized (${modelType.toUpperCase()} - WebGL)`);
-
-    } catch (err) {
-        throw new Error(`Model Başlatma Hatası (${modelType}): ${err.message}`);
+        if (type === '2x' && !upscaler2x) {
+            console.log("Loading 2X Model...");
+            upscaler2x = new Upscaler({
+                model: self.DefaultUpscalerJSModel,
+            });
+        }
+    } catch (e) {
+        throw new Error(`Model Yükleme Hatası (${type}): ${e.message}`);
     }
 };
 
+// --- TILING PIPELINE (The Magic Fix) ---
+
+const processTiled = async (imageData, modelType, id) => {
+    const upscaler = modelType === '4x' ? upscaler4x : upscaler2x;
+    const scale = modelType === '4x' ? 4 : 2;
+
+    // Convert source to Tensor to slice easily
+    const fullTensor = tf.browser.fromPixels(imageData);
+    const [h, w] = fullTensor.shape;
+
+    const outW = w * scale;
+    const outH = h * scale;
+    const finalBuffer = new Uint8ClampedArray(outW * outH * 4);
+
+    const cols = Math.ceil(w / TILE_SIZE);
+    const rows = Math.ceil(h / TILE_SIZE);
+    const totalTiles = cols * rows;
+    let processed = 0;
+
+    for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+            processed++;
+            if (processed % 2 === 0 || processed === totalTiles) {
+                self.postMessage({ type: 'progress', message: `İşleniyor: %${Math.round(processed / totalTiles * 100)}`, id });
+                await new Promise(res => setTimeout(res, 0)); // Yield
+            }
+
+            // 1. Calc Bounds
+            const srcX = c * TILE_SIZE;
+            const srcY = r * TILE_SIZE;
+
+            const x1 = Math.max(0, srcX - PAD);
+            const y1 = Math.max(0, srcY - PAD);
+            const x2 = Math.min(w, srcX + TILE_SIZE + PAD);
+            const y2 = Math.min(h, srcY + TILE_SIZE + PAD);
+
+            const tileH = y2 - y1;
+            const tileW = x2 - x1;
+
+            if (tileW <= 0 || tileH <= 0) continue;
+
+            const tileTensor = tf.tidy(() => {
+                return fullTensor.slice([y1, x1, 0], [tileH, tileW, 3]);
+            });
+
+            // 2. Upscale
+            let resultTensor;
+            try {
+                // UpscalerJS expects 0-255 int tensor or 0-1 float. It handles auto-normalization usually.
+                // We pass the raw tensor (0-255).
+                resultTensor = await upscaler.upscale(tileTensor, {
+                    output: 'tensor',
+                    patchSize: undefined, // We are doing manual tiling
+                    padding: 0
+                });
+            } catch (err) {
+                tileTensor.dispose();
+                fullTensor.dispose();
+                throw new Error(`Tile Hatası: ${err.message}`);
+            }
+
+            // 3. To Pixels
+            const tileBytes = await tf.browser.toPixels(resultTensor);
+
+            tileTensor.dispose();
+            resultTensor.dispose();
+
+            // 4. Stitch
+            const validInX = (srcX - x1);
+            const validInY = (srcY - y1);
+            const validW = Math.min(TILE_SIZE, w - srcX);
+            const validH = Math.min(TILE_SIZE, h - srcY);
+
+            // Scale to output
+            const targetX = srcX * scale;
+            const targetY = srcY * scale;
+            const upscaledTileW = tileW * scale;
+
+            const writeW = validW * scale;
+            const writeH = validH * scale;
+            const readOffX = validInX * scale;
+            const readOffY = validInY * scale;
+
+            for (let row = 0; row < writeH; row++) {
+                const srcIdx = ((readOffY + row) * upscaledTileW + readOffX) * 4;
+                const dstIdx = ((targetY + row) * outW + targetX) * 4;
+
+                // Copy row
+                const line = tileBytes.subarray(srcIdx, srcIdx + (writeW * 4));
+                finalBuffer.set(line, dstIdx);
+            }
+        }
+    }
+
+    fullTensor.dispose();
+    return { width: outW, height: outH, data: finalBuffer };
+}
+
+
 self.onmessage = async (e) => {
-    const { imageData, type, id, modelType } = e.data;
+    const { type, imageData, id, modelType } = e.data;
+    const target = modelType || '2x';
 
     try {
         if (type === 'MakeModelReady') {
-            await initModel(modelType || '2x');
+            await initModels(target);
             self.postMessage({ type: 'ready', id });
             return;
         }
 
         if (type === 'Upscale') {
-            const targetType = modelType || '2x';
+            self.postMessage({ type: 'progress', message: 'Model Hazırlanıyor...', id });
+            await initModels(target);
 
-            // 1. Init
-            self.postMessage({ type: 'progress', message: `Model Yükleniyor (${targetType.toUpperCase()})...`, id });
-            await initModel(targetType);
+            self.postMessage({ type: 'progress', message: 'İşleniyor...', id });
+            const result = await processTiled(imageData, target, id);
 
-            // 2. Pre-process
-            self.postMessage({ type: 'progress', message: 'Görüntü İşleniyor...', id });
-            const pixels = tf.browser.fromPixels(imageData);
-            const normalized = tf.tidy(() => pixels.cast('float32').div(255.0));
-            pixels.dispose();
-
-            // 3. Inference
-            self.postMessage({ type: 'progress', message: `AI İyileştirme Uygulanıyor (${targetType.toUpperCase()})...`, id });
-
-            // 4. Inference & Stitching (MANUAL TILING FOR BOTH 2X & 4X)
-            // This ensures consistent low-memory usage and stability for all modes.
-
-            let finalDataEncoded;
-            let outW, outH;
-
-            const scale = targetType === '4x' ? 4 : 2;
-            // 64 is too small and causes jitter/overhead. 128 is a safe balance (128x128 input -> 512x512 output).
-            const tileInputSize = 128;
-            const pad = 6; // Overlap
-
-            const [h, w] = normalized.shape;
-            outW = w * scale;
-            outH = h * scale;
-
-            // Allocate CPU buffer for result
-            finalDataEncoded = new Uint8ClampedArray(outW * outH * 4);
-
-            const numCols = Math.ceil(w / tileInputSize);
-            const numRows = Math.ceil(h / tileInputSize);
-            const totalTiles = numCols * numRows;
-            let processedTiles = 0;
-
-            for (let r = 0; r < numRows; r++) {
-                for (let c = 0; c < numCols; c++) {
-                    processedTiles++;
-                    // Report progress less frequently to save UI thread
-                    const progressPercent = Math.round((processedTiles / totalTiles) * 100);
-                    if (processedTiles % 2 === 0 || processedTiles === totalTiles) { // Every 2 tiles is fine for 128px
-                        self.postMessage({ type: 'progress', message: `İşleniyor (%${progressPercent})`, id });
-                        // Breath for GC and UI responsiveness
-                        await new Promise(res => setTimeout(res, 2));
-                    }
-
-                    // Calculate Input Coordinates with Padding
-                    const startX = c * tileInputSize;
-                    const startY = r * tileInputSize;
-
-                    // Input bounds including padding
-                    const x1 = Math.max(0, startX - pad);
-                    const y1 = Math.max(0, startY - pad);
-                    const x2 = Math.min(w, startX + tileInputSize + pad);
-                    const y2 = Math.min(h, startY + tileInputSize + pad);
-
-                    const tileW = x2 - x1;
-                    const tileH = y2 - y1;
-
-                    // Slice Input Logic
-                    const tileTensor = tf.tidy(() => {
-                        return normalized.slice([y1, x1, 0], [tileH, tileW, 3]);
-                    });
-
-                    // Upscale Tile
-                    let upscaledTile;
-                    try {
-                        upscaledTile = await upscaler.upscale(tileTensor, {
-                            output: 'tensor',
-                            patchSize: undefined, // Already manually tiled
-                            padding: 0
-                        });
-                    } catch (tileErr) {
-                        tileTensor.dispose();
-                        throw new Error(`Tile Hatası (${r},${c}): ${tileErr.message}`);
-                    }
-
-                    // Convert to pixels immediately
-                    const tilePixels = await tf.browser.toPixels(upscaledTile);
-
-                    // Dispose Tensors
-                    tileTensor.dispose();
-                    upscaledTile.dispose();
-
-                    // --- CPU Stitching Logic ---
-                    // Determine valid output region (removing padding)
-                    // Input-space offsets relative to the tile we extracted
-                    const validInX = (startX - x1);
-                    const validInY = (startY - y1);
-                    const validInW = Math.min(tileInputSize, w - startX);
-                    const validInH = Math.min(tileInputSize, h - startY);
-
-                    // Scale to Output-space
-                    const validOutX = validInX * scale;
-                    const validOutY = validInY * scale;
-                    const validOutW = validInW * scale;
-                    const validOutH = validInH * scale;
-
-                    const upscaledTileW = tileW * scale;
-
-                    // Copy row by row from tilePixels to finalDataEncoded
-                    const targetStartX = startX * scale;
-                    const targetStartY = startY * scale;
-
-                    for (let row = 0; row < validOutH; row++) {
-                        const srcRow = validOutY + row;
-                        const srcColStart = validOutX;
-
-                        const srcIndex = (srcRow * upscaledTileW + srcColStart) * 4;
-                        const destRow = targetStartY + row;
-                        const destColStart = targetStartX;
-                        const destIndex = (destRow * outW + destColStart) * 4;
-
-                        // Copy line
-                        const lineBytes = validOutW * 4;
-                        finalDataEncoded.set(
-                            tilePixels.subarray(srcIndex, srcIndex + lineBytes),
-                            destIndex
-                        );
-                    }
-                }
-            }
-
-            normalized.dispose();
-
-            // 4. Send Result
-            self.postMessage({ type: 'progress', message: 'Sonuç Oluşturuluyor...', id });
-
-            const msgData = {
-                width: outW,
-                height: outH,
-                data: finalDataEncoded
-            };
-
-            // Transfer buffer for performance
-            try {
-                self.postMessage({ type: 'complete', result: msgData, id }, [finalDataEncoded.buffer]);
-            } catch (transferErr) {
-                self.postMessage({ type: 'complete', result: msgData, id });
-            }
+            self.postMessage({ type: 'complete', result, id }, [result.data.buffer]);
         }
-    } catch (error) {
-        console.error("Worker Critical Error:", error);
-        self.postMessage({ type: 'error', error: error.message || "Bilinmeyen Hata", id });
+    } catch (err) {
+        console.error(err);
+        self.postMessage({ type: 'error', error: err.message, id });
     }
 };
