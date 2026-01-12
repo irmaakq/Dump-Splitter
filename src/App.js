@@ -72,7 +72,7 @@ const DEFAULT_SETTINGS = {
   hdMode: false,
   optimizeMode: false,
   smartCrop: false,
-  ultraHdMode: false
+  ultraHdSelection: null
 };
 
 const FEATURE_DETAILS = {
@@ -108,8 +108,8 @@ const FEATURE_DETAILS = {
     title: "ULTRA HD (AI SR)",
     icon: Zap,
     color: "text-yellow-400",
-    shortDesc: "Gerçek AI Super Resolution (2x) uygular.",
-    desc: "Derin Öğrenme (Deep Learning) tabanlı Super Resolution modeli çalıştırır. Pikselleri sadece büyütmez, eksik detayları 'tahmin ederek' yeniden çizer."
+    shortDesc: "Gerçek AI Super Resolution (2x / 4x) uygular.",
+    desc: "Derin Öğrenme (Deep Learning) tabanlı Super Resolution modeli çalıştırır. Pikselleri sadece büyütmez, eksik detayları 'tahmin ederek' yeniden çizer. (4X modu daha detaylıdır ancak işlem süresi artabilir)."
   }
 };
 
@@ -563,7 +563,7 @@ const App = () => {
   const [hdMode, setHdMode] = useState(DEFAULT_SETTINGS.hdMode);
   const [optimizeMode, setOptimizeMode] = useState(DEFAULT_SETTINGS.optimizeMode);
   const [smartCrop, setSmartCrop] = useState(DEFAULT_SETTINGS.smartCrop);
-  const [ultraHdMode, setUltraHdMode] = useState(DEFAULT_SETTINGS.ultraHdMode);
+  const [ultraHdSelection, setUltraHdSelection] = useState(DEFAULT_SETTINGS.ultraHdSelection);
 
   // İndirme işlemi kontrolü
   const [isDownloading, setIsDownloading] = useState(false);
@@ -904,11 +904,11 @@ const App = () => {
       case 'hdMode': setHdMode(value); stateKey = 'hdMode'; break;
       case 'optimize': setOptimizeMode(value); stateKey = 'optimizeMode'; break;
       case 'smartCrop': setSmartCrop(value); stateKey = 'smartCrop'; break;
-      case 'ultraHd': setUltraHdMode(value); stateKey = 'ultraHdMode'; break;
+      case 'ultraHdSelection': setUltraHdSelection(value); stateKey = 'ultraHdSelection'; break;
 
       case 'autoEnhance': setAutoEnhance(value); break;
       case 'optimizeMode': setOptimizeMode(value); break;
-      case 'ultraHdMode': setUltraHdMode(value); break;
+      case 'ultraHdSelection': setUltraHdSelection(value); break;
     }
 
     if (uploadedFile) {
@@ -927,7 +927,7 @@ const App = () => {
     }
 
     // GÜNCELLENDİ: Ultra HD değiştiğinde HER ZAMAN feedback ver (Açılırken de kapanırken de)
-    if (key === 'ultraHd' || key === 'ultraHdMode') {
+    if (key === 'ultraHdSelection') {
       skipFeedbackRef.current = false;
     }
     // GÜNCELLENDİ: Split count değiştiğinde de feedback ver (Yumuşak geçiş için)
@@ -953,7 +953,7 @@ const App = () => {
     setHdMode(s.hdMode ?? DEFAULT_SETTINGS.hdMode);
     setOptimizeMode(s.optimizeMode ?? DEFAULT_SETTINGS.optimizeMode);
     setSmartCrop(s.smartCrop ?? DEFAULT_SETTINGS.smartCrop);
-    setUltraHdMode(s.ultraHdMode ?? DEFAULT_SETTINGS.ultraHdMode);
+    setUltraHdSelection(s.ultraHdSelection ?? DEFAULT_SETTINGS.ultraHdSelection);
 
     setUploadedFile(fileItem.url);
     setFileType(fileItem.type);
@@ -1365,7 +1365,7 @@ const App = () => {
         setHdMode(DEFAULT_SETTINGS.hdMode);
         setOptimizeMode(DEFAULT_SETTINGS.optimizeMode);
         setSmartCrop(DEFAULT_SETTINGS.smartCrop);
-        setUltraHdMode(DEFAULT_SETTINGS.ultraHdMode);
+        setUltraHdSelection(DEFAULT_SETTINGS.ultraHdSelection);
 
         setSplitSlides([]);
         setIsProcessing(false);
@@ -1386,7 +1386,7 @@ const App = () => {
           setHdMode(DEFAULT_SETTINGS.hdMode);
           setOptimizeMode(DEFAULT_SETTINGS.optimizeMode);
           setSmartCrop(DEFAULT_SETTINGS.smartCrop);
-          setUltraHdMode(DEFAULT_SETTINGS.ultraHdMode);
+          setUltraHdSelection(DEFAULT_SETTINGS.ultraHdSelection);
 
           setSplitSlides([]);
           setIsProcessing(false);
@@ -1565,21 +1565,21 @@ const App = () => {
         const h = isVideo ? mediaElement.videoHeight : mediaElement.height;
 
         // --- PIPELINE STEP 1: Determine Essentials ---
-        const upscaleFactor = ultraHdMode ? 2 : 1;
+        const upscaleFactor = ultraHdSelection === '4x' ? 4 : (ultraHdSelection === '2x' ? 2 : 1);
         if (myId !== processingIdRef.current) return;
         let processingCanvas = document.createElement('canvas'); // Temporary working canvas
         finalW = w;
         finalH = h;
 
-        if (ultraHdMode) {
-          if (!isSilent) setAiLogs(prev => [...prev, "AI Super Resolution (2x) başlatılıyor (Web Worker)..."]);
+        if (ultraHdSelection) {
+          if (!isSilent) setAiLogs(prev => [...prev, `AI Super Resolution (${ultraHdSelection.toUpperCase()}) başlatılıyor (Web Worker)...`]);
 
           // 1. Worker Başlat (Veya Mevcut Olanı Al)
           if (!aiWorkerRef.current) {
             aiWorkerRef.current = new Worker('./aiWorker.js');
-            // Worker'a modeli ısıtması için sinyal gönder
-            aiWorkerRef.current.postMessage({ type: 'MakeModelReady', id: 'init' });
           }
+          // Worker'a modeli ısıtması için sinyal gönder (Model Tipi ile)
+          aiWorkerRef.current.postMessage({ type: 'MakeModelReady', id: 'init', modelType: ultraHdSelection });
 
           // 2. Piksel Verisini Hazırla
           const tempC = document.createElement('canvas');
@@ -1628,7 +1628,7 @@ const App = () => {
 
             worker.addEventListener('message', handler);
             worker.addEventListener('error', errorHandler);
-            worker.postMessage({ type: 'Upscale', imageData, id: currentReqId });
+            worker.postMessage({ type: 'Upscale', imageData, id: currentReqId, modelType: ultraHdSelection });
           });
 
           if (myId !== processingIdRef.current) return;
@@ -1761,7 +1761,7 @@ const App = () => {
       if (myId === processingIdRef.current) {
         setIsProcessing(false);
         if (!isSilent && !canUseCache) {
-          showToast(`İşlem Tamamlandı! (${ultraHdMode ? '2x AI Upscale' : 'Standart'})`);
+          showToast(`İşlem Tamamlandı! (${ultraHdSelection ? 'AI Upscale ' + ultraHdSelection.toUpperCase() : 'Standart'})`);
         }
         setIsContentReady(true);
       }
@@ -1969,7 +1969,19 @@ const App = () => {
                 {/* YENİ AI UPSCALE BÖLÜMÜ */}
 
 
-                <div className="space-y-2 border-t border-white/5 pt-3"><FeatureToggle featureKey="ultraHd" state={ultraHdMode} onToggle={updateSetting} onInfo={setFeatureInfo} /></div>
+                <div className="space-y-3 pt-3 border-t border-white/5">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-3">
+                      <Zap size={16} className="text-yellow-400" />
+                      <span className="text-[12px] font-black text-white uppercase tracking-tight">ULTRA HD (AI SR)</span>
+                      <button onClick={() => setFeatureInfo(FEATURE_DETAILS.ultraHd)} className="opacity-50 hover:opacity-100 transition-opacity"><Info size={12} className="text-gray-400" /></button>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <button onClick={() => updateSetting('ultraHdSelection', ultraHdSelection === '2x' ? null : '2x')} className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase transition-all border ${ultraHdSelection === '2x' ? 'bg-yellow-400 text-black border-yellow-400 shadow-[0_0_15px_rgba(250,204,21,0.3)]' : 'bg-white/5 border-white/10 text-gray-500 hover:text-white'}`}>2X (Standart)</button>
+                    <button onClick={() => updateSetting('ultraHdSelection', ultraHdSelection === '4x' ? null : '4x')} className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase transition-all border ${ultraHdSelection === '4x' ? 'bg-yellow-400 text-black border-yellow-400 shadow-[0_0_15px_rgba(250,204,21,0.3)]' : 'bg-white/5 border-white/10 text-gray-500 hover:text-white'}`}>4X (Pro)</button>
+                  </div>
+                </div>
                 <div className="space-y-3">
                   <span className="text-[12px] font-black text-gray-500 uppercase tracking-widest block">Parça Sayısı</span>
                   <div className="grid grid-cols-5 gap-2 w-full">
