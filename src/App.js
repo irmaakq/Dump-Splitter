@@ -108,8 +108,8 @@ const FEATURE_DETAILS = {
     title: "ULTRA HD (AI SR)",
     icon: Zap,
     color: "text-yellow-400",
-    shortDesc: "Gerçek AI Super Resolution (2x / 4x) uygular.",
-    desc: "Derin Öğrenme (Deep Learning) tabanlı Super Resolution modeli çalıştırır. Pikselleri sadece büyütmez, eksik detayları 'tahmin ederek' yeniden çizer. (0 -> 2x -> 4x Modlarına geçmek için tıklayın)."
+    shortDesc: "Gerçek AI Super Resolution (2x) uygular.",
+    desc: "Derin Öğrenme (Deep Learning) tabanlı Super Resolution modeli çalıştırır. Pikselleri sadece büyütmez, eksik detayları 'tahmin ederek' yeniden çizer."
   }
 };
 
@@ -119,41 +119,15 @@ const FeatureToggle = ({ featureKey, state, onToggle, onInfo }) => {
   const details = FEATURE_DETAILS[featureKey];
   const Icon = details.icon;
 
-  // Özel Başlık Yönetimi (Ultra HD için 2x/4x gösterimi)
-  let displayTitle = details.title;
-  let activeState = state; // Boolean veya Number olabilir
-
-  if (featureKey === 'ultraHd') {
-    if (state === 2) displayTitle = "ULTRA HD (2X)";
-    if (state === 4) displayTitle = "ULTRA HD (4X)";
-    // Visual active check: 0 (false) is inactive, >0 is active
-    activeState = state > 0;
-  }
-
-  const handleClick = () => {
-    if (featureKey === 'ultraHd') {
-      // DÖNGÜ: 0 -> 2 -> 4 -> 0
-      let nextVal = 0;
-      if (!state || state === 0) nextVal = 2;
-      else if (state === 2) nextVal = 4;
-      else nextVal = 0;
-
-      onToggle(featureKey, nextVal);
-    } else {
-      // Normal Toggle
-      onToggle(featureKey, !state);
-    }
-  };
-
   return (
     <div
       className="group relative cursor-pointer"
-      onClick={handleClick}
+      onClick={() => onToggle(featureKey, !state)}
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Icon size={16} className={details.color} />
-          <span className="text-[12px] font-black text-white uppercase tracking-tight">{displayTitle}</span>
+          <span className="text-[12px] font-black text-white uppercase tracking-tight">{details.title}</span>
           <button
             onClick={(e) => { e.stopPropagation(); onInfo(details); }}
             className="opacity-0 group-hover:opacity-100 transition-opacity p-1 bg-white/10 rounded-full hover:bg-white/20 text-gray-400 hover:text-white"
@@ -163,8 +137,8 @@ const FeatureToggle = ({ featureKey, state, onToggle, onInfo }) => {
             <Info size={10} />
           </button>
         </div>
-        <div className={`w-9 h-5 rounded-full transition-all relative ${activeState ? details.color.replace('text-', 'bg-') : 'bg-white/10'}`}>
-          <div className={`absolute top-1 w-3 h-3 rounded-full transition-all ${activeState ? 'right-1 bg-black' : 'left-1 bg-white/30'}`} />
+        <div className={`w-9 h-5 rounded-full transition-all relative ${state ? details.color.replace('text-', 'bg-') : 'bg-white/10'}`}>
+          <div className={`absolute top-1 w-3 h-3 rounded-full transition-all ${state ? 'right-1 bg-black' : 'left-1 bg-white/30'}`} />
         </div>
       </div>
       <p className="text-[10px] text-gray-500 leading-relaxed font-bold uppercase mt-1.5 opacity-80">{details.shortDesc}</p>
@@ -1519,17 +1493,13 @@ const App = () => {
       const w = isVideo ? mediaElement.videoWidth : mediaElement.width;
       const h = isVideo ? mediaElement.videoHeight : mediaElement.height;
 
-      // --- PIPELINE STEP 1: Determine Upscale Factor ---
-      // ultraHdMode artık 0, 2 veya 4 değerini alıyor
-      const upscaleFactor = typeof ultraHdMode === 'number' && ultraHdMode > 1 ? ultraHdMode : 1;
-
       // --- PIPELINE STEP 2: AI UPSCALING (If needed) ---
       let processingCanvas = document.createElement('canvas'); // Temporary working canvas
       let finalW = w;
       let finalH = h;
 
-      if (upscaleFactor > 1) {
-        if (!isSilent) setAiLogs(prev => [...prev, `AI Super Resolution (${upscaleFactor}x) başlatılıyor...`]);
+      if (ultraHdMode) {
+        if (!isSilent) setAiLogs(prev => [...prev, "AI Super Resolution (2x) başlatılıyor..."]);
 
         // 2.1 Load Library
         await loadAiLibrary();
@@ -1540,41 +1510,30 @@ const App = () => {
           model: window['@upscalerjs/default-model'],
         });
 
-        // 2.3 Convert to Tensor
-        let currentTensor = tf.browser.fromPixels(mediaElement);
+        // 2.3 Convert to Tensor & Normalize (CRITICAL FIX)
+        let rawPixels = tf.browser.fromPixels(mediaElement);
+        let normalizedTensor = tf.tidy(() => rawPixels.cast('float32').div(255.0));
+        rawPixels.dispose();
 
         if (!isSilent) setAiLogs(prev => [...prev, "Pikseller analiz ediliyor..."]);
 
-        // 2.4 Run Inference (Step 1: 2x)
-        let upscaledTensor1 = await upscaler.upscale(currentTensor, {
+        // 2.4 Run Inference (2x)
+        let upscaledTensor = await upscaler.upscale(normalizedTensor, {
           patchSize: 64,
           padding: 2,
           output: 'tensor'
         });
 
-        currentTensor.dispose();
-        currentTensor = upscaledTensor1;
+        normalizedTensor.dispose();
 
-        // 2.5 Run Inference (Step 2: 4x if needed)
-        if (upscaleFactor === 4) {
-          if (!isSilent) setAiLogs(prev => [...prev, "İnce detaylar dokunuyor (4x)..."]);
-          let upscaledTensor2 = await upscaler.upscale(currentTensor, {
-            patchSize: 64,
-            padding: 2,
-            output: 'tensor'
-          });
-          currentTensor.dispose();
-          currentTensor = upscaledTensor2;
-        }
-
-        // 2.6 Convert Final Tensor to Image
-        finalW = currentTensor.shape[1];
-        finalH = currentTensor.shape[0];
+        // 2.5 Convert Final Tensor back to Canvas
+        finalW = upscaledTensor.shape[1];
+        finalH = upscaledTensor.shape[0];
 
         const finalCanvas = document.createElement('canvas');
         finalCanvas.width = finalW;
         finalCanvas.height = finalH;
-        await tf.browser.toPixels(currentTensor, finalCanvas);
+        await tf.browser.toPixels(upscaledTensor, finalCanvas);
 
         processingCanvas.width = finalW;
         processingCanvas.height = finalH;
@@ -1582,7 +1541,7 @@ const App = () => {
         pCtx.drawImage(finalCanvas, 0, 0);
 
         // Cleanup
-        currentTensor.dispose();
+        upscaledTensor.dispose();
 
         if (!isSilent) setAiLogs(prev => [...prev, `Upscale tamamlandı: ${finalW}x${finalH}`]);
       } else {
