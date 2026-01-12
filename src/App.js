@@ -1814,18 +1814,13 @@ const App = () => {
             aiWorkerRef.current = null;
           }
 
-          // 2. Temporarily disable AI flags for this run
-          // We don't change state (ultraHdMode) so the UI toggle stays on, 
-          // but we process this specific request as standard.
-          // However, to avoid confusion, it might be better to turn them off or just process once.
-          // Let's recursively call with forceStandard = true.
-
-          showToast(`AI Yetersiz Bellek/Hata. Standart Kaliteye dönüldü.`, "error");
+          console.log("AI Worker terminated. Retrying with Standard Mode.");
+          showToast(`Cihazınız AI işlemini kaldıramadı (GPU/Bellek). Standart olarak devam ediliyor.`, "error");
 
           // Give UI a moment to breathe then retry
           setTimeout(() => {
             processSplit(sourceUrl, isVideo, true);
-          }, 500);
+          }, 1000); // 1 sec delay specifically to let GPU cool down/reset
           return;
         }
 
