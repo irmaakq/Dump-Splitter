@@ -143,8 +143,24 @@ const processTiled = async (imageData, modelType, id) => {
                 throw new Error(`Upscale Fail (Tile ${r},${c}): ${err.message} [Input Range: ${min.toFixed(4)} - ${max.toFixed(4)}]`);
             }
 
-            // 4. Download to CPU (GPU -> CPU Sync)
-            const tileBytes = await tf.browser.toPixels(upscaledTensor);
+            // 4. Download to CPU (GPU -> CPU Sync) with AUTO-RANGE FIX
+            const tileBytes = await tf.tidy(() => {
+                const maxVal = upscaledTensor.max().dataSync()[0];
+                let safeTensor;
+
+                // Decision Logic: 
+                // If max > 1.5, we assume the model output is in [0-255] range.
+                // If max <= 1.5, we assume [0-1] range (likely with slight float noise > 1.0).
+                if (maxVal > 1.5) {
+                    // Case: 0-255 Range
+                    safeTensor = upscaledTensor.clipByValue(0, 255).toInt();
+                } else {
+                    // Case: 0-1 Range (Strict Clip)
+                    safeTensor = upscaledTensor.clipByValue(0.0, 1.0);
+                }
+
+                return tf.browser.toPixels(safeTensor);
+            });
 
             // 5. Cleanup (Crucial for 8GB RAM constraint)
             tileTensor.dispose();
