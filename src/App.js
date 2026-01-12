@@ -1793,7 +1793,13 @@ const App = () => {
 
           // Give UI a moment to breathe then retry
           setTimeout(() => {
-            processSplit(sourceUrl, isVideo, true);
+            // Update UI state to reflect fallback (This will also trigger useEffect to re-run processSplit)
+            if (ultraHdMode) {
+              updateSetting('ultraHd', false);
+            }
+            if (ultraHd4xMode) {
+              updateSetting('ultraHd4x', false);
+            }
           }, 1000); // 1 sec delay specifically to let GPU cool down/reset
           return;
         }
