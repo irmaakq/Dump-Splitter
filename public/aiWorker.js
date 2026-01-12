@@ -110,10 +110,22 @@ const processTiled = async (imageData, modelType, id) => {
 
             if (tileW <= 0 || tileH <= 0) continue;
 
-            // 2. Extract Tile Tensor (Normalize to 0-1 for Model)
+            // 2. Extract Tile Tensor (Normalize to 0-1 and CLIP strictly)
             const tileTensor = tf.tidy(() => {
-                return fullTensor.slice([y1, x1, 0], [tileH, tileW, 3]).div(255.0);
+                return fullTensor
+                    .slice([y1, x1, 0], [tileH, tileW, 3])
+                    .div(255.0)
+                    .clipByValue(0.0, 1.0); // Force strict 0-1 range
             });
+
+            // DEBUG: Check range
+            /*
+            const minVal = tileTensor.min().dataSync()[0];
+            const maxVal = tileTensor.max().dataSync()[0];
+            if (maxVal > 1.0 || minVal < 0.0) {
+                 console.warn(`Tile ${r},${c} OOB: [${minVal}, ${maxVal}]`);
+            }
+            */
 
             // 3. Inference
             let upscaledTensor;
@@ -124,8 +136,11 @@ const processTiled = async (imageData, modelType, id) => {
                     padding: 0
                 });
             } catch (err) {
+                // Determine if it's a range error
+                const min = tileTensor.min().dataSync()[0];
+                const max = tileTensor.max().dataSync()[0];
                 tileTensor.dispose();
-                throw new Error(`Upscale Fail (Tile ${r},${c}): ${err.message}`);
+                throw new Error(`Upscale Fail (Tile ${r},${c}): ${err.message} [Input Range: ${min.toFixed(4)} - ${max.toFixed(4)}]`);
             }
 
             // 4. Download to CPU (GPU -> CPU Sync)
