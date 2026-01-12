@@ -1761,7 +1761,11 @@ const App = () => {
       if (myId === processingIdRef.current) {
         setIsProcessing(false);
         if (!isSilent && !canUseCache) {
-          const modeText = ultraHd4xMode ? "AI Upscale 4X" : (ultraHdMode ? "AI Upscale 2X" : "Standart");
+          // GÜNCELLENDİ: Eğer forceStandard aktifse, kullanıcıya 'Standart' olduğunu söyle
+          const modeText = ((ultraHd4xMode || ultraHdMode) && !forceStandard)
+            ? (ultraHd4xMode ? "AI Upscale 4X" : "AI Upscale 2X")
+            : "Standart";
+
           showToast(`İşlem Tamamlandı! (${modeText})`);
         }
         setIsContentReady(true);
