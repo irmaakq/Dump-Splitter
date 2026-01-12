@@ -13,37 +13,39 @@ let upscaler = null;
 let currentModelType = null; // '2x' or '4x'
 
 const initModel = async (modelType = '2x') => {
-    // If we already have the correct model loaded, do nothing
-    if (upscaler && currentModelType === modelType) return;
+    try {
+        // If we already have the correct model loaded, do nothing
+        if (upscaler && currentModelType === modelType) return;
 
-    // If a different model is loaded, dispose it first (to free memory)
-    if (upscaler) {
-        try {
-            // UpscalerJS doesn't expose a simple dispose for the model instance itself
-            // but we can clear TF memory if needed. 
-            // Re-instantiating handles the JS object.
-            await tf.disposeVariables();
-        } catch (e) { console.warn("Cleanup warning:", e); }
-        upscaler = null;
+        // If a different model is loaded, dispose it first (to free memory)
+        if (upscaler) {
+            try {
+                // Garbage collect previous tensors
+                await tf.disposeVariables();
+            } catch (e) { console.warn("Cleanup warning:", e); }
+            upscaler = null;
+        }
+
+        // Explicitly use WebGL for performance
+        await tf.setBackend('webgl');
+        await tf.ready();
+
+        let selectedModel;
+        if (modelType === '4x') {
+            selectedModel = EsrganThick4x; // From imported script
+        } else {
+            selectedModel = DefaultUpscalerJSModel; // Default 2x model
+        }
+
+        upscaler = new Upscaler({
+            model: selectedModel,
+        });
+
+        currentModelType = modelType;
+        console.log(`AI Worker: Model Initialized (${modelType.toUpperCase()} - WebGL)`);
+    } catch (err) {
+        throw new Error(`Model Init Error: ${err.message}`);
     }
-
-    // Explicitly use WebGL for performance
-    await tf.setBackend('webgl');
-    await tf.ready();
-
-    let selectedModel;
-    if (modelType === '4x') {
-        selectedModel = EsrganThick4x; // From imported script
-    } else {
-        selectedModel = DefaultUpscalerJSModel; // Default 2x model
-    }
-
-    upscaler = new Upscaler({
-        model: selectedModel,
-    });
-
-    currentModelType = modelType;
-    console.log(`AI Worker: Model Initialized (${modelType.toUpperCase()} - WebGL)`);
 };
 
 self.onmessage = async (e) => {
@@ -77,8 +79,9 @@ self.onmessage = async (e) => {
             self.postMessage({ type: 'progress', message: `Süper Çözünürlük Uygulanıyor (${targetType.toUpperCase()})...`, id });
 
             // 4X models might need smaller patches to avoid blocks
+            // 2X can handle larger patches
             const patchSize = targetType === '4x' ? 32 : 64;
-            const padding = targetType === '4x' ? 3 : 2;
+            const padding = targetType === '4x' ? 2 : 2;
 
             const upscaledTensor = await upscaler.upscale(normalized, {
                 patchSize,
@@ -100,18 +103,25 @@ self.onmessage = async (e) => {
             const data = await tf.browser.toPixels(finalTensor);
             finalTensor.dispose();
 
-            // Create output ImageData
+            // Create output ImageData logic replacement (Transferrable)
             const msgData = {
                 width,
                 height,
                 data // Uint8ClampedArray
             };
 
-            self.postMessage({ type: 'complete', result: msgData, id }, [data.buffer]);
+            // CRITICAL: Always try to transfer buffer to avoid memory spike
+            try {
+                self.postMessage({ type: 'complete', result: msgData, id }, [data.buffer]);
+            } catch (transferErr) {
+                // Fallback if transfer fails
+                console.warn("Transferable failed, copying data...", transferErr);
+                self.postMessage({ type: 'complete', result: msgData, id });
+            }
         }
-
     } catch (error) {
-        console.error("Worker Error:", error);
-        self.postMessage({ type: 'error', error: error.message, id });
+        console.error("Worker Critical Error:", error);
+        // Ensure main thread gets UNBLOCKED
+        self.postMessage({ type: 'error', error: error.message || "Bilinmeyen Worker Hatası", id });
     }
 };
