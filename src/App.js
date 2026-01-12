@@ -840,6 +840,7 @@ const App = () => {
   const fileInputRef = useRef(null);
   const shouldResetList = useRef(false);
   const activeUrlsRef = useRef([]);
+  const processingIdRef = useRef(0); // Concurrency control için
 
   // --- MEMORY CLEANUP HELPER ---
   const cleanupFile = useCallback((url) => {
@@ -1445,6 +1446,9 @@ const App = () => {
   const processSplit = async (sourceUrl, isVideo) => {
     if (!sourceUrl) return;
 
+    // Concurrency control: Stale işlemlerden kurtulmak için ID ata
+    const myId = ++processingIdRef.current;
+
     // 1. ANINDA GİZLE VE TEMİZLE
     setIsContentReady(false);
 
@@ -1493,7 +1497,9 @@ const App = () => {
       const w = isVideo ? mediaElement.videoWidth : mediaElement.width;
       const h = isVideo ? mediaElement.videoHeight : mediaElement.height;
 
-      // --- PIPELINE STEP 2: AI UPSCALING (If needed) ---
+      // --- PIPELINE STEP 1: Determine Essentials ---
+      const upscaleFactor = ultraHdMode ? 2 : 1;
+      if (myId !== processingIdRef.current) return;
       let processingCanvas = document.createElement('canvas'); // Temporary working canvas
       let finalW = w;
       let finalH = h;
@@ -1512,9 +1518,10 @@ const App = () => {
 
         // 2.3 Convert to Tensor & Normalize (CRITICAL FIX)
         let rawPixels = tf.browser.fromPixels(mediaElement);
-        let normalizedTensor = tf.tidy(() => rawPixels.cast('float32').div(255.0));
+        let normalizedTensor = tf.tidy(() => rawPixels.cast('float32').div(255.0).clipByValue(0, 1));
         rawPixels.dispose();
 
+        if (myId !== processingIdRef.current) { normalizedTensor.dispose(); return; }
         if (!isSilent) setAiLogs(prev => [...prev, "Pikseller analiz ediliyor..."]);
 
         // 2.4 Run Inference (2x)
@@ -1636,20 +1643,25 @@ const App = () => {
       }
 
       setSplitSlides(parts);
-      setIsProcessing(false);
 
-      if (!isSilent) {
-        showToast(`İşlem Tamamlandı! (${upscaleFactor > 1 ? upscaleFactor + 'x AI Upscale' : 'Standart'})`);
+      if (myId === processingIdRef.current) {
+        setIsProcessing(false);
+        if (!isSilent) {
+          showToast(`İşlem Tamamlandı! (${upscaleFactor > 1 ? upscaleFactor + 'x AI Upscale' : 'Standart'})`);
+        }
+        setIsContentReady(true);
       }
 
       skipFeedbackRef.current = false;
-      setIsContentReady(true);
 
     } catch (error) {
       console.error("Pipeline Error:", error);
-      setIsProcessing(false);
-      showToast("İşlem sırasında hata: " + error.message, "error");
-      setIsContentReady(true); // Hata olsa bile içeriği göster
+      if (myId === processingIdRef.current) {
+        setIsProcessing(false);
+        setIsContentReady(true);
+        showToast(`İşlem sırasında hata: ${error.message.toUpperCase()}`, "error");
+      }
+      skipFeedbackRef.current = false;
     }
   };
 
