@@ -145,17 +145,21 @@ const processTiled = async (imageData, modelType, id) => {
 
             // 4. Download to CPU (GPU -> CPU Sync) with AUTO-RANGE FIX
             const tileBytes = await tf.tidy(() => {
-                const maxVal = upscaledTensor.max().dataSync()[0];
-                let safeTensor;
+                // AUTO-RANGE FIX (Updated: Mean-based Detection)
+                // PREVIOUS BUG: Single outlier (e.g. 2.0) caused max > 1.5,
+                // treating 0-1 float data as 0-255 int, resulting in all-black image.
 
-                // Decision Logic: 
-                // If max > 1.5, we assume the model output is in [0-255] range.
-                // If max <= 1.5, we assume [0-1] range (likely with slight float noise > 1.0).
-                if (maxVal > 1.5) {
+                const meanVal = upscaledTensor.mean().dataSync()[0];
+
+                let safeTensor;
+                // Heuristic: 0-255 images usually have mean > 50. 
+                // 0-1 images have mean around 0.5.
+                // Threshold of 1.0 is extremely safe.
+                if (meanVal > 1.0) {
                     // Case: 0-255 Range
                     safeTensor = upscaledTensor.clipByValue(0, 255).toInt();
                 } else {
-                    // Case: 0-1 Range (Strict Clip)
+                    // Case: 0-1 Range
                     safeTensor = upscaledTensor.clipByValue(0.0, 1.0);
                 }
 
