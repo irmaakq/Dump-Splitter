@@ -10,11 +10,11 @@ importScripts('https://unpkg.com/upscaler@0.13.3/dist/browser/umd/upscaler.min.j
 importScripts('https://unpkg.com/@upscalerjs/default-model@0.1.0/dist/umd/index.min.js');
 importScripts('https://unpkg.com/@upscalerjs/esrgan-thick@0.1.0/dist/umd/models/esrgan-thick/src/umd.min.js');
 
-// 2. CONFIGURATION (Ayarlar - STABİLİTE VERSİYONU)
+// 2. CONFIGURATION (Ayarlar - OPTİMİZE EDİLMİŞ VERSİYON)
 const CONFIG = {
-    TILE_SIZE: 128,      // 64 çok küçük geldi, overhead yüzünden çöktü. 128 en ideali.
-    PADDING: 32,         // Çizgileri yok etmek için 32px yeterli.
-    DELAY_MS: 100,       // 100ms gecikme GPU'yu rahatlatır, donmayı önler.
+    TILE_SIZE: 192,      // 64/128 küçük kaldığı için overhead (kenar işlem yükü) şişti. 192 ile dengeliyoruz.
+    PADDING: 24,         // 32 yerine 24 yapıyoruz (Yeterli ve daha hafif).
+    DELAY_MS: 50,        // Tile büyüdüğü için işlem sürecek, bekleme süresini 50'ye çektik (Akıcılık için).
     TENSOR_CLEANUP: true
 };
 
