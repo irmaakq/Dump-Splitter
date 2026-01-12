@@ -54,8 +54,8 @@ export function useUpscaler() {
         return new Promise((resolve, reject) => {
             try {
                 // Initialize Worker
-                // './aiWorker.js' assumes the worker is in the same folder as index.html (public root)
-                const worker = new Worker('./aiWorker.js');
+                // aiWorker.js public folder içinde olduğu için kök dizinden çağırıyoruz
+                const worker = new Worker('/aiWorker.js');
                 workerRef.current = worker;
 
                 // 1. Prepare Image (File -> ImageBitmap/ImageData)
