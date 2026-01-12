@@ -908,7 +908,8 @@ const App = () => {
       }));
     }
 
-    if (key === 'ultraHd' || key === 'ultraHdMode') {
+    // Ultra HD açılıyorsa feedback ver, kapanıyorsa sessizce yap ki takılma hissedilmesin
+    if ((key === 'ultraHd' || key === 'ultraHdMode') && !!value) {
       skipFeedbackRef.current = false;
     } else {
       skipFeedbackRef.current = true;
@@ -1533,14 +1534,18 @@ const App = () => {
 
         normalizedTensor.dispose();
 
-        // 2.5 Convert Final Tensor back to Canvas
+        // 2.5 Convert Final Tensor back to Canvas (With Output Clipping)
         finalW = upscaledTensor.shape[1];
         finalH = upscaledTensor.shape[0];
 
         const finalCanvas = document.createElement('canvas');
         finalCanvas.width = finalW;
         finalCanvas.height = finalH;
-        await tf.browser.toPixels(upscaledTensor, finalCanvas);
+
+        // Model bazen 1.0'ın çok az üstünde değer üretebilir (örn: 1.009), clipping şart.
+        const outputClipped = tf.tidy(() => upscaledTensor.clipByValue(0, 1));
+        await tf.browser.toPixels(outputClipped, finalCanvas);
+        outputClipped.dispose();
 
         processingCanvas.width = finalW;
         processingCanvas.height = finalH;
