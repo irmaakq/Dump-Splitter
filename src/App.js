@@ -579,6 +579,9 @@ const App = () => {
   const [showFAQ, setShowFAQ] = useState(false);
   const [featureInfo, setFeatureInfo] = useState(null);
 
+  // Loading Screen Message
+  const [loadingMessage, setLoadingMessage] = useState('İşleniyor...');
+
   // Mobil Menü State'i
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -1431,11 +1434,25 @@ const App = () => {
           setSplitSlides([]);
           setIsProcessing(false);
 
-          setPage('loading');
-          setTimeout(() => {
-            setPage('editor');
-          }, 800);
         }
+
+        // Remini Style Staged Transition (File Uploading -> Processing -> Success)
+        setPage('loading');
+        setLoadingMessage(`Dosya Yükleniyor... (1/${newFilesToAdd.length})`); // Aşama 1
+
+        setTimeout(() => {
+          setLoadingMessage("AI Görüntü Analizi Yapılıyor..."); // Aşama 2: AI Hissiyatı
+
+          setTimeout(() => {
+            setLoadingMessage("Geliştirme Başarılı!"); // Aşama 3: Başarı
+
+            setTimeout(() => {
+              setPage('editor'); // Bitiş
+            }, 600);
+
+          }, 1200);
+
+        }, 800);
       }
     }
 
@@ -1664,6 +1681,12 @@ const App = () => {
         sourceCanvas.width = finalW;
         sourceCanvas.height = finalH;
         const sCtx = sourceCanvas.getContext('2d', { willReadFrequently: true });
+
+        // --- VARSAYILAN KALİTE AYARLARI (Start Balanced) ---
+        // Kullanıcı hiçbir ayarı açmasa bile (AI Enhance vb. kapalı olsa da)
+        // Canvas'ın çizim kalitesini en yükseğe (High) çekiyoruz ki görüntü "Dengeli ve Net" olsun.
+        sCtx.imageSmoothingEnabled = true;
+        sCtx.imageSmoothingQuality = 'high';
 
         // a) Smart Crop
         if (smartCrop) {
@@ -1917,7 +1940,7 @@ const App = () => {
       {page === 'loading' ? (
         <div className="min-h-screen bg-[#050505] flex flex-col items-center justify-center text-white">
           <div className="w-16 h-16 md:w-20 md:h-20 border-4 border-white/5 border-t-white rounded-[32px] animate-spin mb-8 md:mb-10 shadow-2xl" />
-          <h2 className="text-xl md:text-2xl font-black uppercase italic tracking-widest animate-pulse tracking-tighter">İşleniyor</h2>
+          <h2 className="text-xl md:text-2xl font-black uppercase italic tracking-widest animate-pulse tracking-tighter text-center">{loadingMessage}</h2>
         </div>
       ) : page === 'landing' ? (
         // LANDING VIEW
