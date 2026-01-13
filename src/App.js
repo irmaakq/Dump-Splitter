@@ -705,8 +705,11 @@ const App = () => {
       const img = imgContainer.querySelector('img');
       if (img && img.dataset.panStart) {
         const startState = JSON.parse(img.dataset.panStart);
-        const dx = e.clientX - startState.x;
-        const dy = e.clientY - startState.y;
+        // ZOOM CORRECTION: Parent element scaled, so we must divide delta by zoom factor
+        // to keep 1:1 finger tracking.
+        const scaleFactor = zoom / 100;
+        const dx = (e.clientX - startState.x) / scaleFactor;
+        const dy = (e.clientY - startState.y) / scaleFactor;
         img.style.transform = `translate(${startState.tx + dx}px, ${startState.ty + dy}px)`;
       }
     }
@@ -2212,9 +2215,10 @@ const App = () => {
                     <div className="text-center mt-4"><h3 className="text-2xl md:text-4xl font-black uppercase tracking-tighter italic">Bölünen Parçalar</h3></div>
                     <div className={`grid gap-6 md:gap-12 w-full justify-items-center ${splitCount === 1 ? 'grid-cols-1' : (splitCount % 2 !== 0 || splitCount === 2 ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2')}`}>
                       {splitSlides.length > 0 ? splitSlides.map((s) => (
-                        <div key={`${uploadedFile}-${s.id}`} style={{ aspectRatio: s.aspectRatio, transform: `scale(${zoom / 100})`, transformOrigin: 'center center', transition: 'transform 0.2s' }} className="relative w-full max-w-[500px] h-auto max-h-[50vh] md:max-h-[70vh] bg-white/5 group hover:scale-[1.01] transition-all flex items-center justify-center snap-center rounded-2xl md:rounded-3xl overflow-hidden shadow-2xl">
+                        <div key={`${uploadedFile}-${s.id}`} style={{ aspectRatio: s.aspectRatio }} className="relative w-full max-w-[500px] h-auto max-h-[50vh] md:max-h-[70vh] bg-white/5 group hover:scale-[1.01] transition-all flex items-center justify-center snap-center rounded-2xl md:rounded-3xl overflow-hidden shadow-2xl">
                           <div
                             className="relative w-full h-full"
+                            style={{ transform: `scale(${zoom / 100})`, transformOrigin: 'center center', transition: 'transform 0.2s' }}
                             onPointerDown={handlePointerDown}
                             onPointerMove={handlePointerMove}
                             onPointerUp={handlePointerUp}
