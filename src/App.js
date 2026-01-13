@@ -7,8 +7,10 @@ import {
   Zap, CheckCircle2,
   Grid, DownloadCloud, FileImage,
   ShieldCheck, Cpu, Activity, Target, Lock, ServerOff, HelpCircle as HelpIcon, Info, MessageCircleQuestion, FileQuestion, ZoomIn, Maximize,
-  Download, Eye, Shield, Github, Settings, ChevronRight, Loader2, Menu, Trash2, RefreshCcw, Archive, Layers, Smartphone, Wand2, AlertTriangle, Cookie, Scale, MousePointerClick, ListChecks, Scissors, Files, Move
+  Download, Eye, Shield, Github, Settings, ChevronRight, Loader2, Menu, Trash2, RefreshCcw, Archive, Layers, Smartphone, Wand2, AlertTriangle, Cookie, Scale, MousePointerClick, ListChecks, Scissors, Files, Move, Minimize // Added Minimize
 } from 'lucide-react';
+
+
 
 // --- ICONS (Custom) ---
 const DownloadIcon = ({ size = 24, strokeWidth = 2.5, className }) => (
@@ -614,6 +616,7 @@ const App = () => {
 
   // ZOOM & BOYUTLAR
   const [zoom, setZoom] = useState(100);
+  const [viewMode, setViewMode] = useState('contain'); // 'contain' | 'cover'
   const [mediaDimensions, setMediaDimensions] = useState({ width: 0, height: 0 });
 
   // --- DOCK DRAG LOGIC ---
@@ -2220,7 +2223,7 @@ const App = () => {
                           >
                             <img
                               src={s.dataUrl}
-                              className="w-full h-full object-contain drop-shadow-2xl rounded-2xl md:rounded-3xl cursor-grab active:cursor-grabbing"
+                              className={`w-full h-full ${viewMode === 'contain' ? 'object-contain' : 'object-cover'} drop-shadow-2xl rounded-2xl md:rounded-3xl cursor-grab active:cursor-grabbing transition-all duration-500`}
                               alt="Slide"
                               draggable="false"
                             />
@@ -2259,6 +2262,18 @@ const App = () => {
                         </div>
                       </div>
                       <div className="flex items-center gap-2 md:gap-4 pl-2 justify-end shrink-0 flex-1">
+                        {/* View Mode Toggle */}
+                        <button
+                          onClick={() => setViewMode(prev => prev === 'contain' ? 'cover' : 'contain')}
+                          onPointerDown={(e) => e.stopPropagation()}
+                          className={`w-8 h-8 md:w-9 md:h-9 rounded-full flex items-center justify-center transition-all border shrink-0 ${viewMode === 'cover' ? 'bg-white text-black border-white' : 'bg-white/5 text-gray-400 border-white/5 hover:bg-white/10 hover:text-white'}`}
+                          title={viewMode === 'contain' ? "Ekrana Yay (Cover)" : "Sığdır (Contain)"}
+                        >
+                          {viewMode === 'contain' ? <Maximize size={14} /> : <Minimize size={14} />}
+                        </button>
+
+                        <div className="w-px h-4 bg-white/10 mx-1"></div>
+
                         <button onClick={() => setZoom(prev => Math.max(10, prev - 10))} onPointerDown={(e) => e.stopPropagation()} className="text-gray-500 hover:text-white transition-colors shrink-0 p-2" aria-label="Uzaklaştır"><Minus size={14} /></button>
                         <div className="flex items-center gap-2 group/zoom"><span className="text-[10px] md:text-xs font-black text-white/50 w-8 text-center group-hover/zoom:text-white transition-colors shrink-0">{Math.round(zoom)}%</span></div>
                         <button onClick={() => setZoom(prev => Math.min(200, prev + 10))} onPointerDown={(e) => e.stopPropagation()} className="text-gray-500 hover:text-white transition-colors shrink-0 p-2" aria-label="Yakınlaştır"><Plus size={14} /></button>
