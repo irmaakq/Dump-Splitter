@@ -290,8 +290,8 @@ const HowToModal = ({ isOpen, onClose }) => {
               </p>
               <ul className="mt-2 space-y-1 text-[10px] text-gray-500 font-medium">
                 <li className="flex items-center gap-2"><div className="w-1 h-1 bg-pink-500 rounded-full"></div> <strong>AI Enhance:</strong> Renkleri canlandırır.</li>
-                <li className="flex items-center gap-2"><div className="w-1 h-1 bg-blue-500 rounded-full"></div> <strong>HD Kalite:</strong> Pikselleri yumuşatır.</li>
-                <li className="flex items-center gap-2"><div className="w-1 h-1 bg-yellow-500 rounded-full"></div> <strong>Ultra HD:</strong> Çözünürlüğü 2 katına çıkarır.</li>
+                <li className="flex items-center gap-2"><div className="w-1 h-1 bg-blue-500 rounded-full"></div> <strong>HD Kalite (AI Detail):</strong> Keskinleştirir ve detayları geri getirir.</li>
+                <li className="flex items-center gap-2"><div className="w-1 h-1 bg-yellow-500 rounded-full"></div> <strong>4X Super (Ultra HD):</strong> Çözünürlüğü 4 katına (4X) çıkararak maksimum kalite sağlar.</li>
               </ul>
             </div>
           </div>
