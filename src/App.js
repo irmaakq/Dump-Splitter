@@ -2005,11 +2005,16 @@ const App = () => {
                 <div className="p-5 bg-white/[0.03] border border-white/10 rounded-[28px] space-y-5 shadow-inner mt-6">
                   <div className="space-y-2"><FeatureToggle featureKey="ultraHd" state={ultraHdMode} onToggle={updateSetting} onInfo={setFeatureInfo} /></div>
                   <div className="space-y-2 border-t border-white/5 pt-4 relative group">
-                    <div className="opacity-40 pointer-events-none grayscale">
-                      {/* Toggle'ı gizle (Bakımda olduğu anlaşılır zaten disabled gibi durunca) */}
-                      <div className="[&_button]:hidden">
-                        <FeatureToggle featureKey="ultraHd4x" state={false} onToggle={() => { }} onInfo={setFeatureInfo} />
-                      </div>
+                    <div
+                      className="opacity-50 grayscale hover:opacity-80 transition-opacity cursor-not-allowed"
+                      title="⚠️ Bakım Çalışması: Bu özellik geçici olarak kullanılamıyor"
+                      onClickCapture={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        showToast("4X Super Resolution özelliği şu an bakım çalışması nedeniyle devre dışıdır.", "error");
+                      }}
+                    >
+                      <FeatureToggle featureKey="ultraHd4x" state={false} onToggle={() => { }} onInfo={setFeatureInfo} />
                     </div>
                   </div>
                 </div>
