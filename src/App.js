@@ -2005,7 +2005,14 @@ const App = () => {
                 {/* YENİ AI UPSCALE BÖLÜMÜ - restored to original style + new 4x toggle */}
                 <div className="p-5 bg-white/[0.03] border border-white/10 rounded-[28px] space-y-5 shadow-inner mt-6">
                   <div className="space-y-2"><FeatureToggle featureKey="ultraHd" state={ultraHdMode} onToggle={updateSetting} onInfo={setFeatureInfo} /></div>
-                  <div className="space-y-2 border-t border-white/5 pt-4"><FeatureToggle featureKey="ultraHd4x" state={ultraHd4xMode} onToggle={updateSetting} onInfo={setFeatureInfo} /></div>
+                  <div className="space-y-2 border-t border-white/5 pt-4 relative group">
+                    <div className="opacity-40 pointer-events-none grayscale">
+                      <FeatureToggle featureKey="ultraHd4x" state={false} onToggle={() => { }} onInfo={setFeatureInfo} />
+                    </div>
+                    <div className="absolute top-1/2 right-14 -translate-y-1/2 z-10">
+                      <span className="text-[9px] font-black text-yellow-400 bg-yellow-400/10 px-2 py-0.5 rounded border border-yellow-400/20 uppercase tracking-widest cursor-help" title="Bu özellik şu anda bakım çalışması nedeniyle geçici olarak devre dışıdır.">Bakımda</span>
+                    </div>
+                  </div>
                 </div>
                 <div className="space-y-3">
                   <span className="text-[12px] font-black text-gray-500 uppercase tracking-widest block">Parça Sayısı</span>
