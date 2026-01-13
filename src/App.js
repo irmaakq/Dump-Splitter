@@ -997,7 +997,7 @@ const App = () => {
   const handleSwitchFile = (fileItem) => {
     if (uploadedFile === fileItem.url) return;
 
-    skipFeedbackRef.current = true;
+    skipFeedbackRef.current = false;
 
     const s = fileItem.settings || DEFAULT_SETTINGS;
 
