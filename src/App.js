@@ -1629,9 +1629,9 @@ const App = () => {
         setAiLogs(["Görünüm Düzenleniyor..."]);
 
         // YUMUŞAK GEÇİŞ GECİKMESİ (Smooth Transition)
-        // Parça sayısı değişirken loading animasyonunun (veya blur'un) görünmesi için
-        // işlem çok hızlı bitse bile en az 600ms beklet.
-        await new Promise(r => setTimeout(r, 600));
+        // Parça sayısı değişirken anlık titremeyi önlemek için çok kısa (50ms) bekle.
+        // GÜNCELLENDİ: 600ms -> 50ms (Kullanıcı isteği: Hızlandırıldı)
+        await new Promise(r => setTimeout(r, 50));
       }
     }
 
@@ -1646,8 +1646,8 @@ const App = () => {
       } else {
         // --- CACHE MISS: Tüm Pipeline'ı Çalıştır ---
 
-        // Gecikmeli Başlat (Fade-out efekti için)
-        await new Promise(r => setTimeout(r, 200));
+        // Gecikmeli Başlat (Fade-out efekti için) - GÜNCELLENDİ: 200ms -> 10ms (Hızlandırıldı)
+        await new Promise(r => setTimeout(r, 10));
 
         // --- MEDIA LOAD ---
         const mediaElement = isVideo ? document.createElement('video') : new Image();
@@ -1828,10 +1828,9 @@ const App = () => {
 
       setSplitSlides(parts);
 
-      // --- MINIMUM DURATION ENFORCEMENT (SMOOTH LOADING) ---
-      // İşlem ne kadar hızlı biterse bitsin, toplam süreyi en az 500ms'ye tamamla.
-      const elapsedTime = Date.now() - startTime;
-      const minDuration = 500;
+      // --- MINIMUM DURATION ENFORCEMENT ---
+      // GÜNCELLENDİ: 500ms -> 50ms (Hızlandırıldı)
+      const minDuration = 50;
       if (elapsedTime < minDuration) {
         await new Promise(r => setTimeout(r, minDuration - elapsedTime));
       }
