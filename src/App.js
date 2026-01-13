@@ -1830,6 +1830,7 @@ const App = () => {
 
       // --- MINIMUM DURATION ENFORCEMENT ---
       // GÜNCELLENDİ: 500ms -> 50ms (Hızlandırıldı)
+      const elapsedTime = Date.now() - startTime;
       const minDuration = 50;
       if (elapsedTime < minDuration) {
         await new Promise(r => setTimeout(r, minDuration - elapsedTime));
