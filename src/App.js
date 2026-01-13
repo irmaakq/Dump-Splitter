@@ -93,7 +93,7 @@ const FEATURE_DETAILS = {
     icon: Cpu,
     color: "text-blue-400",
     shortDesc: "Netleştirir ve doku detaylarını geri kazandırır.",
-    desc: "Gelişmiş 'Detail Reconstruction' algoritması kullanır. Görüntüdeki bulanıklığı (Deblur) giderir, kenar yumuşatma (Anti-aliasing) uygular ve dokuları keskinleştirir. Çözünürlüğü değiştirmez."
+    desc: "Görüntü çözünürlüğünü değiştirmeden, mevcut pikselleri akıllıca işleyerek 'Mikro-Kontrast' (Micro-Contrast) artışı sağlar. 'Detail Reconstruction' algoritması sayesinde, fotoğraftaki hafif titremeleri ve lens bulanıklığını (Deblur) ortadan kaldırır. Özellikle yazılar, keskin hatlar ve dokular üzerinde etkilidir. Fotoğrafınızın sanki çok daha pahalı bir lensle çekilmiş gibi keskin ve net görünmesini sağlar."
   },
   optimize: {
     title: "OPTIMIZE",
@@ -114,7 +114,7 @@ const FEATURE_DETAILS = {
     icon: Zap,
     color: "text-yellow-400",
     shortDesc: "Gerçek AI Super Resolution (2x) uygular.",
-    desc: "Derin Öğrenme (Deep Learning) tabanlı Super Resolution modeli çalıştırır. Pikselleri sadece büyütmez, eksik detayları 'tahmin ederek' yeniden çizer."
+    desc: "Tarayıcınızın içinde çalışan, Deep Learning (Derin Öğrenme) tabanlı Gerçek Yapay Zeka motorudur. Klasik büyütme yöntemlerinin (bilinear/bicubic) aksine, görseli piksel piksel analiz eder ve kaybolmuş detayları mantıksal tahminle yeniden üretir. Sonuç: Bulanıklık olmadan 2 kat daha yüksek çözünürlük ve kristal netliğinde detaylar. Hem fotoğraflar hem de videolar için optimize edilmiş, en dengeli ve performanslı moddur."
   },
   ultraHd4x: {
     title: "4X SUPER RESOLUTION",
@@ -1730,15 +1730,10 @@ const App = () => {
           partCanvas.height = pH;
           const partCtx = partCanvas.getContext('2d');
 
-          partCtx.imageSmoothingEnabled = true;
-          partCtx.imageSmoothingQuality = 'high';
-
-          partCtx.drawImage(sourceCanvas, c * pW, r * pH, pW, pH, 0, 0, pW, pH);
-
           const mimeType = `image/${downloadFormat === 'jpg' ? 'jpeg' : downloadFormat}`;
-          let quality = 0.95;
-          if (hdMode) quality = 1.0;
-          if (optimizeMode) quality = 0.80;
+          let quality = 0.90; // Standart kaliteyi biraz düşürelim ki HD ve Optimize farkı belli olsun
+          if (hdMode) quality = 1.0; // HD Mod: Maksimum Kalite
+          if (optimizeMode) quality = 0.70; // Optimize: Görünür sıkıştırma ve düşük boyut
 
           parts.push({
             id: parts.length + 1,
@@ -2007,10 +2002,14 @@ const App = () => {
                   <div className="space-y-2"><FeatureToggle featureKey="ultraHd" state={ultraHdMode} onToggle={updateSetting} onInfo={setFeatureInfo} /></div>
                   <div className="space-y-2 border-t border-white/5 pt-4 relative group">
                     <div className="opacity-40 pointer-events-none grayscale">
-                      <FeatureToggle featureKey="ultraHd4x" state={false} onToggle={() => { }} onInfo={setFeatureInfo} />
+                      {/* Toggle'ı gizle, yerine badge koyacağız */}
+                      <div className="[&_button]:hidden">
+                        <FeatureToggle featureKey="ultraHd4x" state={false} onToggle={() => { }} onInfo={setFeatureInfo} />
+                      </div>
                     </div>
-                    <div className="absolute top-1/2 right-14 -translate-y-1/2 z-10">
-                      <span className="text-[9px] font-black text-yellow-400 bg-yellow-400/10 px-2 py-0.5 rounded border border-yellow-400/20 uppercase tracking-widest cursor-help" title="Bu özellik şu anda bakım çalışması nedeniyle geçici olarak devre dışıdır.">Bakımda</span>
+                    {/* Badge'i tam Toggle'ın olması gereken yere koy */}
+                    <div className="absolute top-4 right-0 z-10">
+                      <span className="text-[10px] font-black text-yellow-500 bg-yellow-500/10 px-3 py-1.5 rounded-lg border border-yellow-500/20 uppercase tracking-widest cursor-help shadow-[0_0_10px_rgba(234,179,8,0.2)]" title="Bu özellik şu anda bakım çalışması nedeniyle geçici olarak devre dışıdır.">BAKIMDA</span>
                     </div>
                   </div>
                 </div>
