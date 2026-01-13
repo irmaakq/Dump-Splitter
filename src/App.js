@@ -964,17 +964,9 @@ const App = () => {
       }));
     }
 
-    // GÜNCELLENDİ: Ultra HD değiştiğinde HER ZAMAN feedback ver
-    if (key === 'ultraHd' || key === 'ultraHd4x') {
-      skipFeedbackRef.current = false;
-    }
-    // GÜNCELLENDİ: Split count değiştiğinde de feedback ver (Yumuşak geçiş için)
-    else if (key === 'splitCount') {
-      skipFeedbackRef.current = false;
-    }
-    else {
-      skipFeedbackRef.current = true;
-    }
+    // GÜNCELLENDİ: Hangi ayar değişirse değişsin yükleme ekranını (Feedback) göster.
+    // Kullanıcı anlık değil, işlem yapıldığını görmek istiyor.
+    skipFeedbackRef.current = false;
   };
 
   // --- DOSYA DEĞİŞTİRME YÖNETİCİSİ ---
