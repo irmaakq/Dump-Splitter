@@ -1546,12 +1546,14 @@ const App = () => {
 
     const canUseCache = processedCanvasRef.current && lastAiParamsRef.current === currentParams;
 
-    // YENİ UX: Eğer zaten bir fotoğraf yüklüyse ve cache yoksa ekranı tamamen karartma
-    const isHardReset = (!splitSlides || splitSlides.length === 0) && !canUseCache;
-    if (isHardReset) {
-      setIsContentReady(false);
+    // YENİ UX: Her işlemde (Cache olsun olmasın) içeriği geçici olarak gizle/bulanıklaştır
+    // Bu sayede parça sayısı değişirken arkadaki "sansür" bozulmaz ve geçiş hissedilir.
+    setIsContentReady(false);
+
+    // Eğer Cache YOKSA (Yani yeni bir dosya veya AI işlemi ise) temizlik yap
+    if (!canUseCache) {
       setSplitSlides([]);
-      cleanupCache(); // Ensure fresh start
+      // cleanupCache(); // Cache'i burada silme, aşağıda dolacak zaten.
     }
 
     const isSilent = skipFeedbackRef.current;
@@ -1582,8 +1584,9 @@ const App = () => {
         setAiLogs(["Görünüm Düzenleniyor..."]);
 
         // YUMUŞAK GEÇİŞ GECİKMESİ (Smooth Transition)
-        // Kullanıcı anlık 'snap' yerine şık bir bekleme istediği için 400ms bekletiyoruz.
-        await new Promise(r => setTimeout(r, 400));
+        // Parça sayısı değişirken loading animasyonunun (veya blur'un) görünmesi için
+        // işlem çok hızlı bitse bile en az 600ms beklet.
+        await new Promise(r => setTimeout(r, 600));
       }
     }
 
