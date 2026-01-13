@@ -8,13 +8,14 @@
 importScripts('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js');
 importScripts('https://unpkg.com/upscaler@latest/dist/browser/umd/upscaler.min.js');
 importScripts('https://unpkg.com/@upscalerjs/default-model@latest/dist/umd/index.min.js');
-importScripts('https://unpkg.com/@upscalerjs/esrgan-thick@latest/dist/umd/models/esrgan-thick/src/umd.min.js');
+// REAL-ESRGAN (GANS) MODÜLÜ - RAKİP SİTE KALİTESİ İÇİN
+importScripts('https://unpkg.com/@upscalerjs/esrgan-legacy@latest/dist/umd/models/esrgan-legacy/src/umd.min.js');
 
-// 2. CONFIGURATION (Ayarlar - "HAYATTA KALMA" MODU)
+// 2. CONFIGURATION (Ayarlar - "HAYATTA KALMA" + "YÜKSEK KALİTE" MODU)
 const CONFIG = {
-    TILE_SIZE: 64,       // 128px bile ağır geldi (Beyaz ekran/Crash). 64px'e düşürdük (Daha küçük lokmalar).
-    PADDING: 32,         // Kaliteden ödün vermiyoruz (Çizgileri engeller).
-    DELAY_MS: 500,       // YARIM SANİYE MOLA: Tarayıcının "Ben öldüm" demesini engellemek için her parçada uzun mola.
+    TILE_SIZE: 64,       // Stabilite için küçük parçalar.
+    PADDING: 32,         // Çizgileri yok etmek için.
+    DELAY_MS: 500,       // Donmayı önlemek için.
     TENSOR_CLEANUP: true
 };
 
@@ -33,12 +34,13 @@ const initModels = async (type) => {
 
     if (type === '4x') {
         if (!upscaler4x) {
-            console.log("Worker: 4X Model Yükleniyor (ESRGAN)...");
-            const esrganLib = self.EsrganThick || self.ESRGANThick;
+            console.log("Worker: 4X Model Yükleniyor (REAL-ESRGAN / GANS)...");
+            // Yeni kütüphane yapısı (ESRGAN-Legacy içindeki GANS modeli)
+            const esrganLib = self.EsrganLegacy || self.ESRGANLegacy;
             if (!esrganLib) throw new Error("4X Kütüphanesi Yüklenemedi.");
 
             upscaler4x = new Upscaler({
-                model: esrganLib.ESRGANThick4x || esrganLib,
+                model: esrganLib.gans, // 'esrgan-thick' yerine 'gans' (Daha keskin, daha net)
             });
             await warmup(upscaler4x);
         }
