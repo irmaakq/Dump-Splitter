@@ -1760,12 +1760,13 @@ const App = () => {
       if (myId === processingIdRef.current) {
         setIsProcessing(false);
         if (!isSilent && !canUseCache) {
-          // GÜNCELLENDİ: Eğer forceStandard aktifse, kullanıcıya 'Standart' olduğunu söyle
-          const modeText = ((ultraHd4xMode || ultraHdMode) && !forceStandard)
-            ? (ultraHd4xMode ? "AI Upscale 4X" : "AI Upscale 2X")
-            : "Standart";
-
-          showToast(`İşlem Tamamlandı! (${modeText})`);
+          // GÜNCELLENDİ: Standart mod bildirimleri sadeleştirildi
+          if ((ultraHd4xMode || ultraHdMode) && !forceStandard) {
+            const mode = ultraHd4xMode ? "4X" : "2X";
+            showToast(`AI İyileştirme Tamamlandı (${mode})`);
+          } else {
+            showToast("Görünüm Hazırlandı!");
+          }
         }
         setIsContentReady(true);
       }
