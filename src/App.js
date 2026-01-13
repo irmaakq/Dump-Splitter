@@ -506,8 +506,9 @@ const Header = ({
           {splitCount > 1 && (
             <button
               onClick={onDownload}
-              disabled={isDownloading}
-              className={`bg-white text-black px-4 md:px-6 py-2 md:py-2.5 mr-2 md:mr-0 rounded-xl text-xs md:text-sm font-black flex items-center gap-2 hover:bg-gray-200 transition-all active:scale-95 shadow-[0_0_30px_rgba(255,255,255,0.2)] whitespace-nowrap ${isDownloading ? 'opacity-50 cursor-not-allowed' : ''}`}
+              disabled={isDownloading || !isContentReady || isProcessing} // LOCKED
+              className={`bg-white text-black px-4 md:px-6 py-2 md:py-2.5 mr-2 md:mr-0 rounded-xl text-xs md:text-sm font-black flex items-center gap-2 hover:bg-gray-200 transition-all active:scale-95 shadow-[0_0_30px_rgba(255,255,255,0.2)] whitespace-nowrap 
+                ${isDownloading || !isContentReady || isProcessing ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
               {isDownloading ? <Loader2 size={16} className="animate-spin" /> : <DownloadCloud size={16} />}
               <span className="whitespace-nowrap">{isDownloading ? 'İndiriliyor...' : 'Tümünü İndir'}</span>
@@ -1462,11 +1463,9 @@ const App = () => {
             setLoadingMessage("Geliştirme Başarılı!");
 
             setTimeout(() => {
-              // Sadece durumu güncelle, sayfa geçişini useEffect yapacak
-              // veya zaten editor sayfasındaysak sorun yok.
-              if (page !== 'editor') {
-                setPage('editor');
-              }
+              // FORCE SWITCH TO EDITOR
+              setPage('editor');
+              setLoadingMessage('İşleniyor...'); // Reset message for next time
             }, 600);
 
           }, 1200);
@@ -2327,8 +2326,10 @@ const App = () => {
             {fileList.map((file, idx) => (
               <div
                 key={file.id}
-                onClick={() => { handleSwitchFile(file); }}
-                className={`relative group rounded-[16px] lg:rounded-[20px] overflow-hidden aspect-square h-16 lg:h-auto lg:w-full border-2 shadow-xl cursor-pointer transition-all shrink-0 animate-in fade-in zoom-in duration-300 ${uploadedFile === file.url ? 'border-white ring-2 ring-white/20' : 'border-white/10 opacity-60 hover:opacity-100'}`}
+                onClick={() => { if (isContentReady && !isProcessing) handleSwitchFile(file); }} // LOCKED
+                className={`relative group rounded-[16px] lg:rounded-[20px] overflow-hidden aspect-square h-16 lg:h-auto lg:w-full border-2 shadow-xl cursor-pointer transition-all shrink-0 animate-in fade-in zoom-in duration-300 
+                  ${(!isContentReady || isProcessing) ? 'opacity-50 cursor-not-allowed pointer-events-none' : ''}
+                  ${uploadedFile === file.url ? 'border-white ring-2 ring-white/20' : 'border-white/10 opacity-60 hover:opacity-100'}`}
               >
                 {file.type === 'video' ? <video src={file.url} className="w-full h-full object-cover" /> : <img src={file.url} className="w-full h-full object-cover" alt="Thumb" />}
               </div>
@@ -2336,12 +2337,26 @@ const App = () => {
             <div className="flex lg:flex-col items-center gap-3 shrink-0">
               {fileList.length > 0 && (<span className="text-[9px] lg:text-[10px] font-black text-gray-500 uppercase tracking-widest">{fileList.length}/20</span>)}
 
-              {fileList.length < 20 && (<div onClick={triggerFileInput} className="h-16 w-16 lg:h-auto lg:w-full lg:aspect-square border-2 border-dashed border-white/10 rounded-[16px] lg:rounded-[20px] flex items-center justify-center text-gray-800 hover:text-white transition-all cursor-pointer shadow-inner"><Plus size={20} /></div>)}
+              {fileList.length < 20 && (
+                <div
+                  onClick={() => { if (isContentReady && !isProcessing) triggerFileInput(); }}
+                  className={`h-16 w-16 lg:h-auto lg:w-full lg:aspect-square border-2 border-dashed border-white/10 rounded-[16px] lg:rounded-[20px] flex items-center justify-center text-gray-800 hover:text-white transition-all cursor-pointer shadow-inner
+                    ${(!isContentReady || isProcessing) ? 'opacity-30 cursor-not-allowed pointer-events-none' : ''}`}
+                >
+                  <Plus size={20} />
+                </div>
+              )}
 
               {/* SİL BUTONU - GÜNCELLENMİŞ TASARIM (YENİDEN BÖL TARZI - İKONSUZ SADE YAZI) */}
               {/* SADECE 2 VEYA DAHA FAZLA FOTOĞRAF VARSA GÖSTERİLİR */}
               {uploadedFile && fileList.length > 1 && (
-                <button onClick={handleDeleteCurrent} title="Seçili Olanı Sil" className="w-16 h-16 lg:w-full lg:h-auto lg:py-4 bg-white text-black rounded-[16px] lg:rounded-[24px] font-black text-[10px] lg:text-xs shadow-xl hover:bg-gray-200 transition-all active:scale-95 uppercase tracking-widest flex flex-col lg:flex-row items-center justify-center gap-1 lg:gap-2 shrink-0">
+                <button
+                  onClick={handleDeleteCurrent}
+                  disabled={!isContentReady || isProcessing} // LOCKED
+                  title="Seçili Olanı Sil"
+                  className={`w-16 h-16 lg:w-full lg:h-auto lg:py-4 bg-white text-black rounded-[16px] lg:rounded-[24px] font-black text-[10px] lg:text-xs shadow-xl hover:bg-gray-200 transition-all active:scale-95 uppercase tracking-widest flex flex-col lg:flex-row items-center justify-center gap-1 lg:gap-2 shrink-0
+                    ${(!isContentReady || isProcessing) ? 'opacity-50 cursor-not-allowed' : ''}`}
+                >
                   <span>SİL</span>
                 </button>
               )}
@@ -2349,14 +2364,26 @@ const App = () => {
               {/* SIFIRLA BUTONU - GÜNCELLENMİŞ TASARIM (YENİDEN BÖL TARZI - İKONSUZ SADE YAZI) */}
               {/* SADECE 2 VEYA DAHA FAZLA FOTOĞRAF VARSA GÖSTERİLİR */}
               {fileList.length > 1 && (
-                <button onClick={handleResetList} title="Diğerlerini Sil (Sıfırla)" className="w-16 h-16 lg:w-full lg:h-auto lg:py-4 bg-white text-black rounded-[16px] lg:rounded-[24px] font-black text-[10px] lg:text-xs shadow-xl hover:bg-gray-200 transition-all active:scale-95 uppercase tracking-normal flex flex-col lg:flex-row items-center justify-center gap-1 lg:gap-2 shrink-0">
+                <button
+                  onClick={handleResetList}
+                  disabled={!isContentReady || isProcessing} // LOCKED
+                  title="Diğerlerini Sil (Sıfırla)"
+                  className={`w-16 h-16 lg:w-full lg:h-auto lg:py-4 bg-white text-black rounded-[16px] lg:rounded-[24px] font-black text-[10px] lg:text-xs shadow-xl hover:bg-gray-200 transition-all active:scale-95 uppercase tracking-normal flex flex-col lg:flex-row items-center justify-center gap-1 lg:gap-2 shrink-0
+                    ${(!isContentReady || isProcessing) ? 'opacity-50 cursor-not-allowed' : ''}`}
+                >
                   <span>SIFIRLA</span>
                 </button>
               )}
 
               {/* TOPLU İNDİR BUTONU - SADECE 2 VEYA DAHA FAZLA FOTOĞRAF VARSA GÖSTERİLİR */}
               {fileList.length > 1 && (
-                <button onClick={handleBatchDownload} title="Tümünü Arşivle ve İndir (ZIP)" className="w-16 h-16 lg:w-full lg:h-auto lg:py-4 bg-white text-black rounded-[16px] lg:rounded-[24px] font-black text-[10px] lg:text-xs shadow-xl hover:bg-gray-200 transition-all active:scale-95 uppercase tracking-tighter flex flex-col lg:flex-row items-center justify-center gap-1 lg:gap-2 shrink-0">
+                <button
+                  onClick={handleBatchDownload}
+                  disabled={!isContentReady || isProcessing} // LOCKED
+                  title="Tümünü Arşivle ve İndir (ZIP)"
+                  className={`w-16 h-16 lg:w-full lg:h-auto lg:py-4 bg-white text-black rounded-[16px] lg:rounded-[24px] font-black text-[10px] lg:text-xs shadow-xl hover:bg-gray-200 transition-all active:scale-95 uppercase tracking-tighter flex flex-col lg:flex-row items-center justify-center gap-1 lg:gap-2 shrink-0
+                    ${(!isContentReady || isProcessing) ? 'opacity-50 cursor-not-allowed' : ''}`}
+                >
                   <span className="text-center leading-tight">TOPLU<br />İNDİR</span>
                 </button>
               )}
