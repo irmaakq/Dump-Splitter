@@ -2104,6 +2104,10 @@ const App = () => {
                         disabled={!isContentReady || isProcessing}
                         onClick={() => {
                           if (isContentReady && !isProcessing) {
+                            setSplitSlides([]);
+                            setIsContentReady(false);
+                            setIsProcessing(true);
+                            skipFeedbackRef.current = false;
                             updateSetting('splitCount', num);
                           }
                         }}
