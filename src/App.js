@@ -291,7 +291,7 @@ const HowToModal = ({ isOpen, onClose }) => {
               <ul className="mt-2 space-y-1 text-[10px] text-gray-500 font-medium">
                 <li className="flex items-center gap-2"><div className="w-1 h-1 bg-pink-500 rounded-full"></div> <strong>AI Enhance:</strong> Renkleri canlandırır.</li>
                 <li className="flex items-center gap-2"><div className="w-1 h-1 bg-blue-500 rounded-full"></div> <strong>HD Kalite (AI Detail):</strong> Keskinleştirir ve detayları geri getirir.</li>
-                <li className="flex items-center gap-2"><div className="w-1 h-1 bg-yellow-500 rounded-full"></div> <strong>4X Super (Ultra HD):</strong> Çözünürlüğü 4 katına (4X) çıkararak maksimum kalite sağlar.</li>
+                <li className="flex items-center gap-2"><div className="w-1 h-1 bg-yellow-500 rounded-full"></div> <strong>4X SUPER RESOLUTION:</strong> Çözünürlüğü 4 katına (4X) çıkararak maksimum kalite sağlar.</li>
               </ul>
             </div>
           </div>
@@ -314,6 +314,45 @@ const HowToModal = ({ isOpen, onClose }) => {
         </div>
 
         <button onClick={onClose} className="w-full bg-white text-black font-black py-4 rounded-xl mt-10 hover:bg-gray-200 transition-all uppercase tracking-widest text-xs shadow-xl active:scale-95">Anladım, Başlayalım</button>
+      </div>
+    </div>
+  );
+};
+
+const TimeoutErrorModal = ({ isOpen, onCancel, onRetry, onNewUpload, onGoHome }) => {
+  const { isRendered, isVisible } = useModalTransition(isOpen);
+  if (!isRendered) return null;
+
+  return (
+    <div className={`fixed inset-0 z-[200] bg-black/95 backdrop-blur-xl flex items-center justify-center p-6 transition-all duration-300 ${isVisible ? 'opacity-100' : 'opacity-0'}`}>
+      <div className={`bg-[#121212] border border-red-500/20 rounded-3xl max-w-md w-full p-8 relative shadow-[0_0_50px_rgba(239,68,68,0.2)] text-center transform transition-all duration-300 ${isVisible ? 'scale-100 translate-y-0' : 'scale-95 translate-y-4'}`}>
+
+        <div className="w-20 h-20 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-6 animate-pulse">
+          <AlertTriangle size={40} className="text-red-500" />
+        </div>
+
+        <h2 className="text-2xl font-black text-white uppercase mb-2">İşlem Çok Uzun Sürdü</h2>
+        <p className="text-gray-400 text-sm mb-8 leading-relaxed">
+          Beklenen süre aşıldı. Bağlantı sorunu olabilir veya dosya çok büyük olabilir. Ne yapmak istersiniz?
+        </p>
+
+        <div className="grid grid-cols-1 gap-3">
+          <button onClick={onRetry} className="bg-white text-black font-bold py-3.5 rounded-xl hover:bg-gray-200 transition-all uppercase text-xs flex items-center justify-center gap-2">
+            <RefreshCcw size={16} /> Tekrar Dene
+          </button>
+
+          <button onClick={onNewUpload} className="bg-white/10 text-white font-bold py-3.5 rounded-xl hover:bg-white/20 transition-all uppercase text-xs flex items-center justify-center gap-2 border border-white/5">
+            <Upload size={16} /> Yeni Dosya Yükle
+          </button>
+
+          <button onClick={onGoHome} className="bg-white/5 text-gray-300 font-bold py-3.5 rounded-xl hover:bg-white/10 transition-all uppercase text-xs flex items-center justify-center gap-2">
+            <Home size={16} /> Ana Menü
+          </button>
+
+          <button onClick={onCancel} className="text-red-400 font-bold py-2 rounded-xl hover:bg-red-500/10 transition-all uppercase text-[10px] mt-2">
+            İptal Et ve Geri Dön
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -473,13 +512,14 @@ const Header = ({
   onShowPrivacy,
   splitCount,
   isProcessing,
-  isContentReady
+  isContentReady,
+  isLocked // GÜNCELLENDİ: Yeni prop
 }) => (
   <header className={`fixed top-0 left-0 right-0 z-[70] px-4 md:px-8 py-2 md:py-4 flex items-center justify-between backdrop-blur-3xl transition-all ${isEditor ? 'bg-black/90 border-b border-white/5' : 'bg-transparent'}`}>
     <div className="flex items-center gap-3 md:gap-6 ml-0 md:ml-10">
       <div
-        className="flex items-center gap-2 cursor-pointer group hover:opacity-80 transition-all"
-        onClick={onGoHome}
+        className={`flex items-center gap-2 group transition-all ${isLocked ? 'opacity-50 cursor-not-allowed pointer-events-none' : 'cursor-pointer hover:opacity-80'}`}
+        onClick={() => { if (!isLocked) onGoHome(); }}
         title="Ana Menüye Dön"
         role="button"
         aria-label="Ana Menüye Dön"
@@ -494,10 +534,10 @@ const Header = ({
       {isEditor && (
         <>
           <button
-            onClick={onUpload}
-            disabled={!isContentReady || isProcessing} // LOCKED
+            onClick={() => { if (!isLocked) onUpload(); }}
+            disabled={!isContentReady || isProcessing || isLocked} // LOCKED
             className={`bg-white text-black px-4 md:px-6 py-2 md:py-2.5 rounded-xl text-xs md:text-sm font-black flex items-center gap-2 hover:bg-gray-200 transition-all active:scale-95 shadow-lg border border-white/10 whitespace-nowrap 
-              ${!isContentReady || isProcessing ? 'opacity-50 cursor-not-allowed' : ''}`}
+              ${!isContentReady || isProcessing || isLocked ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
             <Upload size={16} /> <span className="whitespace-nowrap">Yeni Yükleme</span>
           </button>
@@ -505,10 +545,10 @@ const Header = ({
           {/* SAĞ BUTTON: TÜMÜNÜ İNDİR - SADECE PARÇA SAYISI 1'DEN BÜYÜKSE GÖSTER */}
           {splitCount > 1 && (
             <button
-              onClick={onDownload}
-              disabled={isDownloading || !isContentReady || isProcessing} // LOCKED
+              onClick={() => { if (!isLocked) onDownload(); }}
+              disabled={isDownloading || !isContentReady || isProcessing || isLocked} // LOCKED
               className={`bg-white text-black px-4 md:px-6 py-2 md:py-2.5 mr-2 md:mr-0 rounded-xl text-xs md:text-sm font-black flex items-center gap-2 hover:bg-gray-200 transition-all active:scale-95 shadow-[0_0_30px_rgba(255,255,255,0.2)] whitespace-nowrap 
-                ${isDownloading || !isContentReady || isProcessing ? 'opacity-50 cursor-not-allowed' : ''}`}
+                ${isDownloading || !isContentReady || isProcessing || isLocked ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
               {isDownloading ? <Loader2 size={16} className="animate-spin" /> : <DownloadCloud size={16} />}
               <span className="whitespace-nowrap">{isDownloading ? 'İndiriliyor...' : 'Tümünü İndir'}</span>
@@ -521,8 +561,9 @@ const Header = ({
       <div className="flex items-center justify-center">
         {!isEditor && (
           <button
-            onClick={onMobileMenuToggle}
-            className="md:hidden p-3 bg-white/10 rounded-full text-white border border-white/10 active:scale-95 transition-all"
+            onClick={() => { if (!isLocked) onMobileMenuToggle(); }}
+            disabled={isLocked}
+            className={`md:hidden p-3 bg-white/10 rounded-full text-white border border-white/10 active:scale-95 transition-all ${isLocked ? 'opacity-30 cursor-not-allowed' : ''}`}
             aria-label="Menüyü Aç"
           >
             <Menu size={24} />
@@ -532,10 +573,37 @@ const Header = ({
         <div className="hidden md:flex flex-wrap justify-end gap-3">
           {!isEditor && (
             <>
-              <button onClick={onShowAbout} className="flex items-center gap-2 text-[10px] font-bold text-gray-500 hover:text-white transition-colors uppercase tracking-widest border border-white/10 px-4 py-2 rounded-full hover:bg-white/5 bg-black/20 backdrop-blur-sm"><Info size={12} /> DUMP SPLITTER NEDİR?</button>
-              <button onClick={onShowHowTo} className="flex items-center gap-2 text-[10px] font-bold text-gray-500 hover:text-white transition-colors uppercase tracking-widest border border-white/10 px-4 py-2 rounded-full hover:bg-white/5 bg-black/20 backdrop-blur-sm"><HelpIcon size={12} /> Nasıl Kullanılır?</button>
-              <button onClick={onShowFAQ} className="flex items-center gap-2 text-[10px] font-bold text-gray-500 hover:text-white transition-colors uppercase tracking-widest border border-white/10 px-4 py-2 rounded-full hover:bg-white/5 bg-black/20 backdrop-blur-sm"><MessageCircleQuestion size={12} /> SSS</button>
-              <button onClick={onShowPrivacy} className="flex items-center gap-2 text-[10px] font-bold text-gray-500 hover:text-white transition-colors uppercase tracking-widest border border-white/10 px-4 py-2 rounded-full hover:bg-white/5 bg-black/20 backdrop-blur-sm"><ShieldCheck size={12} /> Gizlilik</button>
+              <button
+                onClick={() => { if (!isLocked) onShowAbout(); }}
+                disabled={isLocked}
+                className={`flex items-center gap-2 text-[10px] font-bold text-gray-500 hover:text-white transition-colors uppercase tracking-widest border border-white/10 px-4 py-2 rounded-full hover:bg-white/5 bg-black/20 backdrop-blur-sm ${isLocked ? 'opacity-30 cursor-not-allowed pointer-events-none' : ''}`}
+              >
+                <Info size={12} /> DUMP SPLITTER NEDİR?
+              </button>
+
+              <button
+                onClick={() => { if (!isLocked) onShowHowTo(); }}
+                disabled={isLocked}
+                className={`flex items-center gap-2 text-[10px] font-bold text-gray-500 hover:text-white transition-colors uppercase tracking-widest border border-white/10 px-4 py-2 rounded-full hover:bg-white/5 bg-black/20 backdrop-blur-sm ${isLocked ? 'opacity-30 cursor-not-allowed pointer-events-none' : ''}`}
+              >
+                <HelpIcon size={12} /> Nasıl Kullanılır?
+              </button>
+
+              <button
+                onClick={() => { if (!isLocked) onShowFAQ(); }}
+                disabled={isLocked}
+                className={`flex items-center gap-2 text-[10px] font-bold text-gray-500 hover:text-white transition-colors uppercase tracking-widest border border-white/10 px-4 py-2 rounded-full hover:bg-white/5 bg-black/20 backdrop-blur-sm ${isLocked ? 'opacity-30 cursor-not-allowed pointer-events-none' : ''}`}
+              >
+                <MessageCircleQuestion size={12} /> SSS
+              </button>
+
+              <button
+                onClick={() => { if (!isLocked) onShowPrivacy(); }}
+                disabled={isLocked}
+                className={`flex items-center gap-2 text-[10px] font-bold text-gray-500 hover:text-white transition-colors uppercase tracking-widest border border-white/10 px-4 py-2 rounded-full hover:bg-white/5 bg-black/20 backdrop-blur-sm ${isLocked ? 'opacity-30 cursor-not-allowed pointer-events-none' : ''}`}
+              >
+                <ShieldCheck size={12} /> Gizlilik
+              </button>
             </>
           )}
         </div>
@@ -544,7 +612,7 @@ const Header = ({
   </header>
 );
 
-const MobileMenu = ({ isOpen, onClose, onShowAbout, onShowHowTo, onShowFAQ, onShowPrivacy }) => {
+const MobileMenu = ({ isOpen, onClose, onShowAbout, onShowHowTo, onShowFAQ, onShowPrivacy, isLocked }) => {
   const { isRendered, isVisible } = useModalTransition(isOpen);
   if (!isRendered) return null;
 
@@ -552,10 +620,34 @@ const MobileMenu = ({ isOpen, onClose, onShowAbout, onShowHowTo, onShowFAQ, onSh
     <div className={`fixed inset-0 z-[60] bg-black/95 backdrop-blur-xl flex flex-col items-center justify-center p-6 transition-all duration-300 ${isVisible ? 'opacity-100' : 'opacity-0'}`}>
       <button onClick={onClose} className="absolute top-6 right-6 p-2 bg-white/10 rounded-full text-white"><X size={24} /></button>
       <div className={`flex flex-col gap-6 text-center w-full max-w-sm transform transition-all duration-300 ${isVisible ? 'translate-y-0 opacity-100' : '-translate-y-8 opacity-0'}`}>
-        <button onClick={onShowAbout} className="text-lg font-black text-white uppercase tracking-widest py-4 border-b border-white/10 hover:text-gray-300">DUMP SPLITTER NEDİR?</button>
-        <button onClick={onShowHowTo} className="text-lg font-black text-white uppercase tracking-widest py-4 border-b border-white/10 hover:text-gray-300">Nasıl Kullanılır?</button>
-        <button onClick={onShowFAQ} className="text-lg font-black text-white uppercase tracking-widest py-4 border-b border-white/10 hover:text-gray-300">Sıkça Sorulan Sorular</button>
-        <button onClick={onShowPrivacy} className="text-lg font-black text-white uppercase tracking-widest py-4 border-b border-white/10 hover:text-gray-300">Gizlilik</button>
+        <button
+          onClick={() => { if (!isLocked) onShowAbout(); }}
+          disabled={isLocked}
+          className={`text-lg font-black text-white uppercase tracking-widest py-4 border-b border-white/10 hover:text-gray-300 ${isLocked ? 'opacity-30 cursor-not-allowed' : ''}`}
+        >
+          DUMP SPLITTER NEDİR?
+        </button>
+        <button
+          onClick={() => { if (!isLocked) onShowHowTo(); }}
+          disabled={isLocked}
+          className={`text-lg font-black text-white uppercase tracking-widest py-4 border-b border-white/10 hover:text-gray-300 ${isLocked ? 'opacity-30 cursor-not-allowed' : ''}`}
+        >
+          Nasıl Kullanılır?
+        </button>
+        <button
+          onClick={() => { if (!isLocked) onShowFAQ(); }}
+          disabled={isLocked}
+          className={`text-lg font-black text-white uppercase tracking-widest py-4 border-b border-white/10 hover:text-gray-300 ${isLocked ? 'opacity-30 cursor-not-allowed' : ''}`}
+        >
+          Sıkça Sorulan Sorular
+        </button>
+        <button
+          onClick={() => { if (!isLocked) onShowPrivacy(); }}
+          disabled={isLocked}
+          className={`text-lg font-black text-white uppercase tracking-widest py-4 border-b border-white/10 hover:text-gray-300 ${isLocked ? 'opacity-30 cursor-not-allowed' : ''}`}
+        >
+          Gizlilik
+        </button>
       </div>
     </div>
   );
@@ -638,6 +730,27 @@ const App = () => {
   const evCache = useRef([]);
   const prevDiff = useRef(-1);
   const prevFormatRef = useRef(DEFAULT_SETTINGS.downloadFormat);
+
+  // --- GLOBAL TIMEOUT & ERROR STATE ---
+  const [timeoutError, setTimeoutError] = useState(false);
+  const loadingTimeoutRef = useRef(null);
+
+  // 15 Saniye limitini başlat
+  const startLoadingTimeout = () => {
+    if (loadingTimeoutRef.current) clearTimeout(loadingTimeoutRef.current);
+    loadingTimeoutRef.current = setTimeout(() => {
+      setTimeoutError(true);
+      setIsProcessing(false); // İşlemi fiilen durdur (UI kilidini açmayabilir ama state'i bozar)
+    }, 15000); // 15 Saniye
+  };
+
+  // Limiti temizle (işlem başarılırsa)
+  const clearLoadingTimeout = () => {
+    if (loadingTimeoutRef.current) {
+      clearTimeout(loadingTimeoutRef.current);
+      loadingTimeoutRef.current = null;
+    }
+  };
 
   const removeEvent = (ev) => {
     const index = evCache.current.findIndex((cachedEv) => cachedEv.pointerId === ev.pointerId);
@@ -726,15 +839,16 @@ const App = () => {
       imgContainer.releasePointerCapture(e.pointerId);
     }
 
+    // Reset Zoom Logic if fewer than 2 fingers
     if (evCache.current.length < 2) {
       prevDiff.current = -1;
     }
+  };
 
-    // Clean up pan state
-    if (evCache.current.length === 0) {
-      const img = imgContainer.querySelector('img');
-      if (img) delete img.dataset.panStart;
-    }
+  const handlePointerCancel = (e) => {
+    handlePointerUp(e);
+    evCache.current = []; // Force clear on cancel to prevent stuck fingers
+    prevDiff.current = -1;
   };
 
   // --- AI & IMAGE PROCESSING HELPERS ---
@@ -871,18 +985,20 @@ const App = () => {
 
       const margin = 10; // Kenarlardan 10px boşluk
 
-      // X Ekseni Sınırları (Container merkezine göre)
-      const minX = -(containerW / 2) + (dockW / 2) + margin;
-      const maxX = (containerW / 2) - (dockW / 2) - margin;
-
-      nextX = Math.max(minX, Math.min(maxX, nextX));
+      // X ekseninde sınırla
+      const maxOffset = (containerRect.width / 2) - (dockRect.width / 2) - 20; // 20px padding
+      if (nextX > maxOffset) nextX = maxOffset;
+      if (nextX < -maxOffset) nextX = -maxOffset;
     }
 
     setDockPos({ x: nextX, y: 0 }); // Y'yi 0'a sabitle
   };
 
-  const handleDockPointerUp = () => {
+  const handleDockPointerUp = (e) => {
     setIsDraggingDock(false);
+    if (e.target.releasePointerCapture) {
+      e.target.releasePointerCapture(e.pointerId);
+    }
   };
 
   // DOSYA LİSTESİ: { url, type, id, settings: {...} }
@@ -942,6 +1058,13 @@ const App = () => {
 
   // --- AYAR GÜNCELLEME YÖNETİCİSİ ---
   const updateSetting = (key, value) => {
+    // GÜNCELLENDİ: INSTANT LOCK (Debounce beklemeden kitle)
+    if (uploadedFile && page === 'editor') {
+      setIsProcessing(true);
+      setIsContentReady(false);
+      startLoadingTimeout(); // İşlem başlıyor say
+    }
+
     let stateKey = key;
 
     switch (key) {
@@ -997,6 +1120,11 @@ const App = () => {
   const handleSwitchFile = (fileItem) => {
     if (uploadedFile === fileItem.url) return;
 
+    // GÜNCELLENDİ: INSTANT LOCK
+    setIsProcessing(true);
+    setIsContentReady(false);
+    startLoadingTimeout();
+
     skipFeedbackRef.current = false;
 
     const s = fileItem.settings || DEFAULT_SETTINGS;
@@ -1012,13 +1140,17 @@ const App = () => {
 
     setUploadedFile(fileItem.url);
     setFileType(fileItem.type);
-    setUpscaleFactor(1); // Reset upscale status for new file
-    cleanupCache();      // Reset AI cache for new file
-    setAiLogs([]);       // Clear logs
+
+    shouldResetList.current = false;
+
+    // GÜNCELLENDİ: processSplit çağrıldığında zaten isProcessing=true devam ediyor
+    // State güncellemesi bitince useEffect tetiklenecek
+    cleanupCache();
+    processSplit(fileItem.url, fileItem.type === 'video');
+    setAiLogs([]);
   };
 
   const showToast = (msg, type = 'success') => {
-    setNotification(msg);
     setNotificationType(type);
     setTimeout(() => {
       setNotification(null);
@@ -1048,6 +1180,7 @@ const App = () => {
     setSplitSlides([]);
     setZoom(100);
     setIsMobileMenuOpen(false);
+    clearLoadingTimeout(); // Clear timeout on navigating home
   };
 
   const handleDeleteCurrent = (e) => {
@@ -1136,6 +1269,7 @@ const App = () => {
 
     setIsZipping(true);
     setZipProgress({ current: 0, total: fileList.length });
+    startLoadingTimeout(); // Start timeout for batch download
 
     const zip = new window.JSZip();
     const mainFolder = zip.folder("Dump_Splitter_Pack");
@@ -1361,9 +1495,11 @@ const App = () => {
         setTimeout(() => URL.revokeObjectURL(link.href), 10000);
         showToast("İndirme tamamlandı! Eksik varsa 'Hata_Raporu'nu okuyun.");
       }
+      clearLoadingTimeout(); // Clear timeout on successful batch download
 
     } catch (globalError) {
       showToast("Kritik Hata: " + globalError.message);
+      clearLoadingTimeout(); // Clear timeout on batch download error
     } finally {
       setIsZipping(false);
       setZipProgress({ current: 0, total: 0 });
@@ -1429,8 +1565,10 @@ const App = () => {
         setIsProcessing(false);
 
         setPage('loading');
+        startLoadingTimeout(); // Start timeout for new upload
         setTimeout(() => {
           setPage('editor');
+          clearLoadingTimeout(); // Clear timeout on editor load
         }, 800);
       } else {
         setFileList(prev => [...prev, ...newFilesToAdd]);
@@ -1455,6 +1593,7 @@ const App = () => {
         // Remini Style Staged Transition (File Uploading -> Processing -> Success)
         setPage('loading');
         setLoadingMessage(`Dosya Yükleniyor... (1/${newFilesToAdd.length})`);
+        startLoadingTimeout(); // Start timeout for staged transition
 
         setTimeout(() => {
           setLoadingMessage("AI Görüntü Analizi Yapılıyor...");
@@ -1466,6 +1605,7 @@ const App = () => {
               // FORCE SWITCH TO EDITOR
               setPage('editor');
               setLoadingMessage('İşleniyor...'); // Reset message for next time
+              clearLoadingTimeout(); // Clear timeout on editor load
             }, 600);
 
           }, 1200);
@@ -1586,6 +1726,9 @@ const App = () => {
   const processSplit = async (sourceUrl, isVideo, forceStandard = false) => {
     if (!sourceUrl) return;
 
+    // --- TIMEOUT BAŞLAT (YENİ) ---
+    startLoadingTimeout();
+
     // 1. Minimum Loading Timer Başlat (Akıcılık için)
     const startTime = Date.now();
 
@@ -1698,7 +1841,7 @@ const App = () => {
           }
         });
 
-        const w = isVideo ? mediaElement.videoWidth : mediaElement.width;
+        const w = isVideo ? mediaElement.videoWidth : mediaElement.height;
         const h = isVideo ? mediaElement.videoHeight : mediaElement.height;
 
         // --- PIPELINE STEP 1: Determine Essentials ---
@@ -1869,6 +2012,7 @@ const App = () => {
 
       if (myId === processingIdRef.current) {
         setIsProcessing(false);
+        clearLoadingTimeout(); // Clear timeout on successful processing
         if (!isSilent && !canUseCache) {
           // GÜNCELLENDİ: Standart mod bildirimleri sadeleştirildi
           if ((ultraHd4xMode || ultraHdMode) && !forceStandard) {
@@ -1886,6 +2030,7 @@ const App = () => {
     } catch (error) {
       console.error("Pipeline Error:", error);
       if (myId === processingIdRef.current) {
+        clearLoadingTimeout(); // Clear timeout on processing error
 
         // --- AUTO-FALLBACK TO STANDARD MODE ---
         if ((ultraHdMode || ultraHd4xMode) && !forceStandard) {
@@ -1946,6 +2091,7 @@ const App = () => {
     }
 
     setIsDownloading(true);
+    startLoadingTimeout(); // Start timeout for batch download
 
     try {
       const zip = new window.JSZip();
@@ -1968,10 +2114,12 @@ const App = () => {
       document.body.removeChild(link);
 
       showToast("Tüm parçalar ZIP olarak indirildi.");
+      clearLoadingTimeout(); // Clear timeout on successful batch download
 
     } catch (error) {
       console.error("ZIP hatası:", error);
       showToast("İndirme sırasında bir hata oluştu.");
+      clearLoadingTimeout(); // Clear timeout on batch download error
     } finally {
       setIsDownloading(false);
     }
@@ -1995,15 +2143,21 @@ const App = () => {
         splitCount={splitCount}
         isProcessing={isProcessing}
         isContentReady={isContentReady}
+        isLocked={page === 'loading' || timeoutError} // GÜNCELLENDİ: Loading ekranında ve timeoutError durumunda da kilitli
       />
 
       <MobileMenu
         isOpen={isMobileMenuOpen}
         onClose={() => setIsMobileMenuOpen(false)}
+        onGoHome={handleGoHome}
+        onUpload={triggerNewUpload}
+        onDownload={handleDownloadAll}
+        isDownloading={isDownloading}
         onShowAbout={() => setShowAbout(true)}
         onShowHowTo={() => setShowHowTo(true)}
         onShowFAQ={() => setShowFAQ(true)}
         onShowPrivacy={() => setShowPrivacy(true)}
+        isLocked={!isContentReady || isProcessing || page === 'loading' || timeoutError} // GÜNCELLENDİ: isLocked prop'u eklendi
       />
 
       <PrivacyModal isOpen={showPrivacy} onClose={() => setShowPrivacy(false)} />
@@ -2011,6 +2165,15 @@ const App = () => {
       <AboutModal isOpen={showAbout} onClose={() => setShowAbout(false)} />
       <FAQModal isOpen={showFAQ} onClose={() => setShowFAQ(false)} />
       <FeatureInfoModal info={featureInfo} onClose={() => setFeatureInfo(null)} />
+
+      {/* YENİ TIMEOUT MODAL */}
+      <TimeoutErrorModal
+        isOpen={timeoutError}
+        onCancel={() => { setTimeoutError(false); setIsProcessing(false); clearLoadingTimeout(); }}
+        onRetry={() => { setTimeoutError(false); processSplit(fileList.find(f => f.url === uploadedFile)); }}
+        onNewUpload={() => { setTimeoutError(false); triggerNewUpload(); }}
+        onGoHome={() => { setTimeoutError(false); handleGoHome(); }}
+      />
 
       {/* ZIP PROCESSING MODAL */}
       {isZipping && (
@@ -2130,10 +2293,10 @@ const App = () => {
                     {['png', 'jpg', 'webp'].map(fmt => (
                       <button
                         key={fmt}
-                        disabled={!isContentReady || isProcessing}
+                        disabled={!isContentReady || isProcessing || page === 'loading' || timeoutError} // GÜNCELLENDİ: disabled prop
                         onClick={() => { skipFeedbackRef.current = false; updateSetting('downloadFormat', fmt); }}
                         className={`flex-1 py-2 rounded-lg text-[12px] font-black uppercase transition-all 
-                          ${!isContentReady || isProcessing ? 'opacity-30 cursor-not-allowed' : ''}
+                          ${!isContentReady || isProcessing || page === 'loading' || timeoutError ? 'opacity-30 cursor-not-allowed' : ''}
                           ${downloadFormat === fmt ? 'bg-white text-black shadow-lg' : 'text-gray-500 hover:text-white'}`
                         }
                       >
@@ -2172,7 +2335,7 @@ const App = () => {
                     {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(num => (
                       <button
                         key={num}
-                        disabled={!isContentReady || isProcessing}
+                        disabled={!isContentReady || isProcessing || page === 'loading' || timeoutError} // GÜNCELLENDİ: disabled prop
                         onClick={() => {
                           if (isContentReady && !isProcessing) {
                             setSplitSlides([]);
@@ -2183,7 +2346,7 @@ const App = () => {
                           }
                         }}
                         className={`aspect-square rounded-xl text-[12px] font-black flex items-center justify-center transition-all border 
-                          ${!isContentReady || isProcessing ? 'opacity-30 cursor-not-allowed' : ''}
+                          ${!isContentReady || isProcessing || page === 'loading' || timeoutError ? 'opacity-30 cursor-not-allowed' : ''}
                           ${splitCount === num ? 'bg-white text-black border-white shadow-[0_0_15px_rgba(255,255,255,0.3)] scale-105' : 'bg-white/5 border-white/10 text-gray-500 hover:bg-white/10 hover:text-white hover:border-white/30'}`
                         }
                       >
@@ -2202,8 +2365,8 @@ const App = () => {
                   setIsContentReady(false);
                   processSplit(uploadedFile, fileType === 'video');
                 }}
-                disabled={!uploadedFile || !isContentReady || isProcessing} // LOCKED
-                className={`w-full py-4 lg:py-5 rounded-[24px] font-black text-xs transition-all shadow-2xl ${!uploadedFile || !isContentReady || isProcessing ? 'bg-white/5 text-gray-600 cursor-not-allowed' : 'bg-white text-black hover:bg-gray-200 active:scale-95 uppercase tracking-widest'}`}
+                disabled={!uploadedFile || !isContentReady || isProcessing || page === 'loading' || timeoutError} // GÜNCELLENDİ: disabled prop
+                className={`w-full py-4 lg:py-5 rounded-[24px] font-black text-xs transition-all shadow-2xl ${!uploadedFile || !isContentReady || isProcessing || page === 'loading' || timeoutError ? 'bg-white/5 text-gray-600 cursor-not-allowed' : 'bg-white text-black hover:bg-gray-200 active:scale-95 uppercase tracking-widest'}`}
               >
                 {isProcessing ? 'İŞLENİYOR...' : 'YENİDEN BÖL'}
               </button>
@@ -2244,11 +2407,11 @@ const App = () => {
 
                           <div
                             className="relative w-full h-full z-10"
-                            style={{ transform: `scale(${zoom / 100})`, transformOrigin: 'center center', transition: 'transform 0.2s' }}
+                            style={{ transform: `scale(${zoom / 100})`, transformOrigin: 'center center', transition: 'transform 0.2s', touchAction: 'none' }}
                             onPointerDown={handlePointerDown}
                             onPointerMove={handlePointerMove}
                             onPointerUp={handlePointerUp}
-                            onPointerCancel={handlePointerUp}
+                            onPointerCancel={handlePointerCancel}
                             onPointerLeave={handlePointerUp}
                           >
                             <img
@@ -2276,12 +2439,13 @@ const App = () => {
                       onPointerDown={handleDockPointerDown}
                       onPointerMove={handleDockPointerMove}
                       onPointerUp={handleDockPointerUp}
+                      onPointerCancel={handleDockPointerUp} // Handle cancel same as up
                       style={{
                         left: '50%',
                         bottom: '20px',
                         transform: `translate(calc(-50% + ${dockPos.x}px), ${dockPos.y}px)`,
                         cursor: isDraggingDock ? 'grabbing' : 'grab',
-                        touchAction: 'none'
+                        touchAction: 'none' // CRITICAL for mobile drag
                       }}
                       className="absolute bg-black/90 backdrop-blur-xl border border-white/10 rounded-full px-4 py-2 md:px-6 md:py-3 flex items-center justify-center gap-4 md:gap-6 shadow-[0_20px_50px_rgba(0,0,0,0.5)] z-50 animate-in slide-in-from-bottom-5 w-[90%] max-w-sm md:w-auto md:max-w-[90vw] select-none"
                     >
@@ -2352,10 +2516,10 @@ const App = () => {
               {uploadedFile && fileList.length > 1 && (
                 <button
                   onClick={handleDeleteCurrent}
-                  disabled={!isContentReady || isProcessing} // LOCKED
+                  disabled={!isContentReady || isProcessing || page === 'loading' || timeoutError} // LOCKED
                   title="Seçili Olanı Sil"
                   className={`w-16 h-16 lg:w-full lg:h-auto lg:py-4 bg-white text-black rounded-[16px] lg:rounded-[24px] font-black text-[10px] lg:text-xs shadow-xl hover:bg-gray-200 transition-all active:scale-95 uppercase tracking-widest flex flex-col lg:flex-row items-center justify-center gap-1 lg:gap-2 shrink-0
-                    ${(!isContentReady || isProcessing) ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    ${(!isContentReady || isProcessing || page === 'loading' || timeoutError) ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
                   <span>SİL</span>
                 </button>
@@ -2366,10 +2530,10 @@ const App = () => {
               {fileList.length > 1 && (
                 <button
                   onClick={handleResetList}
-                  disabled={!isContentReady || isProcessing} // LOCKED
+                  disabled={!isContentReady || isProcessing || page === 'loading' || timeoutError} // LOCKED
                   title="Diğerlerini Sil (Sıfırla)"
                   className={`w-16 h-16 lg:w-full lg:h-auto lg:py-4 bg-white text-black rounded-[16px] lg:rounded-[24px] font-black text-[10px] lg:text-xs shadow-xl hover:bg-gray-200 transition-all active:scale-95 uppercase tracking-normal flex flex-col lg:flex-row items-center justify-center gap-1 lg:gap-2 shrink-0
-                    ${(!isContentReady || isProcessing) ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    ${(!isContentReady || isProcessing || page === 'loading' || timeoutError) ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
                   <span>SIFIRLA</span>
                 </button>
@@ -2379,10 +2543,10 @@ const App = () => {
               {fileList.length > 1 && (
                 <button
                   onClick={handleBatchDownload}
-                  disabled={!isContentReady || isProcessing} // LOCKED
+                  disabled={!isContentReady || isProcessing || page === 'loading' || timeoutError} // LOCKED
                   title="Tümünü Arşivle ve İndir (ZIP)"
                   className={`w-16 h-16 lg:w-full lg:h-auto lg:py-4 bg-white text-black rounded-[16px] lg:rounded-[24px] font-black text-[10px] lg:text-xs shadow-xl hover:bg-gray-200 transition-all active:scale-95 uppercase tracking-tighter flex flex-col lg:flex-row items-center justify-center gap-1 lg:gap-2 shrink-0
-                    ${(!isContentReady || isProcessing) ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    ${(!isContentReady || isProcessing || page === 'loading' || timeoutError) ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
                   <span className="text-center leading-tight">TOPLU<br />İNDİR</span>
                 </button>
