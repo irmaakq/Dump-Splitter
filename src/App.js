@@ -493,7 +493,9 @@ const Header = ({
         <>
           <button
             onClick={onUpload}
-            className="bg-white text-black px-4 md:px-6 py-2 md:py-2.5 rounded-xl text-xs md:text-sm font-black flex items-center gap-2 hover:bg-gray-200 transition-all active:scale-95 shadow-lg border border-white/10 whitespace-nowrap"
+            disabled={!isContentReady || isProcessing} // LOCKED
+            className={`bg-white text-black px-4 md:px-6 py-2 md:py-2.5 rounded-xl text-xs md:text-sm font-black flex items-center gap-2 hover:bg-gray-200 transition-all active:scale-95 shadow-lg border border-white/10 whitespace-nowrap 
+              ${!isContentReady || isProcessing ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
             <Upload size={16} /> <span className="whitespace-nowrap">Yeni Yükleme</span>
           </button>
@@ -632,6 +634,7 @@ const App = () => {
   // --- POINTER EVENTS STATE (ZOOM/PAN) ---
   const evCache = useRef([]);
   const prevDiff = useRef(-1);
+  const prevFormatRef = useRef(DEFAULT_SETTINGS.downloadFormat);
 
   const removeEvent = (ev) => {
     const index = evCache.current.findIndex((cachedEv) => cachedEv.pointerId === ev.pointerId);
@@ -1647,12 +1650,18 @@ const App = () => {
         if (window.tf) await window.tf.nextFrame();
       } else {
         // --- CACHE HIT (Yumuşak Geçiş & Split Count Değişimi) ---
-        setAiLogs(["Görünüm Düzenleniyor..."]);
-
-        // YUMUŞAK GEÇİŞ GECİKMESİ (Smooth Transition)
-        // Parça sayısı değişirken anlık titremeyi önlemek için çok kısa (50ms) bekle.
-        // GÜNCELLENDİ: 600ms -> 50ms (Kullanıcı isteği: Hızlandırıldı)
-        await new Promise(r => setTimeout(r, 50));
+        // Format Değişimi Kontrolü
+        if (downloadFormat !== prevFormatRef.current) {
+          setAiLogs(["Format Dönüştürülüyor...", `${downloadFormat.toUpperCase()} Hazırlanıyor...`]);
+          // KULLANICI İSTEĞİ: Format değişirken net bir bekleme süresi (1.5 sn)
+          await new Promise(r => setTimeout(r, 1500));
+          prevFormatRef.current = downloadFormat;
+        } else {
+          setAiLogs(["Görünüm Düzenleniyor..."]);
+          // YUMUŞAK GEÇİŞ GECİKMESİ (Smooth Transition)
+          // Parça sayısı değişirken anlık titremeyi önlemek için çok kısa (50ms) bekle.
+          await new Promise(r => setTimeout(r, 50));
+        }
       }
     }
 
@@ -2116,7 +2125,17 @@ const App = () => {
                   <span className="text-[12px] font-black text-gray-500 uppercase tracking-widest block">Format</span>
                   <div className="flex gap-2 p-1 bg-white/5 rounded-xl border border-white/10">
                     {['png', 'jpg', 'webp'].map(fmt => (
-                      <button key={fmt} onClick={() => { skipFeedbackRef.current = true; updateSetting('downloadFormat', fmt); }} className={`flex-1 py-2 rounded-lg text-[12px] font-black uppercase transition-all ${downloadFormat === fmt ? 'bg-white text-black shadow-lg' : 'text-gray-500 hover:text-white'}`}>{fmt}</button>
+                      <button
+                        key={fmt}
+                        disabled={!isContentReady || isProcessing}
+                        onClick={() => { skipFeedbackRef.current = true; updateSetting('downloadFormat', fmt); }}
+                        className={`flex-1 py-2 rounded-lg text-[12px] font-black uppercase transition-all 
+                          ${!isContentReady || isProcessing ? 'opacity-30 cursor-not-allowed' : ''}
+                          ${downloadFormat === fmt ? 'bg-white text-black shadow-lg' : 'text-gray-500 hover:text-white'}`
+                        }
+                      >
+                        {fmt}
+                      </button>
                     ))}
                   </div>
                 </div>
@@ -2180,8 +2199,8 @@ const App = () => {
                   setIsContentReady(false);
                   processSplit(uploadedFile, fileType === 'video');
                 }}
-                disabled={!uploadedFile}
-                className={`w-full py-4 lg:py-5 rounded-[24px] font-black text-xs transition-all shadow-2xl ${!uploadedFile ? 'bg-white/5 text-gray-600' : 'bg-white text-black hover:bg-gray-200 active:scale-95 uppercase tracking-widest'}`}
+                disabled={!uploadedFile || !isContentReady || isProcessing} // LOCKED
+                className={`w-full py-4 lg:py-5 rounded-[24px] font-black text-xs transition-all shadow-2xl ${!uploadedFile || !isContentReady || isProcessing ? 'bg-white/5 text-gray-600 cursor-not-allowed' : 'bg-white text-black hover:bg-gray-200 active:scale-95 uppercase tracking-widest'}`}
               >
                 {isProcessing ? 'İŞLENİYOR...' : 'YENİDEN BÖL'}
               </button>
