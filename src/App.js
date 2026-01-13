@@ -2069,10 +2069,30 @@ const App = () => {
             <div className="flex-1 lg:overflow-y-auto custom-scrollbar p-6 space-y-6 lg:space-y-8">
               <div className="space-y-6">
                 <div className="p-5 bg-white/[0.03] border border-white/10 rounded-[28px] space-y-5 shadow-inner">
-                  <div className="space-y-2"><FeatureToggle featureKey="aiEnhance" state={autoEnhance} onToggle={updateSetting} onInfo={setFeatureInfo} /></div>
-                  <div className="space-y-2 border-t border-white/5 pt-4"><FeatureToggle featureKey="hdMode" state={hdMode} onToggle={updateSetting} onInfo={setFeatureInfo} /></div>
-                  <div className="space-y-2 border-t border-white/5 pt-4"><FeatureToggle featureKey="optimize" state={optimizeMode} onToggle={updateSetting} onInfo={setFeatureInfo} /></div>
-                  <div className="space-y-2 border-t border-white/5 pt-4"><FeatureToggle featureKey="smartCrop" state={smartCrop} onToggle={updateSetting} onInfo={setFeatureInfo} /></div>
+                  {/* AI ENHANCE - MAINTENANCE */}
+                  <div className="space-y-2 relative group">
+                    <div className="opacity-50 grayscale cursor-not-allowed" onClickCapture={(e) => { e.preventDefault(); e.stopPropagation(); showToast("AI Enhance özelliği bakım çalışması nedeniyle devre dışıdır.", "error"); }}>
+                      <FeatureToggle featureKey="aiEnhance" state={false} onToggle={() => { }} onInfo={setFeatureInfo} />
+                    </div>
+                  </div>
+                  {/* HD MODE - MAINTENANCE */}
+                  <div className="space-y-2 border-t border-white/5 pt-4 relative group">
+                    <div className="opacity-50 grayscale cursor-not-allowed" onClickCapture={(e) => { e.preventDefault(); e.stopPropagation(); showToast("HD Kalite özelliği bakım çalışması nedeniyle devre dışıdır.", "error"); }}>
+                      <FeatureToggle featureKey="hdMode" state={false} onToggle={() => { }} onInfo={setFeatureInfo} />
+                    </div>
+                  </div>
+                  {/* OPTIMIZE - MAINTENANCE */}
+                  <div className="space-y-2 border-t border-white/5 pt-4 relative group">
+                    <div className="opacity-50 grayscale cursor-not-allowed" onClickCapture={(e) => { e.preventDefault(); e.stopPropagation(); showToast("Optimize özelliği bakım çalışması nedeniyle devre dışıdır.", "error"); }}>
+                      <FeatureToggle featureKey="optimize" state={false} onToggle={() => { }} onInfo={setFeatureInfo} />
+                    </div>
+                  </div>
+                  {/* SMART CROP - MAINTENANCE */}
+                  <div className="space-y-2 border-t border-white/5 pt-4 relative group">
+                    <div className="opacity-50 grayscale cursor-not-allowed" onClickCapture={(e) => { e.preventDefault(); e.stopPropagation(); showToast("Smart Crop özelliği bakım çalışması nedeniyle devre dışıdır.", "error"); }}>
+                      <FeatureToggle featureKey="smartCrop" state={false} onToggle={() => { }} onInfo={setFeatureInfo} />
+                    </div>
+                  </div>
                 </div>
                 <div className="space-y-3">
                   <span className="text-[12px] font-black text-gray-500 uppercase tracking-widest block">Format</span>
@@ -2086,7 +2106,12 @@ const App = () => {
 
                 {/* YENİ AI UPSCALE BÖLÜMÜ - restored to original style + new 4x toggle */}
                 <div className="p-5 bg-white/[0.03] border border-white/10 rounded-[28px] space-y-5 shadow-inner mt-6">
-                  <div className="space-y-2"><FeatureToggle featureKey="ultraHd" state={ultraHdMode} onToggle={updateSetting} onInfo={setFeatureInfo} /></div>
+                  {/* ULTRA HD - MAINTENANCE */}
+                  <div className="space-y-2 relative group">
+                    <div className="opacity-50 grayscale cursor-not-allowed" onClickCapture={(e) => { e.preventDefault(); e.stopPropagation(); showToast("Ultra HD (2x) özelliği bakım çalışması nedeniyle devre dışıdır.", "error"); }}>
+                      <FeatureToggle featureKey="ultraHd" state={false} onToggle={() => { }} onInfo={setFeatureInfo} />
+                    </div>
+                  </div>
                   <div className="space-y-2 border-t border-white/5 pt-4 relative group">
                     <div
                       className="opacity-50 grayscale hover:opacity-80 transition-opacity cursor-not-allowed"
