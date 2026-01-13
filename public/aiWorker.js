@@ -10,11 +10,11 @@ importScripts('https://unpkg.com/upscaler@latest/dist/browser/umd/upscaler.min.j
 importScripts('https://unpkg.com/@upscalerjs/default-model@latest/dist/umd/index.min.js');
 importScripts('https://unpkg.com/@upscalerjs/esrgan-thick@latest/dist/umd/models/esrgan-thick/src/umd.min.js');
 
-// 2. CONFIGURATION (Ayarlar - ISI VE KALİTE OPTİMİZASYONU)
+// 2. CONFIGURATION (Ayarlar - "HAYATTA KALMA" MODU)
 const CONFIG = {
-    TILE_SIZE: 128,      // 128px stabil boyut.
-    PADDING: 32,         // ÇİZGİLER İÇİN KESİN ÇÖZÜM: 32px (Standart ESRGAN payı).
-    DELAY_MS: 250,       // ISI/KASMA ÖNLEMİ: 4x GPU'yu çok ısıtıyor, bekleme süresini arttırdık (Serin çalışma modu).
+    TILE_SIZE: 64,       // 128px bile ağır geldi (Beyaz ekran/Crash). 64px'e düşürdük (Daha küçük lokmalar).
+    PADDING: 32,         // Kaliteden ödün vermiyoruz (Çizgileri engeller).
+    DELAY_MS: 500,       // YARIM SANİYE MOLA: Tarayıcının "Ben öldüm" demesini engellemek için her parçada uzun mola.
     TENSOR_CLEANUP: true
 };
 
