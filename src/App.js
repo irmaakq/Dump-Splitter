@@ -1554,7 +1554,7 @@ const App = () => {
     ultraHd4xMode
   }), [splitCount, autoEnhance, hdMode, optimizeMode, smartCrop, downloadFormat, ultraHdMode, ultraHd4xMode]);
 
-  const debouncedSettings = useDebounce(settingsObj, 400); // 400ms Gecikme
+  const debouncedSettings = useDebounce(settingsObj, 150); // 400ms -> 150ms (Daha seri tepki)
 
   // ... (Zoom vs diğer stateler aynı kalacak) ...
 
@@ -1818,9 +1818,9 @@ const App = () => {
           });
 
           // Her parçadan sonra UI'a nefes aldır (Donmayı önle)
-          if (window.tf) {
-            await window.tf.nextFrame();
-          } else {
+          // Her parçadan sonra UI'a nefes aldır (Donmayı önle)
+          // OPTIMIZATION: Her parça yerine 3 parçada bir yield et (Hızlanma)
+          if ((parts.length) % 3 === 0) {
             await new Promise(r => setTimeout(r, 0));
           }
         }
