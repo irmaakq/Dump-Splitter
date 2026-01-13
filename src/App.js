@@ -1730,6 +1730,10 @@ const App = () => {
           partCanvas.height = pH;
           const partCtx = partCanvas.getContext('2d');
 
+          partCtx.imageSmoothingEnabled = true;
+          partCtx.imageSmoothingQuality = 'high';
+          partCtx.drawImage(sourceCanvas, c * pW, r * pH, pW, pH, 0, 0, pW, pH);
+
           const mimeType = `image/${downloadFormat === 'jpg' ? 'jpeg' : downloadFormat}`;
           let quality = 0.90; // Standart kaliteyi biraz düşürelim ki HD ve Optimize farkı belli olsun
           if (hdMode) quality = 1.0; // HD Mod: Maksimum Kalite
