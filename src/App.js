@@ -1600,11 +1600,21 @@ const App = () => {
 
       if (!canUseCache) {
         // Logları duruma göre seç
-        let msgs = SPLITTER_STATUS_MSGS;
-
-        // Eğer Ultra HD kapalıysa (yani kapatılıyorsa veya normal açılışsa) daha sade mesajlar göster
-        if (!ultraHdMode && !ultraHd4xMode) {
-          msgs = ["Ultra HD Kapatılıyor...", "Standart Görünüm Hazırlanıyor..."];
+        // Logları duruma göre seç
+        let msgs = [];
+        if (ultraHdMode || ultraHd4xMode) {
+          msgs = SPLITTER_STATUS_MSGS;
+        } else if (optimizeMode) {
+          msgs = ["Görseller Optimize Ediliyor...", "Dosya Boyutu Küçültülüyor..."];
+        } else if (autoEnhance) {
+          msgs = ["Renkler Canlandırılıyor...", "AI Enhance Aktif..."];
+        } else if (hdMode) {
+          msgs = ["HD Detaylar İşleniyor...", "Netlik Artırılıyor..."];
+        } else if (smartCrop) {
+          msgs = ["Akıllı Kadrajlama Yapılıyor...", "Kenarlar Temizleniyor..."];
+        } else {
+          // Standard mode or "closing" everything
+          msgs = ["Görünüm Güncelleniyor...", "Standart Mod Hazırlanıyor..."];
         }
 
         // Logları zamana yayarak göster
@@ -1614,7 +1624,8 @@ const App = () => {
           }, i * 350);
         });
         // UI'ın "Yükleniyor" ekranını çizmesi için bir nefes aldır
-        await new Promise(r => setTimeout(r, 150));
+        // GÜNCELLENDİ: Mesajların okunabilmesi için süre uzatıldı (Kullanıcı isteği)
+        await new Promise(r => setTimeout(r, 400));
         if (window.tf) await window.tf.nextFrame();
       } else {
         // --- CACHE HIT (Yumuşak Geçiş & Split Count Değişimi) ---
