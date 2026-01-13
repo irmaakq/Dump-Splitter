@@ -47,7 +47,14 @@ const initModels = async (type) => {
                 throw new Error(`4X Kütüphanesi (GANS) Yüklenemedi. Mevcut: ${keys.join(', ')}`);
             }
 
-            const modelToUse = esrganLib.gans || esrganLib.default || esrganLib;
+            // DÜZELTME: Kütüphane bulundu, şimdi içindeki 'GANS' modelini bulalım.
+            // Hata mesajında gördük ki anahtarlar 'esrganLegacyGans' şeklinde.
+            const modelKey = Object.keys(esrganLib).find(k => k.toLowerCase().includes('gans'));
+            const modelToUse = modelKey ? esrganLib[modelKey] : (esrganLib.default || esrganLib);
+
+            if (!modelToUse) {
+                throw new Error(`GANS Modeli Bulunamadı. Kütüphane İçeriği: ${Object.keys(esrganLib).join(', ')}`);
+            }
 
             upscaler4x = new Upscaler({
                 model: modelToUse,
