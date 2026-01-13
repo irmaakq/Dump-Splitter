@@ -2002,14 +2002,10 @@ const App = () => {
                   <div className="space-y-2"><FeatureToggle featureKey="ultraHd" state={ultraHdMode} onToggle={updateSetting} onInfo={setFeatureInfo} /></div>
                   <div className="space-y-2 border-t border-white/5 pt-4 relative group">
                     <div className="opacity-40 pointer-events-none grayscale">
-                      {/* Toggle'ı gizle, yerine badge koyacağız */}
+                      {/* Toggle'ı gizle (Bakımda olduğu anlaşılır zaten disabled gibi durunca) */}
                       <div className="[&_button]:hidden">
                         <FeatureToggle featureKey="ultraHd4x" state={false} onToggle={() => { }} onInfo={setFeatureInfo} />
                       </div>
-                    </div>
-                    {/* Badge'i tam Toggle'ın olması gereken yere koy */}
-                    <div className="absolute top-4 right-0 z-10">
-                      <span className="text-[10px] font-black text-yellow-500 bg-yellow-500/10 px-3 py-1.5 rounded-lg border border-yellow-500/20 uppercase tracking-widest cursor-help shadow-[0_0_10px_rgba(234,179,8,0.2)]" title="Bu özellik şu anda bakım çalışması nedeniyle geçici olarak devre dışıdır.">BAKIMDA</span>
                     </div>
                   </div>
                 </div>
@@ -2197,10 +2193,7 @@ const App = () => {
         )
       }
 
-      {/* AI UPSCALE PROCESSING MODAL (FULL SCREEN) */}
-      {
 
-      }
 
       <style>{`
         * { scrollbar-width: none; -ms-overflow-style: none; }
