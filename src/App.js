@@ -616,7 +616,7 @@ const App = () => {
 
   // ZOOM & BOYUTLAR
   const [zoom, setZoom] = useState(100);
-  const [viewMode, setViewMode] = useState('contain'); // 'contain' | 'cover'
+  // ViewMode removed as requested
   const [mediaDimensions, setMediaDimensions] = useState({ width: 0, height: 0 });
 
   // --- DOCK DRAG LOGIC ---
@@ -691,28 +691,26 @@ const App = () => {
         const diff = curDiff - prevDiff.current;
         if (Math.abs(diff) > 2) { // Threshold
           const sensitivity = 0.5;
-          setZoom(prev => Math.max(10, Math.min(200, prev + (diff * sensitivity))));
+          setZoom(prev => Math.max(10, Math.min(250, prev + (diff * sensitivity)))); // Increased max zoom to 250
         }
       }
       prevDiff.current = curDiff;
     }
-    // SINGLE TOUCH (PAN)
+    // SINGLE TOUCH (PAN) - DISABLED AS REQUESTED
+    /*
     else if (evCache.current.length === 1) {
-      // MOBILE GUARD: Mobilde yanlışlıkla kaydırmayı önlemek için 1024px altında PAN işlemini engelle.
       if (window.innerWidth < 1024) return;
-
       const imgContainer = e.currentTarget;
       const img = imgContainer.querySelector('img');
       if (img && img.dataset.panStart) {
         const startState = JSON.parse(img.dataset.panStart);
-        // ZOOM CORRECTION: Parent element scaled, so we must divide delta by zoom factor
-        // to keep 1:1 finger tracking.
         const scaleFactor = zoom / 100;
         const dx = (e.clientX - startState.x) / scaleFactor;
         const dy = (e.clientY - startState.y) / scaleFactor;
         img.style.transform = `translate(${startState.tx + dx}px, ${startState.ty + dy}px)`;
       }
     }
+    */
   };
 
   const handlePointerUp = (e) => {
@@ -2233,7 +2231,7 @@ const App = () => {
                           >
                             <img
                               src={s.dataUrl}
-                              className={`w-full h-full ${viewMode === 'contain' ? 'object-contain' : 'object-cover'} drop-shadow-2xl rounded-2xl md:rounded-3xl cursor-grab active:cursor-grabbing transition-all duration-500`}
+                              className="w-full h-full object-contain drop-shadow-2xl rounded-2xl md:rounded-3xl transition-all duration-500"
                               alt="Slide"
                               draggable="false"
                             />
@@ -2274,22 +2272,13 @@ const App = () => {
                         </div>
                       </div>
                       <div className="flex items-center gap-2 md:gap-4 pl-2 justify-end shrink-0 flex-1">
-                        {/* View Mode Toggle */}
-                        <button
-                          onClick={() => setViewMode(prev => prev === 'contain' ? 'cover' : 'contain')}
-                          onPointerDown={(e) => e.stopPropagation()}
-                          className={`w-8 h-8 md:w-9 md:h-9 rounded-full flex items-center justify-center transition-all border shrink-0 ${viewMode === 'cover' ? 'bg-white text-black border-white' : 'bg-white/5 text-gray-400 border-white/5 hover:bg-white/10 hover:text-white'}`}
-                          title={viewMode === 'contain' ? "Ekrana Yay (Cover)" : "Sığdır (Contain)"}
-                        >
-                          {viewMode === 'contain' ? <Maximize size={14} /> : <Minimize size={14} />}
-                        </button>
 
                         <div className="w-px h-4 bg-white/10 mx-1"></div>
 
                         <button onClick={() => setZoom(prev => Math.max(10, prev - 10))} onPointerDown={(e) => e.stopPropagation()} className="text-gray-500 hover:text-white transition-colors shrink-0 p-2" aria-label="Uzaklaştır"><Minus size={14} /></button>
                         <div className="flex items-center gap-2 group/zoom"><span className="text-[10px] md:text-xs font-black text-white/50 w-8 text-center group-hover/zoom:text-white transition-colors shrink-0">{Math.round(zoom)}%</span></div>
-                        <button onClick={() => setZoom(prev => Math.min(200, prev + 10))} onPointerDown={(e) => e.stopPropagation()} className="text-gray-500 hover:text-white transition-colors shrink-0 p-2" aria-label="Yakınlaştır"><Plus size={14} /></button>
-                        <button onClick={() => setZoom(100)} onPointerDown={(e) => e.stopPropagation()} className="w-8 h-8 md:w-9 md:h-9 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center transition-all text-gray-400 hover:text-white ml-1 border border-white/5 shrink-0" title="Sıfırla" aria-label="Zoom Sıfırla"><Maximize size={12} /></button>
+                        <button onClick={() => setZoom(prev => Math.min(250, prev + 10))} onPointerDown={(e) => e.stopPropagation()} className="text-gray-500 hover:text-white transition-colors shrink-0 p-2" aria-label="Yakınlaştır"><Plus size={14} /></button>
+                        <button onClick={() => setZoom(100)} onPointerDown={(e) => e.stopPropagation()} className="w-8 h-8 md:w-9 md:h-9 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center transition-all text-gray-400 hover:text-white ml-1 border border-white/5 shrink-0" title="Zoom Sıfırla" aria-label="Zoom Sıfırla"><RefreshCcw size={12} /></button>
                       </div>
                     </div>
                   )}
