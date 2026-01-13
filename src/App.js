@@ -2071,25 +2071,25 @@ const App = () => {
                 <div className="p-5 bg-white/[0.03] border border-white/10 rounded-[28px] space-y-5 shadow-inner">
                   {/* AI ENHANCE - MAINTENANCE */}
                   <div className="space-y-2 relative group">
-                    <div className="opacity-50 grayscale cursor-not-allowed" onClickCapture={(e) => { e.preventDefault(); e.stopPropagation(); showToast("AI Enhance özelliği bakım çalışması nedeniyle devre dışıdır.", "error"); }}>
+                    <div className="opacity-50 grayscale cursor-not-allowed" title="⚠️ Bakım Çalışması: Bu özellik geçici olarak kullanılamıyor" onClickCapture={(e) => { e.preventDefault(); e.stopPropagation(); showToast("AI Enhance özelliği bakım çalışması nedeniyle devre dışıdır.", "error"); }}>
                       <FeatureToggle featureKey="aiEnhance" state={false} onToggle={() => { }} onInfo={setFeatureInfo} />
                     </div>
                   </div>
                   {/* HD MODE - MAINTENANCE */}
                   <div className="space-y-2 border-t border-white/5 pt-4 relative group">
-                    <div className="opacity-50 grayscale cursor-not-allowed" onClickCapture={(e) => { e.preventDefault(); e.stopPropagation(); showToast("HD Kalite özelliği bakım çalışması nedeniyle devre dışıdır.", "error"); }}>
+                    <div className="opacity-50 grayscale cursor-not-allowed" title="⚠️ Bakım Çalışması: Bu özellik geçici olarak kullanılamıyor" onClickCapture={(e) => { e.preventDefault(); e.stopPropagation(); showToast("HD Kalite özelliği bakım çalışması nedeniyle devre dışıdır.", "error"); }}>
                       <FeatureToggle featureKey="hdMode" state={false} onToggle={() => { }} onInfo={setFeatureInfo} />
                     </div>
                   </div>
                   {/* OPTIMIZE - MAINTENANCE */}
                   <div className="space-y-2 border-t border-white/5 pt-4 relative group">
-                    <div className="opacity-50 grayscale cursor-not-allowed" onClickCapture={(e) => { e.preventDefault(); e.stopPropagation(); showToast("Optimize özelliği bakım çalışması nedeniyle devre dışıdır.", "error"); }}>
+                    <div className="opacity-50 grayscale cursor-not-allowed" title="⚠️ Bakım Çalışması: Bu özellik geçici olarak kullanılamıyor" onClickCapture={(e) => { e.preventDefault(); e.stopPropagation(); showToast("Optimize özelliği bakım çalışması nedeniyle devre dışıdır.", "error"); }}>
                       <FeatureToggle featureKey="optimize" state={false} onToggle={() => { }} onInfo={setFeatureInfo} />
                     </div>
                   </div>
                   {/* SMART CROP - MAINTENANCE */}
                   <div className="space-y-2 border-t border-white/5 pt-4 relative group">
-                    <div className="opacity-50 grayscale cursor-not-allowed" onClickCapture={(e) => { e.preventDefault(); e.stopPropagation(); showToast("Smart Crop özelliği bakım çalışması nedeniyle devre dışıdır.", "error"); }}>
+                    <div className="opacity-50 grayscale cursor-not-allowed" title="⚠️ Bakım Çalışması: Bu özellik geçici olarak kullanılamıyor" onClickCapture={(e) => { e.preventDefault(); e.stopPropagation(); showToast("Smart Crop özelliği bakım çalışması nedeniyle devre dışıdır.", "error"); }}>
                       <FeatureToggle featureKey="smartCrop" state={false} onToggle={() => { }} onInfo={setFeatureInfo} />
                     </div>
                   </div>
@@ -2108,7 +2108,7 @@ const App = () => {
                 <div className="p-5 bg-white/[0.03] border border-white/10 rounded-[28px] space-y-5 shadow-inner mt-6">
                   {/* ULTRA HD - MAINTENANCE */}
                   <div className="space-y-2 relative group">
-                    <div className="opacity-50 grayscale cursor-not-allowed" onClickCapture={(e) => { e.preventDefault(); e.stopPropagation(); showToast("Ultra HD (2x) özelliği bakım çalışması nedeniyle devre dışıdır.", "error"); }}>
+                    <div className="opacity-50 grayscale cursor-not-allowed" title="⚠️ Bakım Çalışması: Bu özellik geçici olarak kullanılamıyor" onClickCapture={(e) => { e.preventDefault(); e.stopPropagation(); showToast("Ultra HD (AI SR 2X) özelliği bakım çalışması nedeniyle devre dışıdır.", "error"); }}>
                       <FeatureToggle featureKey="ultraHd" state={false} onToggle={() => { }} onInfo={setFeatureInfo} />
                     </div>
                   </div>
