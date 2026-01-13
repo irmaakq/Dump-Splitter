@@ -1654,8 +1654,8 @@ const App = () => {
         // Format Değişimi Kontrolü
         if (downloadFormat !== prevFormatRef.current) {
           setAiLogs(["Format Dönüştürülüyor...", `${downloadFormat.toUpperCase()} Hazırlanıyor...`]);
-          // KULLANICI İSTEĞİ: Format değişirken net bir bekleme süresi (1.5 sn)
-          await new Promise(r => setTimeout(r, 1500));
+          // KULLANICI İSTEĞİ: Format değişirken net bir bekleme süresi (0.75 sn)
+          await new Promise(r => setTimeout(r, 750));
           prevFormatRef.current = downloadFormat;
         } else {
           setAiLogs(["Görünüm Düzenleniyor..."]);
@@ -2131,7 +2131,7 @@ const App = () => {
                       <button
                         key={fmt}
                         disabled={!isContentReady || isProcessing}
-                        onClick={() => { skipFeedbackRef.current = true; updateSetting('downloadFormat', fmt); }}
+                        onClick={() => { skipFeedbackRef.current = false; updateSetting('downloadFormat', fmt); }}
                         className={`flex-1 py-2 rounded-lg text-[12px] font-black uppercase transition-all 
                           ${!isContentReady || isProcessing ? 'opacity-30 cursor-not-allowed' : ''}
                           ${downloadFormat === fmt ? 'bg-white text-black shadow-lg' : 'text-gray-500 hover:text-white'}`
