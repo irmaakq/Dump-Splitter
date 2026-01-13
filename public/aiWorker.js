@@ -44,9 +44,9 @@ const initModels = async (type) => {
                 self['@upscalerjs/esrgan-legacy'];
 
             if (!esrganLib) {
-                // HATA AYIKLAMA: Global değişkenleri konsola bas ki ismini görelim
-                console.error("Mevcut Global Değişkenler:", Object.keys(self).filter(k => k.toLowerCase().includes('esrgan') || k.toLowerCase().includes('upscaler')));
-                throw new Error("4X Kütüphanesi (Real-ESRGAN) bulunamadı. CDN hatası olabilir.");
+                // HATA AYIKLAMA: Kullanıcıya hatayı gösterelim ki screenshot atabilsin
+                const keys = Object.keys(self).filter(k => k.toLowerCase().includes('esrgan') || k.toLowerCase().includes('upscaler'));
+                throw new Error(`4X Kütüphanesi Bulunamadı. Bulunanlar: ${keys.join(', ') || 'HİÇBİRİ'}`);
             }
 
             const modelToUse = esrganLib.gans || esrganLib.default || esrganLib;
