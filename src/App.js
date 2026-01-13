@@ -1542,7 +1542,8 @@ const App = () => {
   // --- DEBOUNCED SETTINGS (Toplu State Paketleme) ---
   // Tüm ayarları tek bir obje olarak paketleyip debounce ediyoruz.
   // Böylece kullanıcı arka arkaya 5 kere basarsa sadece sonuncusu işlem görür.
-  const debouncedSettings = useDebounce({
+  // FIX: Sonsuz döngüyü önlemek için obje referansını sabitliyoruz (useMemo)
+  const settingsObj = React.useMemo(() => ({
     splitCount,
     autoEnhance,
     hdMode,
@@ -1551,7 +1552,9 @@ const App = () => {
     downloadFormat,
     ultraHdMode,
     ultraHd4xMode
-  }, 400); // 400ms Gecikme
+  }), [splitCount, autoEnhance, hdMode, optimizeMode, smartCrop, downloadFormat, ultraHdMode, ultraHd4xMode]);
+
+  const debouncedSettings = useDebounce(settingsObj, 400); // 400ms Gecikme
 
   // ... (Zoom vs diğer stateler aynı kalacak) ...
 
