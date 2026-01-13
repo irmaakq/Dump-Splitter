@@ -2049,9 +2049,21 @@ const App = () => {
                   <span className="text-[12px] font-black text-gray-500 uppercase tracking-widest block">Parça Sayısı</span>
                   <div className="grid grid-cols-5 gap-2 w-full">
                     {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(num => (
-                      <button key={num} onClick={() => {
-                        updateSetting('splitCount', num);
-                      }} className={`aspect-square rounded-xl text-[12px] font-black flex items-center justify-center transition-all border ${splitCount === num ? 'bg-white text-black border-white shadow-[0_0_15px_rgba(255,255,255,0.3)] scale-105' : 'bg-white/5 border-white/10 text-gray-500 hover:bg-white/10 hover:text-white hover:border-white/30'}`}>{num}</button>
+                      <button
+                        key={num}
+                        disabled={!isContentReady || isProcessing}
+                        onClick={() => {
+                          if (isContentReady && !isProcessing) {
+                            updateSetting('splitCount', num);
+                          }
+                        }}
+                        className={`aspect-square rounded-xl text-[12px] font-black flex items-center justify-center transition-all border 
+                          ${!isContentReady || isProcessing ? 'opacity-30 cursor-not-allowed' : ''}
+                          ${splitCount === num ? 'bg-white text-black border-white shadow-[0_0_15px_rgba(255,255,255,0.3)] scale-105' : 'bg-white/5 border-white/10 text-gray-500 hover:bg-white/10 hover:text-white hover:border-white/30'}`
+                        }
+                      >
+                        {num}
+                      </button>
                     ))}
                   </div>
                 </div>
@@ -2090,7 +2102,7 @@ const App = () => {
           <section className="flex-1 bg-[#050505] p-2 md:p-6 flex flex-col items-center relative order-1 lg:order-2 min-h-[50vh] lg:min-h-0">
             <div
               ref={containerRef}
-              className={`relative w-full h-full max-w-[95vw] bg-black rounded-[32px] md:rounded-[56px] overflow-hidden border border-white/10 shadow-[0_0_150px_rgba(0,0,0,0.5)] flex items-center justify-center group/canvas my-auto transition-all duration-300 ease-in-out transform ${isContentReady ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-95 translate-y-4 blur-sm'}`}
+              className={`relative w-full h-full max-w-[95vw] bg-black rounded-[32px] md:rounded-[56px] overflow-hidden border border-white/10 shadow-[0_0_150px_rgba(0,0,0,0.5)] flex items-center justify-center group/canvas my-auto transition-all duration-300 ease-in-out transform ${isContentReady ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-95 translate-y-4 blur-sm pointer-events-none'}`}
             >
               {uploadedFile ? (
                 <div className="w-full h-full p-4 md:p-12 flex flex-col overflow-y-auto custom-scrollbar bg-black/40">
