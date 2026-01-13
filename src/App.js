@@ -414,6 +414,20 @@ const FAQModal = ({ isOpen, onClose }) => {
           <div className="bg-white/[0.03] p-5 rounded-2xl border border-white/5 break-inside-avoid mb-6"><h3 className="text-white font-bold text-xs uppercase tracking-wider mb-2 flex items-center gap-2"><Target size={14} className="text-rose-400" /> Smart Crop fotoğrafımı keser mi?</h3><p className="text-gray-400 text-xs leading-relaxed">Smart Crop, fotoğrafın sadece en dışındaki %2'lik "ölü alanı" temizler. Bu işlem, ana objeyi merkeze daha iyi odaklamak ve Instagram'da daha profesyonel bir çerçeveleme sağlamak için yapılır.</p></div>
           <div className="bg-white/[0.03] p-5 rounded-2xl border border-white/5 break-inside-avoid mb-6"><h3 className="text-white font-bold text-xs uppercase tracking-wider mb-2 flex items-center gap-2"><Zap size={14} className="text-teal-400" /> Ultra HD modunda dosya boyutu artar mı?</h3><p className="text-gray-400 text-xs leading-relaxed">Evet, Ultra HD modu fotoğrafın çözünürlüğünü 2 katına çıkardığı (Upscale) için dosya boyutu artabilir. Ancak bu, Instagram'ın sıkıştırma algoritmasına karşı fotoğrafınızın netliğini korumasını sağlar.</p></div>
 
+          {/* YENİ AI ÖZELLİKLERİ HAKKINDA SORULAR (GÜNCEL) */}
+          <div className="bg-white/[0.03] p-5 rounded-2xl border border-white/5 break-inside-avoid mb-6">
+            <h3 className="text-white font-bold text-xs uppercase tracking-wider mb-2 flex items-center gap-2"><Wand2 size={14} className="text-purple-600" /> ULTRA HD (AI SR) NEDİR?</h3>
+            <p className="text-gray-400 text-xs leading-relaxed">Bu mod, eski nesil basit keskinleştirme değildir. Tamamen yenilenmiş 'AI Super Resolution' motorunu kullanır. Fotoğrafınızı piksel piksel tahmin ederek yeniden çizer ve çözünürlüğü yapay zeka ile 2 katına çıkarır.</p>
+          </div>
+          <div className="bg-white/[0.03] p-5 rounded-2xl border border-white/5 break-inside-avoid mb-6">
+            <h3 className="text-white font-bold text-xs uppercase tracking-wider mb-2 flex items-center gap-2"><Maximize size={14} className="text-orange-600" /> 4X SUPER RESOLUTION NEDİR?</h3>
+            <p className="text-gray-400 text-xs leading-relaxed">Görselinizi tam 4 kat (örneğin 1080p'den 4K'ya) büyütür. Profesyonel 'ESRGAN' modelini kullanır. İşlem biraz daha uzun sürer ama en küçük detayları bile kristal netliğinde görmenizi sağlar.</p>
+          </div>
+          <div className="bg-white/[0.03] p-5 rounded-2xl border border-white/5 break-inside-avoid mb-6">
+            <h3 className="text-white font-bold text-xs uppercase tracking-wider mb-2 flex items-center gap-2"><Eye size={14} className="text-teal-500" /> HD AI DETAIL NEDİR?</h3>
+            <p className="text-gray-400 text-xs leading-relaxed">Bu, eski HD modunun çok ötesinde yeni bir 'Detay Kurtarma' teknolojisidir. Bulanık dokuları, titreyen çizgileri ve yüzey detaylarını analiz edip 'Mikro-Kontrast' ekleyerek fotoğrafın sanki çok daha kaliteli bir lensle çekilmiş gibi görünmesini sağlar.</p>
+          </div>
+
           {/* KULLANICI İSTEĞİ İLE EKLENEN YENİ SORULAR - GÜNCELLENMİŞ VERSİYON */}
           <div className="bg-white/[0.03] p-5 rounded-2xl border border-white/5 break-inside-avoid mb-6"><h3 className="text-white font-bold text-xs uppercase tracking-wider mb-2 flex items-center gap-2"><Menu size={14} className="text-indigo-400" /> ANA MENÜYE NASIL GİDİLİR?</h3><p className="text-gray-400 text-xs leading-relaxed">Sol üst köşedeki "D" logosuna veya "Dump Splitter" yazısına tıklayarak istediğiniz zaman ana başlangıç ekranına dönebilirsiniz.</p></div>
           <div className="bg-white/[0.03] p-5 rounded-2xl border border-white/5 break-inside-avoid mb-6"><h3 className="text-white font-bold text-xs uppercase tracking-wider mb-2 flex items-center gap-2"><RefreshCcw size={14} className="text-red-400" /> YENİ YÜKLEME NEDİR?</h3><p className="text-gray-400 text-xs leading-relaxed">"Yeni Yükleme" butonu, mevcut çalışma alanını tamamen temizler. Listede 20/20 fotoğraf olsa bile hepsi silinir ve sıfırdan başlamanızı sağlar.</p></div>
