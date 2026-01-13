@@ -35,12 +35,19 @@ const initModels = async (type) => {
     if (type === '4x') {
         if (!upscaler4x) {
             console.log("Worker: 4X Model Yükleniyor (REAL-ESRGAN / GANS)...");
-            // Yeni kütüphane yapısı (ESRGAN-Legacy içindeki GANS modeli)
-            const esrganLib = self.EsrganLegacy || self.ESRGANLegacy;
-            if (!esrganLib) throw new Error("4X Kütüphanesi Yüklenemedi.");
+
+            // Kütüphane yükleme düzeltmesi:
+            // @upscalerjs/esrgan-legacy 'default' export altında 'gans' modelini barındırır.
+            const esrganLib = self['@upscalerjs/esrgan-legacy'] || self.esrganLegacy || self.EsrganLegacy;
+
+            if (!esrganLib) throw new Error("4X Kütüphanesi (Real-ESRGAN) bulunamadı. CDN hatası olabilir.");
+
+            // Model seçimi: 'gans' (Keskin) veya 'div2k/4x' (Varsayılan)
+            // Genellikle esrganLib doğrudan model objesidir veya altında 'gans' vardır.
+            const modelToUse = esrganLib.gans || esrganLib.default || esrganLib;
 
             upscaler4x = new Upscaler({
-                model: esrganLib.gans, // 'esrgan-thick' yerine 'gans' (Daha keskin, daha net)
+                model: modelToUse,
             });
             await warmup(upscaler4x);
         }
