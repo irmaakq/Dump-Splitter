@@ -1438,16 +1438,20 @@ const App = () => {
 
         // Remini Style Staged Transition (File Uploading -> Processing -> Success)
         setPage('loading');
-        setLoadingMessage(`Dosya Yükleniyor... (1/${newFilesToAdd.length})`); // Aşama 1
+        setLoadingMessage(`Dosya Yükleniyor... (1/${newFilesToAdd.length})`);
 
         setTimeout(() => {
-          setLoadingMessage("AI Görüntü Analizi Yapılıyor..."); // Aşama 2: AI Hissiyatı
+          setLoadingMessage("AI Görüntü Analizi Yapılıyor...");
 
           setTimeout(() => {
-            setLoadingMessage("Geliştirme Başarılı!"); // Aşama 3: Başarı
+            setLoadingMessage("Geliştirme Başarılı!");
 
             setTimeout(() => {
-              setPage('editor'); // Bitiş
+              // Sadece durumu güncelle, sayfa geçişini useEffect yapacak
+              // veya zaten editor sayfasındaysak sorun yok.
+              if (page !== 'editor') {
+                setPage('editor');
+              }
             }, 600);
 
           }, 1200);
