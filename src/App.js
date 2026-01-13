@@ -1654,8 +1654,8 @@ const App = () => {
         // Format Değişimi Kontrolü
         if (downloadFormat !== prevFormatRef.current) {
           setAiLogs(["Format Dönüştürülüyor...", `${downloadFormat.toUpperCase()} Hazırlanıyor...`]);
-          // KULLANICI İSTEĞİ: Format değişirken net bir bekleme süresi (0.75 sn)
-          await new Promise(r => setTimeout(r, 750));
+          // KULLANICI İSTEĞİ: Format değişirken net bir bekleme süresi (0.35 sn - HIZLI AMA GÖRÜNÜR)
+          await new Promise(r => setTimeout(r, 350));
           prevFormatRef.current = downloadFormat;
         } else {
           setAiLogs(["Görünüm Düzenleniyor..."]);
