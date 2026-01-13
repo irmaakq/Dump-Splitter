@@ -1521,14 +1521,52 @@ const App = () => {
     }
   };
 
+  // --- DEBOUNCE HELPER ---
+  const useDebounce = (value, delay) => {
+    const [debouncedValue, setDebouncedValue] = useState(value);
+    useEffect(() => {
+      const handler = setTimeout(() => {
+        setDebouncedValue(value);
+      }, delay);
+      return () => {
+        clearTimeout(handler);
+      };
+    }, [value, delay]);
+    return debouncedValue;
+  };
+
+  // --- DEBOUNCED SETTINGS (Toplu State Paketleme) ---
+  // Tüm ayarları tek bir obje olarak paketleyip debounce ediyoruz.
+  // Böylece kullanıcı arka arkaya 5 kere basarsa sadece sonuncusu işlem görür.
+  const debouncedSettings = useDebounce({
+    splitCount,
+    autoEnhance,
+    hdMode,
+    optimizeMode,
+    smartCrop,
+    downloadFormat,
+    ultraHdMode,
+    ultraHd4xMode
+  }, 400); // 400ms Gecikme
+
+  // ... (Zoom vs diğer stateler aynı kalacak) ...
+
+  // (Dosya seçimi vb methodlar...)
+
   useEffect(() => {
+    // Sadece "Editor" sayfasındaysak ve bir dosya yüklüyse işlem yap
     if (page === 'editor' && uploadedFile) {
+      // Debounced ayarları kullan
+      const { splitCount, autoEnhance, hdMode, optimizeMode, smartCrop, downloadFormat, ultraHdMode, ultraHd4xMode } = debouncedSettings;
       processSplit(uploadedFile, fileType === 'video');
     }
-  }, [splitCount, autoEnhance, hdMode, optimizeMode, smartCrop, downloadFormat, page, uploadedFile, ultraHdMode, ultraHd4xMode]);
+  }, [debouncedSettings, page, uploadedFile]); // Dependency artık sadece debouncedSettings
 
   const processSplit = async (sourceUrl, isVideo, forceStandard = false) => {
     if (!sourceUrl) return;
+
+    // 1. Minimum Loading Timer Başlat (Akıcılık için)
+    const startTime = Date.now();
 
     // Concurrency control: Stale işlemlerden kurtulmak için ID ata
     const myId = ++processingIdRef.current;
@@ -1782,6 +1820,14 @@ const App = () => {
       }
 
       setSplitSlides(parts);
+
+      // --- MINIMUM DURATION ENFORCEMENT (SMOOTH LOADING) ---
+      // İşlem ne kadar hızlı biterse bitsin, toplam süreyi en az 500ms'ye tamamla.
+      const elapsedTime = Date.now() - startTime;
+      const minDuration = 500;
+      if (elapsedTime < minDuration) {
+        await new Promise(r => setTimeout(r, minDuration - elapsedTime));
+      }
 
       if (myId === processingIdRef.current) {
         setIsProcessing(false);
