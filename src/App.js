@@ -741,7 +741,7 @@ const App = () => {
     loadingTimeoutRef.current = setTimeout(() => {
       setTimeoutError(true);
       setIsProcessing(false); // İşlemi fiilen durdur (UI kilidini açmayabilir ama state'i bozar)
-    }, 2000); // TEST MODU: 2 Saniye (Normalde 15000)
+    }, 2000); // TEST MODU AÇIK: 2 Saniye
   };
 
   // Limiti temizle (işlem başarılırsa)
@@ -1859,8 +1859,7 @@ const App = () => {
         // Gecikmeli Başlat (Fade-out efekti için) - GÜNCELLENDİ: 200ms -> 10ms (Hızlandırıldı)
         await new Promise(r => setTimeout(r, 10));
 
-        // TEST MODU: Timeout ekranını test etmek için yapay gecikme (4.5 sn)
-        // Timeout süresi 2 sn olduğu için bu işlem sırasında hata verecektir.
+        // TEST MODU AKTİF: 4.5 sn bekle ki hata versin (Test için)
         await new Promise(r => setTimeout(r, 4500));
 
         // --- MEDIA LOAD ---
