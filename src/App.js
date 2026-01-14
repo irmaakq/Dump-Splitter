@@ -2216,10 +2216,36 @@ const App = () => {
       {/* YENİ TIMEOUT MODAL */}
       <TimeoutErrorModal
         isOpen={timeoutError}
-        onCancel={() => { setTimeoutError(false); setIsProcessing(false); clearLoadingTimeout(); }}
-        onRetry={() => { setTimeoutError(false); processSplit(fileList.find(f => f.url === uploadedFile)); }}
-        onNewUpload={() => { setTimeoutError(false); triggerNewUpload(); }}
-        onGoHome={() => { setTimeoutError(false); handleGoHome(); }}
+        onCancel={() => {
+          setTimeoutError(false);
+          setIsProcessing(false);
+          clearLoadingTimeout();
+        }}
+        onRetry={() => {
+          // 1. Önce Hata Ekranını Kapat ve SIFIRLA
+          setTimeoutError(false);
+          // 2. HEMEN Loading/Blur Arkasını Getir
+          setIsContentReady(false);
+          setIsProcessing(true);
+          setLoadingMessage("Tekrar Deneniyor...");
+
+          processSplit(fileList.find(f => f.url === uploadedFile));
+        }}
+        onNewUpload={() => {
+          // 1. Hata Ekranını Kapat
+          setTimeoutError(false);
+          // 2. HEMEN Loading/Blur Getir (Dosya seçerken arkası boş gözükmesin)
+          setIsContentReady(false);
+          setIsProcessing(true);
+          setLoadingMessage("Yeni Dosya Bekleniyor...");
+
+          triggerNewUpload();
+        }}
+        onGoHome={() => {
+          setTimeoutError(false);
+          clearLoadingTimeout();
+          handleGoHome();
+        }}
       />
 
       {/* ZIP PROCESSING MODAL */}
