@@ -1877,7 +1877,7 @@ const App = () => {
           }
         });
 
-        const w = isVideo ? mediaElement.videoWidth : mediaElement.height;
+        const w = isVideo ? mediaElement.videoWidth : mediaElement.width;
         const h = isVideo ? mediaElement.videoHeight : mediaElement.height;
 
         // --- PIPELINE STEP 1: Determine Essentials ---
@@ -1966,6 +1966,13 @@ const App = () => {
         }
 
         // c) AI Enhance (Color Correction)
+        // Bu CSS filtresi oldugu icin sCtx uzerinde drawImage yaparken veya sonrasinda 
+        // apply etmek icin: context'in filter ozelligini set edip kendisini kendisine cizdiririz.
+
+        // GÜNCELLENDİ: "Görsel neredeyse siyaha gömülüyor" fix.
+        // Contrast değerleri düşürüldü (Black crush'ı önlemek için)
+        // Brightness değerleri artırıldı (Karanlık bölgeleri açmak için)
+
         if (autoEnhance) {
           // Bu CSS filtresi oldugu icin sCtx uzerinde drawImage yaparken veya sonrasinda 
           // apply etmek icin: context'in filter ozelligini set edip kendisini kendisine cizdiririz.
