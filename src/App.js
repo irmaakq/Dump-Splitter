@@ -1561,29 +1561,34 @@ const App = () => {
         setUltraHdMode(DEFAULT_SETTINGS.ultraHdMode);
         setUltraHd4xMode(DEFAULT_SETTINGS.ultraHd4xMode);
 
+        // RESET LIST LOGIC (When "New Upload" is clicked)
+        // If we are already in editor, we should visually stay in editor but show processing loop.
+
+        const isAlreadyInEditor = page === 'editor';
+
         setSplitSlides([]);
         setIsProcessing(false);
 
-        // REMOVED: Do not switch page to 'loading' if essentially reloading same file or replacing.
-        // Instead, just use processing state if needed, or if it's a "reset" replacement, maybe 'loading' page is fine?
-        // Actually user said: "o +'dan dosya yüklüyorsam editör sayfası gözükmesü lazım"
-        // If we are replacing the ONLY file, maybe 'loading' page is acceptable?
-        // But if we are adding files, we DEFINITELY should not switch page.
+        if (isAlreadyInEditor) {
+          // STAY IN EDITOR, SHOW OVERLAY
+          setIsProcessing(true);
+          setLoadingMessage('Dosya Yükleniyor...');
+          startLoadingTimeout();
 
-        // Let's stick to user request: "editör sayfası gözükmesi lazım"
-        // So we will trigger processing overlay instead of full page loading.
-
-        setSplitSlides([]);
-        setIsProcessing(true); // Show overlay instead of full page
-        setLoadingMessage('Dosya Yükleniyor...');
-
-        startLoadingTimeout();
-
-        // Simulate loading delay for UX then finish
-        setTimeout(() => {
-          setIsProcessing(false);
-          clearLoadingTimeout();
-        }, 800);
+          // Simulate loading delay for UX then finish
+          setTimeout(() => {
+            setIsProcessing(false);
+            clearLoadingTimeout();
+          }, 800);
+        } else {
+          // LANDING -> LOADING -> EDITOR
+          setPage('loading');
+          startLoadingTimeout();
+          setTimeout(() => {
+            setPage('editor');
+            clearLoadingTimeout();
+          }, 800);
+        }
       } else {
         setFileList(prev => [...prev, ...newFilesToAdd]);
         // If we were on landing, switch to loading then editor.
@@ -2428,7 +2433,7 @@ const App = () => {
                   <div className={`w-full ${splitCount === 1 ? 'max-w-none px-2 md:px-4' : 'max-w-6xl'} mx-auto space-y-8 md:space-y-16 pb-32 md:pb-40 flex flex-col items-center`}>
                     <div className="text-center mt-4"><h3 className="text-2xl md:text-4xl font-black uppercase tracking-tighter italic">Bölünen Parçalar</h3></div>
                     {/* GÜNCELLENDİ: justify-items-center ve grid gap ayarı */}
-                    <div className={`grid gap-4 md:gap-8 w-full justify-items-center place-items-center ${splitCount === 1 ? 'grid-cols-1' : (splitCount % 2 !== 0 || splitCount === 2 ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2')}`}>
+                    <div className={`grid gap-4 md:gap-8 w-full justify-items-center ${splitCount === 1 ? 'grid-cols-1' : (splitCount % 2 !== 0 || splitCount === 2 ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2')}`}>
                       {splitSlides.length > 0 ? splitSlides.map((s) => (
                         <div key={`${uploadedFile}-${s.id}`} style={{ aspectRatio: s.aspectRatio }} className="relative w-full max-w-[500px] h-auto max-h-[50vh] md:max-h-[70vh] group hover:scale-[1.01] transition-all flex items-center justify-center snap-center rounded-2xl md:rounded-3xl overflow-hidden shadow-2xl bg-black">
                           {/* DYNAMIC BACKGROUND (BLUR) - Fills gaps */}
