@@ -337,19 +337,19 @@ const TimeoutErrorModal = ({ isOpen, onCancel, onRetry, onNewUpload, onGoHome })
         </p>
 
         <div className="grid grid-cols-1 gap-3">
-          <button onClick={onRetry} className="bg-white text-black font-bold py-3.5 rounded-xl hover:bg-gray-200 transition-all uppercase text-xs flex items-center justify-center gap-2">
+          <button onClick={onRetry} className="bg-white text-black font-black py-3.5 rounded-xl hover:bg-gray-200 transition-all uppercase text-xs flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(255,255,255,0.1)] hover:shadow-[0_0_25px_rgba(255,255,255,0.4)] hover:scale-[1.02] active:scale-95">
             <RefreshCcw size={16} /> Tekrar Dene
           </button>
 
-          <button onClick={onNewUpload} className="bg-white/10 text-white font-bold py-3.5 rounded-xl hover:bg-white/20 transition-all uppercase text-xs flex items-center justify-center gap-2 border border-white/5">
+          <button onClick={onNewUpload} className="bg-white text-black font-black py-3.5 rounded-xl hover:bg-gray-200 transition-all uppercase text-xs flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(255,255,255,0.1)] hover:shadow-[0_0_25px_rgba(255,255,255,0.4)] hover:scale-[1.02] active:scale-95">
             <Upload size={16} /> Yeni Dosya Yükle
           </button>
 
-          <button onClick={onGoHome} className="bg-white/5 text-gray-300 font-bold py-3.5 rounded-xl hover:bg-white/10 transition-all uppercase text-xs flex items-center justify-center gap-2">
+          <button onClick={onGoHome} className="bg-white text-black font-black py-3.5 rounded-xl hover:bg-gray-200 transition-all uppercase text-xs flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(255,255,255,0.1)] hover:shadow-[0_0_25px_rgba(255,255,255,0.4)] hover:scale-[1.02] active:scale-95">
             <Home size={16} /> Ana Menü
           </button>
 
-          <button onClick={onCancel} className="text-red-400 font-bold py-2 rounded-xl hover:bg-red-500/10 transition-all uppercase text-[10px] mt-2">
+          <button onClick={onCancel} className="text-red-400 font-bold py-2 rounded-xl hover:bg-red-500/10 transition-all uppercase text-[10px] mt-2 hover:brightness-125">
             İptal Et ve Geri Dön
           </button>
         </div>
