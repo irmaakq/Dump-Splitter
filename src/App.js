@@ -1564,15 +1564,37 @@ const App = () => {
         setSplitSlides([]);
         setIsProcessing(false);
 
-        setPage('loading');
-        startLoadingTimeout(); // Start timeout for new upload
+        // REMOVED: Do not switch page to 'loading' if essentially reloading same file or replacing.
+        // Instead, just use processing state if needed, or if it's a "reset" replacement, maybe 'loading' page is fine?
+        // Actually user said: "o +'dan dosya yüklüyorsam editör sayfası gözükmesü lazım"
+        // If we are replacing the ONLY file, maybe 'loading' page is acceptable?
+        // But if we are adding files, we DEFINITELY should not switch page.
+
+        // Let's stick to user request: "editör sayfası gözükmesi lazım"
+        // So we will trigger processing overlay instead of full page loading.
+
+        setSplitSlides([]);
+        setIsProcessing(true); // Show overlay instead of full page
+        setLoadingMessage('Dosya Yükleniyor...');
+
+        startLoadingTimeout();
+
+        // Simulate loading delay for UX then finish
         setTimeout(() => {
-          setPage('editor');
-          clearLoadingTimeout(); // Clear timeout on editor load
+          setIsProcessing(false);
+          clearLoadingTimeout();
         }, 800);
       } else {
         setFileList(prev => [...prev, ...newFilesToAdd]);
-        if (page === 'landing' || !uploadedFile) {
+        // If we were on landing, switch to loading then editor.
+        // If we were on editor (adding more files), STAY on editor.
+
+        // GÜNCELLENDİ: "Upload New" (+ button) vs "First Upload" detection
+        // If page is ALREADY editor, assume adding files -> STAY ON EDITOR
+        const isAlreadyInEditor = page === 'editor';
+        const isFirstUpload = !uploadedFile && page !== 'editor';
+
+        if (isFirstUpload) {
           setUploadedFile(newFilesToAdd[0].url);
           setFileType(newFilesToAdd[0].type);
 
@@ -1588,29 +1610,38 @@ const App = () => {
           setSplitSlides([]);
           setIsProcessing(false);
 
-        }
-
-        // Remini Style Staged Transition (File Uploading -> Processing -> Success)
-        setPage('loading');
-        setLoadingMessage(`Dosya Yükleniyor... (1/${newFilesToAdd.length})`);
-        startLoadingTimeout(); // Start timeout for staged transition
-
-        setTimeout(() => {
-          setLoadingMessage("AI Görüntü Analizi Yapılıyor...");
+          // INITIAL UPLOAD -> FULL PAGE TRANSITION
+          setPage('loading');
+          setLoadingMessage(`Dosya Yükleniyor... (1/${newFilesToAdd.length})`);
+          startLoadingTimeout();
 
           setTimeout(() => {
-            setLoadingMessage("Geliştirme Başarılı!");
-
+            setLoadingMessage("AI Görüntü Analizi Yapılıyor...");
             setTimeout(() => {
-              // FORCE SWITCH TO EDITOR
-              setPage('editor');
-              setLoadingMessage('İşleniyor...'); // Reset message for next time
-              clearLoadingTimeout(); // Clear timeout on editor load
-            }, 600);
+              setLoadingMessage("Geliştirme Başarılı!");
+              setTimeout(() => {
+                setPage('editor');
+                setLoadingMessage('İşleniyor...');
+                clearLoadingTimeout();
+              }, 600);
+            }, 1200);
+          }, 800);
 
-          }, 1200);
+        } else {
+          // ADDING TO EXISTING -> STAY IN EDITOR, SHOW OVERLAY
+          // Force page to ensure it stays editor
+          if (page !== 'editor') setPage('editor');
 
-        }, 800);
+          setIsProcessing(true);
+          setLoadingMessage('Dosya Ekleniyor...');
+          startLoadingTimeout();
+
+          // Quick feedback then ready
+          setTimeout(() => {
+            setIsProcessing(false);
+            clearLoadingTimeout();
+          }, 1000);
+        }
       }
     }
 
@@ -2396,7 +2427,8 @@ const App = () => {
                 <div className="w-full h-full p-4 md:p-12 flex flex-col overflow-y-auto custom-scrollbar bg-black/40">
                   <div className={`w-full ${splitCount === 1 ? 'max-w-none px-2 md:px-4' : 'max-w-6xl'} mx-auto space-y-8 md:space-y-16 pb-32 md:pb-40 flex flex-col items-center`}>
                     <div className="text-center mt-4"><h3 className="text-2xl md:text-4xl font-black uppercase tracking-tighter italic">Bölünen Parçalar</h3></div>
-                    <div className={`grid gap-6 md:gap-12 w-full justify-items-center ${splitCount === 1 ? 'grid-cols-1' : (splitCount % 2 !== 0 || splitCount === 2 ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2')}`}>
+                    {/* GÜNCELLENDİ: justify-items-center ve grid gap ayarı */}
+                    <div className={`grid gap-4 md:gap-8 w-full justify-items-center place-items-center ${splitCount === 1 ? 'grid-cols-1' : (splitCount % 2 !== 0 || splitCount === 2 ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2')}`}>
                       {splitSlides.length > 0 ? splitSlides.map((s) => (
                         <div key={`${uploadedFile}-${s.id}`} style={{ aspectRatio: s.aspectRatio }} className="relative w-full max-w-[500px] h-auto max-h-[50vh] md:max-h-[70vh] group hover:scale-[1.01] transition-all flex items-center justify-center snap-center rounded-2xl md:rounded-3xl overflow-hidden shadow-2xl bg-black">
                           {/* DYNAMIC BACKGROUND (BLUR) - Fills gaps */}
