@@ -1881,8 +1881,8 @@ const App = () => {
           }
         });
 
-        const w = isVideo ? mediaElement.videoWidth : mediaElement.width;
-        const h = isVideo ? mediaElement.videoHeight : mediaElement.height;
+        const w = isVideo ? mediaElement.videoWidth : mediaElement.naturalWidth;
+        const h = isVideo ? mediaElement.videoHeight : mediaElement.naturalHeight;
 
         // --- PIPELINE STEP 1: Determine Essentials ---
         const upscaleFactor = ultraHd4xMode ? 4 : (ultraHdMode ? 2 : 1);
