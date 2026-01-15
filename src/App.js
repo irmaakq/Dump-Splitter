@@ -1688,7 +1688,8 @@ const App = () => {
 
   const processSplit = async (sourceUrl, isVideo, forceStandard = false) => {
     if (!sourceUrl) {
-      setIsProcessing(false); // Safety
+      setIsProcessing(false);
+      setIsContentReady(true); // GÜNCELLENDİ: Hata durumunda içeriği (veya placeholder'ı) göster
       return;
     }
 
@@ -2154,17 +2155,28 @@ const App = () => {
         onCancel={() => { setTimeoutError(false); handleGoHome(); }}
         onRetry={() => {
           setTimeoutError(false);
-          setIsProcessing(true);
-          setLoadingMessage("Yeniden Deneniyor...");
-          setIsContentReady(false);
-          if (page !== 'editor') setPage('editor');
 
-          const currentFileObj = fileList.find(f => f.url === uploadedFile);
-          if (currentFileObj) {
-            processSplit(currentFileObj.url, currentFileObj.type === 'video');
-          } else {
-            processSplit(uploadedFile, fileType === 'video');
+          // 1. Dosya varsa: GERÇEK İŞLEMİ TEKRARLA (Normal Senaryo)
+          // Kullanıcının "Yeniden Böl" dediği senaryo.
+          const hasFile = fileList.length > 0 || uploadedFile;
+          if (hasFile) {
+            setIsProcessing(true);
+            setLoadingMessage("Yeniden Deneniyor...");
+            setIsContentReady(false);
+            if (page !== 'editor') setPage('editor');
+
+            const currentFileObj = fileList.find(f => f.url === uploadedFile);
+            if (currentFileObj) {
+              processSplit(currentFileObj.url, currentFileObj.type === 'video');
+            } else {
+              processSplit(uploadedFile, fileType === 'video');
+            }
+            return;
           }
+
+          // 2. Dosya yoksa: TEST İŞLEMİNİ TEKRARLA (Debug Senaryosu)
+          // Kullanıcının "Test butonunu algılasın" dediği senaryo.
+          handleTestTimeout();
         }}
         onNewUpload={() => {
           setTimeoutError(false);
