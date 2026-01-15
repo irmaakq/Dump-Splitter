@@ -2395,7 +2395,7 @@ const App = () => {
           <section className="flex-1 bg-[#050505] p-2 md:p-6 flex flex-col items-center relative order-1 lg:order-2 min-h-[50vh] lg:min-h-0">
             <div
               ref={containerRef}
-              className={`relative w-full h-full max-w-[95vw] bg-black rounded-[32px] md:rounded-[56px] overflow-hidden border border-white/10 shadow-[0_0_150px_rgba(0,0,0,0.5)] flex items-center justify-center group/canvas my-auto transition-all duration-300 ease-in-out transform ${isContentReady ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-95 translate-y-4 blur-sm pointer-events-none'}`}
+              className={`relative w-full h-full max-w-[95vw] bg-black rounded-[32px] md:rounded-[56px] overflow-hidden border border-white/10 shadow-[0_0_150px_rgba(0,0,0,0.5)] flex items-center justify-center group/canvas my-auto transition-all duration-300 ease-in-out transform ${(isContentReady || isProcessing) ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-95 translate-y-4 blur-sm pointer-events-none'}`}
             >
               {uploadedFile ? (
                 <div className="w-full h-full p-4 md:p-12 flex flex-col overflow-y-auto custom-scrollbar bg-black/40">
