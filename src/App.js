@@ -7,7 +7,7 @@ import {
   Zap, CheckCircle2,
   Grid, DownloadCloud, FileImage,
   ShieldCheck, Cpu, Activity, Target, Lock, ServerOff, HelpCircle as HelpIcon, Info, MessageCircleQuestion, FileQuestion, ZoomIn, Maximize,
-  Download, Eye, Shield, Github, Settings, ChevronRight, Loader2, Menu, Trash2, RefreshCcw, Archive, Layers, Smartphone, Wand2, AlertTriangle, Cookie, Scale, MousePointerClick, ListChecks, Scissors, Files, Move, Minimize // Added Minimize
+  Download, Eye, Shield, Github, Settings, ChevronRight, Loader2, Menu, Trash2, RefreshCcw, Archive, Layers, Smartphone, Wand2, AlertTriangle, Cookie, Scale, MousePointerClick, ListChecks, Scissors, Files, Move, Minimize, Home // Added Home
 } from 'lucide-react';
 
 
@@ -2098,6 +2098,12 @@ const App = () => {
     }
   };
 
+  const handleTestTimeout = () => {
+    setIsProcessing(true);
+    setLoadingMessage("TEST: TIMEOUT BEKLENİYOR...");
+    startLoadingTimeout();
+  };
+
   return (
     <div className="min-h-[100dvh] bg-[#050505] text-white flex flex-col overflow-x-hidden supports-[min-height:100dvh]:min-h-[100dvh]">
       <input type="file" ref={fileInputRef} className="hidden" accept="image/*,video/*" multiple onChange={handleFileSelect} />
@@ -2551,6 +2557,16 @@ const App = () => {
                   <span className="text-center leading-tight">TOPLU<br />İNDİR</span>
                 </button>
               )}
+
+              {/* TEST TIMEOUT BUTTON - DEBUG ONLY */}
+              <button
+                onClick={handleTestTimeout}
+                disabled={!isContentReady || isProcessing || page === 'loading' || timeoutError}
+                className={`w-16 h-16 lg:w-full lg:h-auto lg:py-4 bg-red-900/50 text-white rounded-[16px] lg:rounded-[24px] font-black text-[10px] lg:text-xs shadow-xl hover:bg-red-800 transition-all active:scale-95 uppercase tracking-tighter flex flex-col lg:flex-row items-center justify-center gap-1 lg:gap-2 shrink-0 border border-red-500/30
+                  ${(!isContentReady || isProcessing || page === 'loading' || timeoutError) ? 'opacity-50 cursor-not-allowed' : ''}`}
+              >
+                <span className="text-center leading-tight">TEST<br />TIMEOUT</span>
+              </button>
             </div>
           </aside>
         </FadeInSection>
