@@ -7,7 +7,7 @@ import {
   Zap, CheckCircle2,
   Grid, DownloadCloud, FileImage,
   ShieldCheck, Cpu, Activity, Target, Lock, ServerOff, HelpCircle as HelpIcon, Info, MessageCircleQuestion, FileQuestion, ZoomIn, Maximize,
-  Download, Eye, Shield, Github, Settings, ChevronRight, Loader2, Menu, Trash2, RefreshCcw, Archive, Layers, Smartphone, Wand2, AlertTriangle, Cookie, Scale, MousePointerClick, ListChecks, Scissors, Files, Move, Minimize, Home // Added Home
+  Download, Eye, Shield, Github, Settings, ChevronRight, Loader2, Menu, Trash2, RefreshCcw, Archive, Layers, Smartphone, Wand2, AlertTriangle, Cookie, Scale, MousePointerClick, ListChecks, Scissors, Files, Move, Minimize // Added Minimize
 } from 'lucide-react';
 
 
@@ -1168,36 +1168,19 @@ const App = () => {
   const triggerNewUpload = () => {
     if (fileInputRef.current) {
       shouldResetList.current = true;
-      // GÜNCELLENDİ: Sayfa değişimi YAPILMIYOR. Sadece input tetikleniyor.
-      // Kullanıcı dosya seçerse handleFileSelect içinde sayfa değişecek.
-      // İptal ederse mevcut sayfada (Landing veya Editor) kalacak.
       fileInputRef.current.click();
     }
   };
 
   const handleGoHome = () => {
-    // GÜNCELLENDİ: Tam temizlik (Reset State)
-    setIsProcessing(false);
-    setIsContentReady(true);
-    clearLoadingTimeout();
-    setAiLogs([]);
-    setNotification(null);
-
-    // Dosyaları bellekten sil
-    fileList.forEach(f => URL.revokeObjectURL(f.url));
-    activeUrlsRef.current = [];
-
-    setFileList([]);
+    // SADELEŞTİRİLDİ: Tek seferde animasyonlu geçiş
+    setPage('landing');
     setUploadedFile(null);
+    setFileList([]);
     setSplitSlides([]);
     setZoom(100);
-
-    // Sayfa değiştir
-    setPage('landing');
     setIsMobileMenuOpen(false);
-
-    // Worker'ı sıfırla
-    cleanupCache();
+    clearLoadingTimeout(); // Clear timeout on navigating home
   };
 
   const handleDeleteCurrent = (e) => {
@@ -1481,7 +1464,6 @@ const App = () => {
         }
       }
     };
-    // ---------------------------------------------------------
 
     try {
       for (let i = 0; i < fileList.length; i++) {
@@ -1524,60 +1506,151 @@ const App = () => {
     }
   };
 
-  /* --- ANA İŞLEM FONKSİYONU --- */
-  const handleFileSelect = async (event) => {
+  const handleFileSelect = (event) => {
     const files = event.target.files;
+    if (!files || files.length === 0) return;
 
-    // GÜNCELLENDİ: İptal edilirse (dosya yoksa) hiçbir şey yapma ve mevcut sayfada kal.
-    if (!files || files.length === 0) {
-      return;
+    let currentCount = shouldResetList.current ? 0 : fileList.length;
+    let limitExceeded = false;
+    const newFilesToAdd = [];
+
+    for (let i = 0; i < files.length; i++) {
+      if (currentCount >= 20) {
+        limitExceeded = true;
+        break;
+      }
+
+      const file = files[i];
+      const url = URL.createObjectURL(file);
+      activeUrlsRef.current.push(url);
+
+      const type = file.type.startsWith('video/') ? 'video' : 'image';
+
+      const newFileObj = {
+        url,
+        type,
+        id: Date.now() + Math.random() + i,
+        settings: { ...DEFAULT_SETTINGS }
+      };
+
+      newFilesToAdd.push(newFileObj);
+      currentCount++;
     }
 
-    // GÜNCELLENDİ: Dosya seçildiyse HEMEN Loading moduna geç
-    setIsProcessing(true);
-    setLoadingMessage("Dosyalar Yükleniyor...");
-    setAiLogs(["Dosyalar Hazırlanıyor..."]);
-    startLoadingTimeout();
-
-    // Editör moduna geç (eğer orada değilsek)
-    if (page !== 'editor') {
-      setPage('editor');
+    if (limitExceeded) {
+      showToast("Maksimum 20 dosya sınırına ulaşıldı.");
     }
 
-    // İçerik henüz hazır değil
-    setIsContentReady(false);
+    if (newFilesToAdd.length > 0) {
+      skipFeedbackRef.current = false;
 
-    // Render'ın tetiklenmesi için minicik bir boşluk
-    await new Promise(r => setTimeout(r, 10));
+      if (shouldResetList.current) {
+        setFileList(newFilesToAdd);
+        shouldResetList.current = false;
 
-    const newFiles = Array.from(files).map((file, index) => ({
-      id: Date.now() + index,
-      url: URL.createObjectURL(file),
-      type: file.type.startsWith('video') ? 'video' : 'image',
-      fileObj: file,
-      settings: JSON.parse(JSON.stringify(DEFAULT_SETTINGS))
-    }));
+        setUploadedFile(newFilesToAdd[0].url);
+        setFileType(newFilesToAdd[0].type);
+        setUpscaleFactor(1); // Reset upscale history for new upload
 
-    if (shouldResetList.current) {
-      // Öncekileri temizle
-      fileList.forEach(f => cleanupFile(f.url));
-      setFileList(newFiles);
-    } else {
-      // Ekle
-      setFileList(prev => [...prev, ...newFiles]);
+        setSplitCount(DEFAULT_SETTINGS.splitCount);
+        setDownloadFormat(DEFAULT_SETTINGS.downloadFormat);
+        setAutoEnhance(DEFAULT_SETTINGS.autoEnhance);
+        setHdMode(DEFAULT_SETTINGS.hdMode);
+        setOptimizeMode(DEFAULT_SETTINGS.optimizeMode);
+        setSmartCrop(DEFAULT_SETTINGS.smartCrop);
+        setUltraHdMode(DEFAULT_SETTINGS.ultraHdMode);
+        setUltraHd4xMode(DEFAULT_SETTINGS.ultraHd4xMode);
+
+        // RESET LIST LOGIC (When "New Upload" is clicked)
+        // If we are already in editor, we should visually stay in editor but show processing loop.
+
+        const isAlreadyInEditor = page === 'editor';
+
+        setSplitSlides([]);
+        setIsProcessing(false);
+
+        if (isAlreadyInEditor) {
+          // STAY IN EDITOR, SHOW OVERLAY
+          setIsProcessing(true);
+          setLoadingMessage('Dosya Yükleniyor...');
+          startLoadingTimeout();
+
+          // Simulate loading delay for UX then finish
+          setTimeout(() => {
+            setIsProcessing(false);
+            clearLoadingTimeout();
+          }, 800);
+        } else {
+          // LANDING -> LOADING -> EDITOR
+          setPage('loading');
+          startLoadingTimeout();
+          setTimeout(() => {
+            setPage('editor');
+            clearLoadingTimeout();
+          }, 800);
+        }
+      } else {
+        setFileList(prev => [...prev, ...newFilesToAdd]);
+        // If we were on landing, switch to loading then editor.
+        // If we were on editor (adding more files), STAY on editor.
+
+        // GÜNCELLENDİ: "Upload New" (+ button) vs "First Upload" detection
+        // If page is ALREADY editor, assume adding files -> STAY ON EDITOR
+        const isAlreadyInEditor = page === 'editor';
+        const isFirstUpload = !uploadedFile && page !== 'editor';
+
+        if (isFirstUpload) {
+          setUploadedFile(newFilesToAdd[0].url);
+          setFileType(newFilesToAdd[0].type);
+
+          setSplitCount(DEFAULT_SETTINGS.splitCount);
+          setDownloadFormat(DEFAULT_SETTINGS.downloadFormat);
+          setAutoEnhance(DEFAULT_SETTINGS.autoEnhance);
+          setHdMode(DEFAULT_SETTINGS.hdMode);
+          setOptimizeMode(DEFAULT_SETTINGS.optimizeMode);
+          setSmartCrop(DEFAULT_SETTINGS.smartCrop);
+          setUltraHdMode(DEFAULT_SETTINGS.ultraHdMode);
+          setUltraHd4xMode(DEFAULT_SETTINGS.ultraHd4xMode);
+
+          setSplitSlides([]);
+          setIsProcessing(false);
+
+          // INITIAL UPLOAD -> FULL PAGE TRANSITION
+          setPage('loading');
+          setLoadingMessage(`Dosya Yükleniyor... (1/${newFilesToAdd.length})`);
+          startLoadingTimeout();
+
+          setTimeout(() => {
+            setLoadingMessage("AI Görüntü Analizi Yapılıyor...");
+            setTimeout(() => {
+              setLoadingMessage("Geliştirme Başarılı!");
+              setTimeout(() => {
+                setPage('editor');
+                setLoadingMessage('İşleniyor...');
+                clearLoadingTimeout();
+              }, 600);
+            }, 1200);
+          }, 800);
+
+        } else {
+          // ADDING TO EXISTING -> STAY IN EDITOR, SHOW OVERLAY
+          // Force page to ensure it stays editor
+          if (page !== 'editor') setPage('editor');
+
+          setIsProcessing(true);
+          setLoadingMessage('Dosya Ekleniyor...');
+          startLoadingTimeout();
+
+          // Quick feedback then ready
+          setTimeout(() => {
+            setIsProcessing(false);
+            clearLoadingTimeout();
+          }, 1000);
+        }
+      }
     }
 
-    const firstFile = newFiles[0];
-    setUploadedFile(firstFile.url);
-    setFileType(firstFile.type);
-
-    // Cache'i resetle ve işleme başla
-    cleanupCache();
-    processSplit(firstFile.url, firstFile.type === 'video');
-    setAiLogs([]); // processSplit kendi loglarını koyacak
-
-    // Inputu sıfırla
-    event.target.value = '';
+    event.target.value = null;
   };
 
   // GÜNCELLENDİ: Sürükleme başladığında efekti aç
@@ -1687,16 +1760,9 @@ const App = () => {
   }, [debouncedSettings, page, uploadedFile]); // Dependency artık sadece debouncedSettings
 
   const processSplit = async (sourceUrl, isVideo, forceStandard = false) => {
-    if (!sourceUrl) {
-      setIsProcessing(false);
-      setIsContentReady(true); // GÜNCELLENDİ: Hata durumunda içeriği (veya placeholder'ı) göster
-      return;
-    }
+    if (!sourceUrl) return;
 
-    // --- TIMEOUT & LOADING START ---
-    // GÜNCELLENDİ: İşlem başlar başlamaz Loading state'i ve Timeout'u aktif et.
-    // Bu sayede "Tekrar Dene" butonuna basıldığında da garanti loading görünür.
-    setIsProcessing(true);
+    // --- TIMEOUT BAŞLAT (YENİ) ---
     startLoadingTimeout();
 
     // 1. Minimum Loading Timer Başlat (Akıcılık için)
@@ -2102,12 +2168,6 @@ const App = () => {
     }
   };
 
-  const handleTestTimeout = () => {
-    setIsProcessing(true);
-    setLoadingMessage("TEST: TIMEOUT BEKLENİYOR...");
-    startLoadingTimeout();
-  };
-
   return (
     <div className="min-h-[100dvh] bg-[#050505] text-white flex flex-col overflow-x-hidden supports-[min-height:100dvh]:min-h-[100dvh]">
       <input type="file" ref={fileInputRef} className="hidden" accept="image/*,video/*" multiple onChange={handleFileSelect} />
@@ -2152,42 +2212,10 @@ const App = () => {
       {/* YENİ TIMEOUT MODAL */}
       <TimeoutErrorModal
         isOpen={timeoutError}
-        onCancel={() => { setTimeoutError(false); handleGoHome(); }}
-        onRetry={() => {
-          setTimeoutError(false);
-
-          // 1. Dosya varsa: GERÇEK İŞLEMİ TEKRARLA (Normal Senaryo)
-          // Kullanıcının "Yeniden Böl" dediği senaryo.
-          const hasFile = fileList.length > 0 || uploadedFile;
-          if (hasFile) {
-            setIsProcessing(true);
-            setLoadingMessage("Yeniden Deneniyor...");
-            setIsContentReady(false);
-            if (page !== 'editor') setPage('editor');
-
-            const currentFileObj = fileList.find(f => f.url === uploadedFile);
-            if (currentFileObj) {
-              processSplit(currentFileObj.url, currentFileObj.type === 'video');
-            } else {
-              processSplit(uploadedFile, fileType === 'video');
-            }
-            return;
-          }
-
-          // 2. Dosya yoksa: TEST İŞLEMİNİ TEKRARLA (Debug Senaryosu)
-          // Kullanıcının "Test butonunu algılasın" dediği senaryo.
-          handleTestTimeout();
-        }}
-        onNewUpload={() => {
-          setTimeoutError(false);
-          setIsProcessing(false);
-          triggerNewUpload();
-        }}
-        onGoHome={() => {
-          setTimeoutError(false);
-          setIsProcessing(false);
-          handleGoHome();
-        }}
+        onCancel={() => { setTimeoutError(false); setIsProcessing(false); clearLoadingTimeout(); }}
+        onRetry={() => { setTimeoutError(false); processSplit(fileList.find(f => f.url === uploadedFile)); }}
+        onNewUpload={() => { setTimeoutError(false); triggerNewUpload(); }}
+        onGoHome={() => { setTimeoutError(false); handleGoHome(); }}
       />
 
       {/* ZIP PROCESSING MODAL */}
@@ -2405,7 +2433,7 @@ const App = () => {
           <section className="flex-1 bg-[#050505] p-2 md:p-6 flex flex-col items-center relative order-1 lg:order-2 min-h-[50vh] lg:min-h-0">
             <div
               ref={containerRef}
-              className={`relative w-full h-full max-w-[95vw] bg-black rounded-[32px] md:rounded-[56px] overflow-hidden border border-white/10 shadow-[0_0_150px_rgba(0,0,0,0.5)] flex items-center justify-center group/canvas my-auto transition-all duration-300 ease-in-out transform ${(isContentReady || isProcessing) ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-95 translate-y-4 blur-sm pointer-events-none'}`}
+              className={`relative w-full h-full max-w-[95vw] bg-black rounded-[32px] md:rounded-[56px] overflow-hidden border border-white/10 shadow-[0_0_150px_rgba(0,0,0,0.5)] flex items-center justify-center group/canvas my-auto transition-all duration-300 ease-in-out transform ${isContentReady ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-95 translate-y-4 blur-sm pointer-events-none'}`}
             >
               {uploadedFile ? (
                 <div className="w-full h-full p-4 md:p-12 flex flex-col overflow-y-auto custom-scrollbar bg-black/40">
@@ -2567,16 +2595,6 @@ const App = () => {
                   <span className="text-center leading-tight">TOPLU<br />İNDİR</span>
                 </button>
               )}
-
-              {/* TEST TIMEOUT BUTTON - DEBUG ONLY */}
-              <button
-                onClick={handleTestTimeout}
-                disabled={!isContentReady || isProcessing || page === 'loading' || timeoutError}
-                className={`w-16 h-16 lg:w-full lg:h-auto lg:py-4 bg-red-900/50 text-white rounded-[16px] lg:rounded-[24px] font-black text-[10px] lg:text-xs shadow-xl hover:bg-red-800 transition-all active:scale-95 uppercase tracking-tighter flex flex-col lg:flex-row items-center justify-center gap-1 lg:gap-2 shrink-0 border border-red-500/30
-                  ${(!isContentReady || isProcessing || page === 'loading' || timeoutError) ? 'opacity-50 cursor-not-allowed' : ''}`}
-              >
-                <span className="text-center leading-tight">TEST<br />TIMEOUT</span>
-              </button>
             </div>
           </aside>
         </FadeInSection>
