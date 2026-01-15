@@ -1687,7 +1687,10 @@ const App = () => {
   }, [debouncedSettings, page, uploadedFile]); // Dependency artık sadece debouncedSettings
 
   const processSplit = async (sourceUrl, isVideo, forceStandard = false) => {
-    if (!sourceUrl) return;
+    if (!sourceUrl) {
+      setIsProcessing(false); // Safety
+      return;
+    }
 
     // --- TIMEOUT & LOADING START ---
     // GÜNCELLENDİ: İşlem başlar başlamaz Loading state'i ve Timeout'u aktif et.
@@ -2151,22 +2154,17 @@ const App = () => {
         onCancel={() => { setTimeoutError(false); handleGoHome(); }}
         onRetry={() => {
           setTimeoutError(false);
-          // GÜNCELLENDİ: Retry mantığı
-          // Önce modalı kapat, sonra loading state'e geç ve işlemi başlat
-          setIsProcessing(true); // Loading overlay hemen görünsün
+          setIsProcessing(true);
           setLoadingMessage("Yeniden Deneniyor...");
-          setIsContentReady(false); // İçeriği geçici gizle
+          setIsContentReady(false);
+          if (page !== 'editor') setPage('editor');
 
-          // Ufak bir gecikme ile (modal kapansın diye) işlemi tetikle
-          setTimeout(() => {
-            const currentFileObj = fileList.find(f => f.url === uploadedFile);
-            if (currentFileObj) {
-              processSplit(currentFileObj.url, currentFileObj.type === 'video');
-            } else {
-              // Fallback
-              processSplit(uploadedFile, fileType === 'video');
-            }
-          }, 100);
+          const currentFileObj = fileList.find(f => f.url === uploadedFile);
+          if (currentFileObj) {
+            processSplit(currentFileObj.url, currentFileObj.type === 'video');
+          } else {
+            processSplit(uploadedFile, fileType === 'video');
+          }
         }}
         onNewUpload={() => {
           setTimeoutError(false);
