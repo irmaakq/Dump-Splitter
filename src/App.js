@@ -2148,7 +2148,7 @@ const App = () => {
       {/* YENİ TIMEOUT MODAL */}
       <TimeoutErrorModal
         isOpen={timeoutError}
-        onCancel={() => { setTimeoutError(false); setIsProcessing(false); clearLoadingTimeout(); }}
+        onCancel={() => { setTimeoutError(false); handleGoHome(); }}
         onRetry={() => {
           setTimeoutError(false);
           // GÜNCELLENDİ: Retry mantığı
