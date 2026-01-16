@@ -7,7 +7,7 @@ import {
   Zap, CheckCircle2,
   Grid, DownloadCloud, FileImage,
   ShieldCheck, Cpu, Activity, Target, Lock, ServerOff, HelpCircle as HelpIcon, Info, MessageCircleQuestion, FileQuestion, ZoomIn, Maximize,
-  Download, Eye, Shield, Github, Settings, ChevronRight, Loader2, Menu, Trash2, RefreshCcw, Archive, Layers, Smartphone, Wand2, AlertTriangle, Cookie, Scale, MousePointerClick, ListChecks, Scissors, Files, Move, Minimize, Home // Added Home
+  Download, Eye, Shield, Github, Settings, ChevronRight, Loader2, Menu, Trash2, RefreshCcw, Archive, Layers, Smartphone, Wand2, AlertTriangle, Cookie, Scale, MousePointerClick, ListChecks, Scissors, Files, Move, Minimize, Home, Timer, Eraser, Columns, FolderInput // Added New Icons
 } from 'lucide-react';
 
 
@@ -333,7 +333,7 @@ const TimeoutErrorModal = ({ isOpen, onCancel, onRetry, onNewUpload, onGoHome })
 
         <h2 className="text-2xl font-black text-white uppercase mb-2">İşlem Çok Uzun Sürdü</h2>
         <p className="text-gray-400 text-sm mb-8 leading-relaxed">
-          Beklenen süre aşıldı. Bağlantı sorunu olabilir veya dosya çok büyük olabilir. Ne yapmak istersiniz?
+          Beklenen süre aşıldı. Lütfen ana menüye dönüp dosyanızı tekrar yükleyin. Sorun devam ederse farklı bir dosya denemenizi öneririz.
         </p>
 
         <div className="w-full">
@@ -462,7 +462,7 @@ const FAQModal = ({ isOpen, onClose }) => {
           <div className="bg-white/[0.03] p-5 rounded-2xl border border-white/5 break-inside-avoid mb-6"><h3 className="text-white font-bold text-xs uppercase tracking-wider mb-2 flex items-center gap-2"><RefreshCcw size={14} className="text-red-400" /> YENİ YÜKLEME NEDİR?</h3><p className="text-gray-400 text-xs leading-relaxed">"Yeni Yükleme" butonu, mevcut çalışma alanını tamamen temizler. Listede 20/20 fotoğraf olsa bile hepsi silinir ve sıfırdan başlamanızı sağlar.</p></div>
           <div className="bg-white/[0.03] p-5 rounded-2xl border border-white/5 break-inside-avoid mb-6"><h3 className="text-white font-bold text-xs uppercase tracking-wider mb-2 flex items-center gap-2"><Archive size={14} className="text-amber-400" /> TOPLU İNDİR BASINCA NEDEN BAZI İMAGELER İNMİYOR?</h3><p className="text-gray-400 text-xs leading-relaxed">Bazı dosya türleri toplu indirme (ZIP) sırasında teknik nedenlerle atlanabilir. Eğer bir fotoğraf inmezse, sol taraftaki listeden o fotoğrafın üzerine tıklayıp tekrar 'TÜMÜNÜ İNDİR' butonuna basabilir veya parçanın üzerindeki tekli indirme butonunu kullanarak indirebilirsiniz.</p></div>
           <div className="bg-white/[0.03] p-5 rounded-2xl border border-white/5 break-inside-avoid mb-6"><h3 className="text-white font-bold text-xs uppercase tracking-wider mb-2 flex items-center gap-2"><Settings size={14} className="text-lime-400" /> EDİTÖRDEKİ ÖZELLİKLER (AI, HD, OPTIMIZE) NE İŞE YARAR?</h3><p className="text-gray-400 text-xs leading-relaxed">Bu özellikler fotoğrafınızı geliştirmenizi sağlar: <strong>AI Enhance</strong> renkleri canlandırır, <strong>HD Mode</strong> netliği artırır, <strong>Optimize</strong> boyutu küçültür, <strong>Smart Crop</strong> kadrajı düzeltir ve <strong>Ultra HD</strong> çözünürlüğü yükseltir. Her özelliğin yanındaki bilgi butonuna basarak daha detaylı açıklama görebilirsiniz.</p></div>
-          <div className="bg-white/[0.03] p-5 rounded-2xl border border-white/5 break-inside-avoid mb-6"><h3 className="text-white font-bold text-xs uppercase tracking-wider mb-2 flex items-center gap-2"><Grid size={14} className="text-violet-400" /> NEDEN 3 SÜTUN (YAN YANA 3) YERİNE HEP 2 SÜTUN BÖLÜYOR?</h3><p className="text-gray-400 text-xs leading-relaxed">Instagram'da en iyi görünüm için 2 sütunlu yapı standarttır. Eğer 3 sütun (yan yana 3 parça) yapılsaydı, her bir parça "kürdan gibi" ince ve dar olurdu. Bu da fotoğrafın anlaşılmaz görünmesine neden olur. Bu yüzden sistem, görsel kalitesini korumak için 3 yerine 2 sütunlu (daha geniş parçalı) düzeni kullanır.</p></div>
+          <div className="bg-white/[0.03] p-5 rounded-2xl border border-white/5 break-inside-avoid mb-6"><h3 className="text-white font-bold text-xs uppercase tracking-wider mb-2 flex items-center gap-2"><Columns size={14} className="text-indigo-500" /> NEDEN 3 SÜTUN (YAN YANA 3) YERİNE HEP 2 SÜTUN BÖLÜYOR?</h3><p className="text-gray-400 text-xs leading-relaxed">Instagram'da en iyi görünüm için 2 sütunlu yapı standarttır. Eğer 3 sütun (yan yana 3 parça) yapılsaydı, her bir parça "kürdan gibi" ince ve dar olurdu. Bu da fotoğrafın anlaşılmaz görünmesine neden olur. Bu yüzden sistem, görsel kalitesini korumak için 3 yerine 2 sütunlu (daha geniş parçalı) düzeni kullanır.</p></div>
           <div className="bg-white/[0.03] p-5 rounded-2xl border border-white/5 break-inside-avoid mb-6"><h3 className="text-white font-bold text-xs uppercase tracking-wider mb-2 flex items-center gap-2"><Activity size={14} className="text-cyan-400" /> HD & OPTIMIZE AÇINCA NEDEN FARK GÖREMİYORUM?</h3><p className="text-gray-400 text-xs leading-relaxed">Bu özellikler filtre değil, teknik kalite ayarlarıdır. <strong>HD Mode</strong> sıkıştırmayı kapatır (%100 Kalite), <strong>Optimize</strong> ise boyutu küçültür. Gözle görülür bir değişim (renk, netlik) istiyorsanız <strong>AI Enhance</strong> özelliğini açmalısınız.</p></div>
           <div className="bg-white/[0.03] p-5 rounded-2xl border border-white/5 break-inside-avoid mb-6"><h3 className="text-white font-bold text-xs uppercase tracking-wider mb-2 flex items-center gap-2"><AlertTriangle size={14} className="text-red-500" /> HATA RAPORU NEDİR?</h3><p className="text-gray-400 text-xs leading-relaxed">Eğer indirme sırasında teknik bir sorun (hafıza dolması vb.) oluşursa, size bozuk dosya vermek yerine <strong>Hata_Raporu.txt</strong> dosyası verilir. Bu dosyayı açarak sorunun nedenini ve 'Tekrar Dene', 'Tekli İndir' gibi çözüm yollarını Türkçe olarak okuyabilirsiniz.</p></div>
           <div className="bg-white/[0.03] p-5 rounded-2xl border border-white/5 break-inside-avoid mb-6"><h3 className="text-white font-bold text-xs uppercase tracking-wider mb-2 flex items-center gap-2"><Smartphone size={14} className="text-emerald-400" /> İNDİRİLEN DOSYALAR NEREYE KAYDEDİLİYOR?</h3><p className="text-gray-400 text-xs leading-relaxed"><strong>iPhone (iOS):</strong> İndirilenler 'Fotoğraflar'a değil, mavi renkli <strong>'Dosyalar'</strong> uygulamasına kaydedilir. <strong>Android:</strong> Direkt 'Galeri' veya 'İndirilenler' klasörüne iner. Bildirim panelinden hemen ulaşabilirsiniz.</p></div>
@@ -471,7 +471,7 @@ const FAQModal = ({ isOpen, onClose }) => {
           <div className="bg-white/[0.03] p-5 rounded-2xl border border-white/5 break-inside-avoid mb-6"><h3 className="text-white font-bold text-xs uppercase tracking-wider mb-2 flex items-center gap-2"><ListChecks size={14} className="text-lime-300" /> HER FOTOĞRAFA FARKLI AYAR YAPARSAM KORUNUR MU?</h3><p className="text-gray-400 text-xs leading-relaxed">Evet, kesinlikle. 20 fotoğraf yükleyip her birine farklı ayar (birine HD, diğerine 3 parça vb.) yapabilirsiniz. 'Tümünü İndir' dediğinizde sistem sırayla her fotoğrafı kendi özel ayarıyla işleyip indirir.</p></div>
           <div className="bg-white/[0.03] p-5 rounded-2xl border border-white/5 break-inside-avoid mb-6"><h3 className="text-white font-bold text-xs uppercase tracking-wider mb-2 flex items-center gap-2"><Scissors size={14} className="text-rose-300" /> EN İYİ SONUCU ALMAK İÇİN KAÇA BÖLMELİYİM?</h3><p className="text-gray-400 text-xs leading-relaxed">Altın kural: Fotoğrafınızın doğal yapısına (yani içindeki kare sayısına) göre bölün. Örneğin 4 kareli bir Dump fotoğrafınız varsa, en sağlıklı sonuç için 4 parçaya bölün. Eğer 4 kareli fotoğrafı 10'a bölerseniz, parçalar anlamsız ve çok küçük olur.</p></div>
           <div className="bg-white/[0.03] p-5 rounded-2xl border border-white/5 break-inside-avoid mb-6"><h3 className="text-white font-bold text-xs uppercase tracking-wider mb-2 flex items-center gap-2"><Files size={14} className="text-indigo-300" /> TOPLU İNDİR İLE TÜMÜNÜ İNDİR ARASINDA FARK VAR MI?</h3><p className="text-gray-400 text-xs leading-relaxed">Evet, kapsam farkı vardır. <strong>"Tümünü İndir"</strong> butonu sadece o an ekranda gördüğünüz 1 fotoğrafın parçalarını indirir. <strong>"Toplu İndir"</strong> ise sol listedeki 10-20 fotoğrafın tamamını, her biri ayrı klasör olacak şekilde tek bir paket (ZIP) halinde indirir.</p></div>
-          <div className="bg-white/[0.03] p-5 rounded-2xl border border-white/5 break-inside-avoid mb-6"><h3 className="text-white font-bold text-xs uppercase tracking-wider mb-2 flex items-center gap-2"><RefreshCcw size={14} className="text-orange-400" /> NEDEN UYGULAMADAN ÇIKINCA VEYA YENİLEYİNCE HER ŞEY SİLİNİYOR?</h3><p className="text-gray-400 text-xs leading-relaxed">Bu bir hata değil, güvenlik tercihidir. Fotoğraflarınız sadece geçici hafızada (RAM) tutulur. Sayfayı yenilediğinizde veya uygulamayı <strong>tamamen kapattığınızda</strong> her şey silinir. Ancak; <strong>uygulamayı kapatmadan</strong> sadece ana ekrana dönerseniz veya başka bir uygulamaya/sekmeye geçip geri dönerseniz <strong>resimleriniz gitmez</strong>, kaldığınız yerden devam edebilirsiniz.</p></div>
+          <div className="bg-white/[0.03] p-5 rounded-2xl border border-white/5 break-inside-avoid mb-6"><h3 className="text-white font-bold text-xs uppercase tracking-wider mb-2 flex items-center gap-2"><Eraser size={14} className="text-rose-500" /> NEDEN UYGULAMADAN ÇIKINCA VEYA YENİLEYİNCE HER ŞEY SİLİNİYOR?</h3><p className="text-gray-400 text-xs leading-relaxed">Bu bir hata değil, güvenlik tercihidir. Fotoğraflarınız sadece geçici hafızada (RAM) tutulur. Sayfayı yenilediğinizde veya uygulamayı <strong>tamamen kapattığınızda</strong> her şey silinir. Ancak; <strong>uygulamayı kapatmadan</strong> sadece ana ekrana dönerseniz veya başka bir uygulamaya/sekmeye geçip geri dönerseniz <strong>resimleriniz gitmez</strong>, kaldığınız yerden devam edebilirsiniz.</p></div>
           <div className="bg-white/[0.03] p-5 rounded-2xl border border-white/5 break-inside-avoid mb-6"><h3 className="text-white font-bold text-xs uppercase tracking-wider mb-2 flex items-center gap-2"><Trash2 size={14} className="text-red-400" /> YENİDEN BÖL, SİL VE SIFIRLA NE İŞE YARAR?</h3><p className="text-gray-400 text-xs leading-relaxed"><strong>Yeniden Böl:</strong> Mevcut ayarlarla işlemi tekrar başlatır. Olası bir takılma durumunda (bug) sayfayı yenilemeden düzeltmenizi sağlar.<br /><strong>Sil:</strong> Sadece o an seçili olan fotoğrafı siler.<br /><strong>Sıfırla:</strong> Seçili fotoğraf hariç, listedeki diğer tüm fotoğrafları temizler.</p></div>
           <div className="bg-white/[0.03] p-5 rounded-2xl border border-white/5 break-inside-avoid mb-6"><h3 className="text-white font-bold text-xs uppercase tracking-wider mb-2 flex items-center gap-2"><Layers size={14} className="text-blue-400" /> YAN TARAFTAKİ 1/20 VE (+) İKONU NE İŞE YARAR?</h3><p className="text-gray-400 text-xs leading-relaxed"><strong>1/20:</strong> Sol taraftaki menüde, şu an kaç fotoğraf yüklü olduğunu ve kotanızı gösterir (En fazla 20).<br /><strong>(+) İkonu:</strong> Mevcut listenizi silmeden, üzerine yeni fotoğraflar eklemenizi sağlar. Böylece tek seferde birden çok albümü birleştirip toplu işlem yapabilirsiniz.</p></div>
           <div className="bg-white/[0.03] p-5 rounded-2xl border border-white/5 break-inside-avoid mb-6"><h3 className="text-white font-bold text-xs uppercase tracking-wider mb-2 flex items-center gap-2"><Grid size={14} className="text-violet-400" /> PARÇA SAYISI (3, 4, 6, 9) NEDEN FARKLI BÖLÜNÜYOR?</h3><p className="text-gray-400 text-xs leading-relaxed"><strong>Çift Sayılar (4, 6, 8, 10):</strong> Sistem bunları 'Izgara' mantığıyla 2 sütuna böler. Bu yüzden parçalar dikey ve karemsi görünür.<br /><strong>Tek Sayılar (3, 5, 7, 9):</strong> 2'ye tam bölünemedikleri için 'Şerit' mantığıyla tek sütuna (alt alta) böler. Bu yüzden parçalar yatay ve ince görünür. Bu normal bir durumdur.</p></div>
@@ -479,7 +479,8 @@ const FAQModal = ({ isOpen, onClose }) => {
           <div className="bg-white/[0.03] p-5 rounded-2xl border border-white/5 break-inside-avoid mb-6"><h3 className="text-white font-bold text-xs uppercase tracking-wider mb-2 flex items-center gap-2"><Github size={14} className="text-white" /> BU SİTE AÇIK KAYNAK KODLU MU?</h3><p className="text-gray-400 text-xs leading-relaxed">Evet, Dump Splitter %100 Açık Kaynaklıdır (Open Source). Kodlarımızı şeffaf bir şekilde GitHub üzerinde inceleyebilir, geliştirebilir veya güvenliğini kendiniz test edebilirsiniz.</p></div>
           <div className="bg-white/[0.03] p-5 rounded-2xl border border-white/5 break-inside-avoid mb-6"><h3 className="text-white font-bold text-xs uppercase tracking-wider mb-2 flex items-center gap-2"><ShieldCheck size={14} className="text-green-500" /> BU SİTE LİSANSLI MI?</h3><p className="text-gray-400 text-xs leading-relaxed">Evet, bu proje <strong>GNU Genel Kamu Lisansı v2.0 (GPLv2)</strong> ile korunmaktadır. Bu lisans, yazılımın özgürce kullanılmasına, dağıtılmasına ve değiştirilmesine izin verirken, özgürlüğünün korunmasını da garanti altına alır.</p></div>
           <div className="bg-white/[0.03] p-5 rounded-2xl border border-white/5 break-inside-avoid mb-6"><h3 className="text-white font-bold text-xs uppercase tracking-wider mb-2 flex items-center gap-2"><Move size={14} className="text-purple-400" /> ALTTAKİ SİYAH ÇUBUK (BAR) NEDİR? (+), (-) VE İKONLAR NE YAPAR?</h3><p className="text-gray-400 text-xs leading-relaxed">Bu <strong>Kontrol Paneli</strong> size şunları sunar:<br /><strong>Çözünürlük (Örn: 1080x1920):</strong> Fotoğrafınızın o anki çıkış boyutunu gösterir.<br /><strong>(- / +) ve %:</strong> Ekranda fotoğrafı <strong>yakınlaştırıp uzaklaştırmanızı</strong> sağlar. Bu sadece görünümü değiştirir, fotoğrafın boyutunu bozmaz.<br /><strong>Kare İkon:</strong> Yakınlaştırmayı sıfırlar (%100 yapar).<br /><strong>Hareket:</strong> Paneli sağa-sola sürükleyebilirsiniz. Kullanım kolaylığı için alt kısıma sabitlenmiştir.</p></div>
-          <div className="bg-white/[0.03] p-5 rounded-2xl border border-white/5 break-inside-avoid mb-6"><h3 className="text-white font-bold text-xs uppercase tracking-wider mb-2 flex items-center gap-2"><Files size={14} className="text-indigo-400" /> TOPLU FOTOĞRAF VİDEO YÜKLEYEBİLİR / SÜRÜKLEYEBİLİR MİYİM?</h3><p className="text-gray-400 text-xs leading-relaxed">Evet! İsterseniz 'Dosya Yükle' butonuna basıp galerinizden birden fazla fotoğrafı videoyu aynı anda seçebilir, isterseniz de bilgisayardan klasördeki fotoğrafları tutup topluca ekranın içine sürükleyebilirsiniz (Drag & Drop). Sistem hepsini sıraya dizecektir. (Tek seferde en fazla 20 adet yükleyebilirsiniz).</p></div>
+          <div className="bg-white/[0.03] p-5 rounded-2xl border border-white/5 break-inside-avoid mb-6"><h3 className="text-white font-bold text-xs uppercase tracking-wider mb-2 flex items-center gap-2"><FolderInput size={14} className="text-cyan-500" /> TOPLU FOTOĞRAF VİDEO YÜKLEYEBİLİR / SÜRÜKLEYEBİLİR MİYİM?</h3><p className="text-gray-400 text-xs leading-relaxed">Evet! İsterseniz 'Dosya Yükle' butonuna basıp galerinizden birden fazla fotoğrafı videoyu aynı anda seçebilir, isterseniz de bilgisayardan klasördeki fotoğrafları tutup topluca ekranın içine sürükleyebilirsiniz (Drag & Drop). Sistem hepsini sıraya dizecektir. (Tek seferde en fazla 20 adet yükleyebilirsiniz).</p></div>
+          <div className="bg-white/[0.03] p-5 rounded-2xl border border-white/5 break-inside-avoid mb-6"><h3 className="text-white font-bold text-xs uppercase tracking-wider mb-2 flex items-center gap-2"><Timer size={14} className="text-orange-500" /> LOADING EKRANINDA UZUN SÜRE KALIRSAM NE YAPMALIYIM?</h3><p className="text-gray-400 text-xs leading-relaxed">Eğer yükleme ekranı 30 saniyeden uzun sürüyorsa bu genellikle tarayıcı hafızasının (RAM) dolmasından veya yüklenen dosyanın çok yüksek çözünürlüklü (8K/4K) olmasından kaynaklanır.<br /><br /><strong>Çözüm:</strong> Sayfayı yenileyin (F5), tarayıcınızın önbelleğini temizleyin veya daha hafif bir dosya ile tekrar deneyin. Sorun devam ederse farklı bir tarayıcı (Chrome/Safari) kullanmayı deneyebilirsiniz.</p></div>
         </div>
         <button onClick={onClose} className="w-full bg-white text-black font-black py-4 rounded-xl mt-8 hover:bg-white hover:text-black transition-all uppercase tracking-widest text-xs shadow-[0_0_40px_rgba(255,255,255,0.2)] hover:shadow-[0_0_60px_rgba(255,255,255,0.4)]">Tamamdır, Anladım</button>
       </div>
@@ -642,6 +643,120 @@ const MobileMenu = ({ isOpen, onClose, onShowAbout, onShowHowTo, onShowFAQ, onSh
 };
 
 
+// --- HELPER FUNCTIONS (Optimized & Extracted) ---
+
+const loadAiLibrary = () => {
+  return new Promise((resolve, reject) => {
+    if (window.Upscaler && window.tf) {
+      resolve();
+      return;
+    }
+
+    const loadScript = (src) => {
+      return new Promise((res, rej) => {
+        const script = document.createElement('script');
+        script.src = src;
+        script.onload = res;
+        script.onerror = rej;
+        document.body.appendChild(script);
+      });
+    };
+
+    // Load sequentially: TFJS -> Upscaler Model -> Upscaler Core
+    // Using unpkg as primary for better cache hits
+    loadScript("https://unpkg.com/@tensorflow/tfjs@4.17.0/dist/tf.min.js")
+      .then(() => loadScript("https://unpkg.com/@upscalerjs/default-model@latest/dist/umd/index.min.js"))
+      .then(() => loadScript("https://unpkg.com/upscaler@latest/dist/browser/umd/upscaler.min.js"))
+      .then(() => resolve())
+      .catch(err => reject(new Error("AI Kütüphaneleri yüklenemedi: " + err.message)));
+  });
+};
+
+const applySharpen = (ctx, width, height, intensity = 1.0) => {
+  const imageData = ctx.getImageData(0, 0, width, height);
+  const data = imageData.data;
+  const w = width;
+  const mix = intensity; // 0.0 - 1.0
+
+  // Basit bir Sharpen Kernel:
+  //  0 -1  0
+  // -1  5 -1
+  //  0 -1  0
+  // Performans için kopyasını oluştur (buffer)
+  const buffer = new Uint8ClampedArray(data);
+
+  for (let y = 1; y < height - 1; y++) {
+    for (let x = 1; x < w - 1; x++) {
+      const i = (y * w + x) * 4;
+
+      const up = ((y - 1) * w + x) * 4;
+      const down = ((y + 1) * w + x) * 4;
+      const left = (y * w + (x - 1)) * 4;
+      const right = (y * w + (x + 1)) * 4;
+
+      for (let c = 0; c < 3; c++) {
+        const val =
+          buffer[i + c] * 5 +
+          (buffer[up + c] * -1) +
+          (buffer[down + c] * -1) +
+          (buffer[left + c] * -1) +
+          (buffer[right + c] * -1);
+
+        data[i + c] = Math.min(255, Math.max(0, (val * mix) + (buffer[i + c] * (1 - mix))));
+      }
+    }
+  }
+  ctx.putImageData(imageData, 0, 0);
+};
+
+// Unified Canvas Processor (Shared Logic)
+const processCanvasImage = (sourceCanvas, finalW, finalH, settings) => {
+  const { smartCrop, hdMode, autoEnhance, optimizeMode } = settings;
+
+  const processedCanvas = document.createElement('canvas');
+  processedCanvas.width = finalW;
+  processedCanvas.height = finalH;
+  const ctx = processedCanvas.getContext('2d', { willReadFrequently: true });
+
+  // High Quality settings
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
+
+  // 1. Smart Crop or Fill
+  if (smartCrop) {
+    const cropMargin = 0.02;
+    const srcX = finalW * cropMargin;
+    const srcY = finalH * cropMargin;
+    const srcW = finalW * (1 - 2 * cropMargin);
+    const srcH = finalH * (1 - 2 * cropMargin);
+    ctx.drawImage(sourceCanvas, srcX, srcY, srcW, srcH, 0, 0, finalW, finalH);
+  } else {
+    ctx.drawImage(sourceCanvas, 0, 0, finalW, finalH);
+  }
+
+  // 2. HD Mode (Sharpen)
+  if (hdMode) {
+    applySharpen(ctx, finalW, finalH, 0.7);
+  }
+
+  // 3. AI Enhance (Color)
+  if (autoEnhance) {
+    const contrastVal = hdMode ? 1.15 : 1.1;
+    const saturateVal = hdMode ? 1.25 : 1.15;
+
+    const tempC = document.createElement('canvas');
+    tempC.width = finalW;
+    tempC.height = finalH;
+    tempC.getContext('2d').drawImage(processedCanvas, 0, 0);
+
+    ctx.filter = `contrast(${contrastVal}) saturate(${saturateVal}) brightness(1.05)`;
+    ctx.drawImage(tempC, 0, 0);
+    ctx.filter = 'none';
+    tempC.width = 0; tempC.height = 0;
+  }
+  return processedCanvas;
+};
+
 const App = () => {
   const [page, setPage] = useState('landing');
   const [isProcessing, setIsProcessing] = useState(false);
@@ -729,7 +844,7 @@ const App = () => {
     loadingTimeoutRef.current = setTimeout(() => {
       setTimeoutError(true);
       setIsProcessing(false); // İşlemi fiilen durdur (UI kilidini açmayabilir ama state'i bozar)
-    }, 2000); // 15 Saniye
+    }, 15000); // 15 Saniye
   };
 
   // Limiti temizle (işlem başarılırsa)
@@ -839,77 +954,7 @@ const App = () => {
     prevDiff.current = -1;
   };
 
-  // --- AI & IMAGE PROCESSING HELPERS ---
 
-  // 1. AI Library Loader (Restored)
-  const loadAiLibrary = () => {
-    return new Promise((resolve, reject) => {
-      if (window.Upscaler && window.tf) {
-        resolve();
-        return;
-      }
-
-      const loadScript = (src) => {
-        return new Promise((res, rej) => {
-          const script = document.createElement('script');
-          script.src = src;
-          script.onload = res;
-          script.onerror = rej;
-          document.body.appendChild(script);
-        });
-      };
-
-      // Load sequentially: TFJS -> Upscaler Model -> Upscaler Core
-      // Using unpkg as primary for better cache hits
-      loadScript("https://unpkg.com/@tensorflow/tfjs@4.17.0/dist/tf.min.js")
-        .then(() => loadScript("https://unpkg.com/@upscalerjs/default-model@latest/dist/umd/index.min.js"))
-        .then(() => loadScript("https://unpkg.com/upscaler@latest/dist/browser/umd/upscaler.min.js"))
-        .then(() => resolve())
-        .catch(err => reject(new Error("AI Kütüphaneleri yüklenemedi: " + err.message)));
-    });
-  };
-
-  // 2. Convolution Filter (Sharpen / Deblur) - CPU optimize
-  const applySharpen = (ctx, width, height, intensity = 1.0) => {
-    const imageData = ctx.getImageData(0, 0, width, height);
-    const data = imageData.data;
-    const w = width;
-    const mix = intensity; // 0.0 - 1.0
-
-    // Basit bir Sharpen Kernel:
-    //  0 -1  0
-    // -1  5 -1
-    //  0 -1  0
-
-    // Performans için kopyasını oluştur (buffer)
-    const buffer = new Uint8ClampedArray(data);
-
-    for (let y = 1; y < height - 1; y++) {
-      for (let x = 1; x < w - 1; x++) {
-        const i = (y * w + x) * 4;
-
-        // Komşular
-        const up = ((y - 1) * w + x) * 4;
-        const down = ((y + 1) * w + x) * 4;
-        const left = (y * w + (x - 1)) * 4;
-        const right = (y * w + (x + 1)) * 4;
-
-        // RGB Kanalları için Convolution
-        for (let c = 0; c < 3; c++) {
-          const val =
-            buffer[i + c] * 5 +
-            (buffer[up + c] * -1) +
-            (buffer[down + c] * -1) +
-            (buffer[left + c] * -1) +
-            (buffer[right + c] * -1);
-
-          // Orijinal ile Convolution sonucunu karıştır (Mix)
-          data[i + c] = Math.min(255, Math.max(0, (val * mix) + (buffer[i + c] * (1 - mix))));
-        }
-      }
-    }
-    ctx.putImageData(imageData, 0, 0);
-  };
 
 
   useEffect(() => {
@@ -1285,96 +1330,59 @@ const App = () => {
         const settings = fileItem.settings || DEFAULT_SETTINGS;
 
         await new Promise((resolve, reject) => {
-          // --- A) VİDEO İŞLEME DALI ---
-          if (fileItem.type === 'video') {
-            const video = document.createElement('video');
-            video.muted = true;
-            video.playsInline = true;
-            video.crossOrigin = "anonymous";
+          const isVideo = fileItem.type === 'video';
+          const mediaElement = isVideo ? document.createElement('video') : new Image();
+          mediaElement.crossOrigin = "anonymous";
+          mediaElement.src = fileItem.url;
 
-            const timeoutTimer = setTimeout(() => {
-              video.src = "";
-              reject(new Error("Video Zaman Aşımı (15sn)"));
-            }, 15000);
+          const timeoutTimer = setTimeout(() => {
+            mediaElement.src = "";
+            reject(new Error("Zaman Aşımı"));
+          }, 15000);
 
-            video.onloadeddata = () => {
-              video.currentTime = 0.5; // İlk kareden az ileri sar (siyah ekran olmasın)
-            };
-
-            video.onseeked = () => {
+          if (isVideo) {
+            mediaElement.muted = true;
+            mediaElement.onloadeddata = () => { mediaElement.currentTime = 0.5; };
+            mediaElement.onseeked = () => {
               clearTimeout(timeoutTimer);
-              processCanvas(video, video.videoWidth, video.videoHeight, resolve, reject);
+              runProcessing(mediaElement, mediaElement.videoWidth, mediaElement.videoHeight);
             };
-
-            video.onerror = () => {
+            mediaElement.onerror = () => {
               clearTimeout(timeoutTimer);
               reject(new Error("Video Dosyası Açılamadı"));
             };
-
-            video.src = fileItem.url;
-          }
-          // --- B) RESİM İŞLEME DALI ---
-          else {
-            const img = new Image();
-
-            const timeoutTimer = setTimeout(() => {
-              img.src = "";
-              reject(new Error("Resim Zaman Aşımı (10sn)"));
-            }, 10000);
-
-            img.onload = () => {
+          } else {
+            mediaElement.onload = () => {
               clearTimeout(timeoutTimer);
-              processCanvas(img, img.width, img.height, resolve, reject);
+              runProcessing(mediaElement, mediaElement.width, mediaElement.height);
             };
-
-            img.onerror = () => {
+            mediaElement.onerror = () => {
               clearTimeout(timeoutTimer);
               reject(new Error("Resim Dosyası Açılamadı"));
             };
-
-            img.src = fileItem.url;
           }
 
-          // --- ORTAK: KANVAS & SPLIT MANTIĞI ---
-          // Hem resim hem video burayı kullanır
-          async function processCanvas(sourceMedia, w, h, res, rej) {
+          async function runProcessing(sourceMedia, w, h) {
             try {
-              if (!w || !h) {
-                rej(new Error("Boyut Hatası (0px)"));
-                return;
-              }
+              if (!w || !h) throw new Error("Boyut Hatası (0px)");
 
-              // --- CANVAS ---
-              // --- CANVAS ---
-              const scaleFactor = settings.ultraHd4xMode ? 4 : (settings.ultraHdMode ? 2 : 1);
-              const sW = Math.floor(w * scaleFactor);
-              const sH = Math.floor(h * scaleFactor);
+              // 1. Create Base Canvas with Scaling
+              const targetScale = settings.ultraHd4xMode ? 4 : (settings.ultraHdMode ? 2 : 1);
+              const sW = Math.floor(w * targetScale);
+              const sH = Math.floor(h * targetScale);
 
-              const sourceCanvas = document.createElement('canvas');
-              sourceCanvas.width = sW;
-              sourceCanvas.height = sH;
+              const processingCanvas = document.createElement('canvas');
+              processingCanvas.width = sW;
+              processingCanvas.height = sH;
+              const pCtx = processingCanvas.getContext('2d');
+              pCtx.imageSmoothingEnabled = true;
+              pCtx.imageSmoothingQuality = 'high';
+              pCtx.drawImage(sourceMedia, 0, 0, sW, sH);
 
-              const sCtx = sourceCanvas.getContext('2d', { willReadFrequently: true });
-              if (!sCtx) {
-                rej(new Error("Bellek Dolu (Canvas Oluşmadı)"));
-                return;
-              }
+              // 2. Use Helper for Enhance/Crop/Sharpen
+              const sourceCanvas = processCanvasImage(processingCanvas, sW, sH, settings);
 
-              if (settings.autoEnhance) {
-                const contrastVal = settings.hdMode ? 1.15 : 1.1;
-                const saturateVal = settings.hdMode ? 1.25 : 1.15;
-                sCtx.filter = `contrast(${contrastVal}) saturate(${saturateVal}) brightness(1.05)`;
-              }
-
-              if (settings.smartCrop) {
-                const cropMargin = 0.02;
-                sCtx.drawImage(sourceMedia, w * cropMargin, h * cropMargin, w * (1 - 2 * cropMargin), h * (1 - 2 * cropMargin), 0, 0, sW, sH);
-              } else {
-                sCtx.drawImage(sourceMedia, 0, 0, sW, sH);
-              }
-              sCtx.filter = 'none';
-
-              // --- SPLIT ---
+              // 3. Split
               let rows = 1, cols = 1;
               if (settings.splitCount === 1) { rows = 1; cols = 1; }
               else if (settings.splitCount === 2) { rows = 2; cols = 1; }
@@ -1391,43 +1399,35 @@ const App = () => {
                   const partCanvas = document.createElement('canvas');
                   partCanvas.width = pW;
                   partCanvas.height = pH;
-                  const pCtx = partCanvas.getContext('2d');
+                  const partCtx = partCanvas.getContext('2d');
+                  partCtx.imageSmoothingEnabled = true;
+                  partCtx.imageSmoothingQuality = 'high';
+                  partCtx.drawImage(sourceCanvas, c * pW, r * pH, pW, pH, 0, 0, pW, pH);
 
-                  if (pCtx) {
-                    pCtx.imageSmoothingEnabled = true;
-                    pCtx.imageSmoothingQuality = 'high';
-                    // Video or Image source works same here
-                    pCtx.drawImage(sourceCanvas, c * pW, r * pH, pW, pH, 0, 0, pW, pH);
+                  const mimeType = `image/${settings.downloadFormat === 'jpg' ? 'jpeg' : settings.downloadFormat}`;
+                  let quality = settings.hdMode ? 1.0 : (settings.optimizeMode ? 0.80 : 0.95);
 
-                    const mimeType = `image/${settings.downloadFormat === 'jpg' ? 'jpeg' : settings.downloadFormat}`;
-                    let quality = 0.95;
-                    if (settings.hdMode) quality = 1.0;
-                    if (settings.optimizeMode) quality = 0.80;
-
-                    await new Promise((resBlob, rejBlob) => {
-                      partCanvas.toBlob((blob) => {
-                        if (blob) {
-                          itemFolder.file(`Part_${partIndex}.${settings.downloadFormat}`, blob);
-                          partIndex++;
-                          resBlob();
-                        } else {
-                          rejBlob(new Error("Bellek Dolu (Blob Yok)"));
-                        }
-                        partCanvas.width = 0;
-                        partCanvas.height = 0;
-                      }, mimeType, quality);
-                    });
-                  }
+                  await new Promise(resBlob => {
+                    partCanvas.toBlob(blob => {
+                      if (blob) {
+                        itemFolder.file(`Part_${partIndex}.${settings.downloadFormat}`, blob);
+                        partIndex++;
+                      }
+                      resBlob();
+                    }, mimeType, quality);
+                  });
+                  // Cleanup Part
+                  partCanvas.width = 0; partCanvas.height = 0;
                 }
               }
 
-              sourceCanvas.width = 0;
-              sourceCanvas.height = 0;
-              res();
+              // Cleanup
+              processingCanvas.width = 0; processingCanvas.height = 0;
+              sourceCanvas.width = 0; sourceCanvas.height = 0;
 
-            } catch (err) {
-              rej(err);
-            }
+              resolve();
+
+            } catch (e) { reject(e); }
           }
         });
       } catch (error) {
@@ -1750,16 +1750,11 @@ const App = () => {
   const processSplit = async (sourceUrl, isVideo, forceStandard = false) => {
     if (!sourceUrl) return;
 
-    // --- TIMEOUT BAŞLAT (YENİ) ---
     startLoadingTimeout();
 
-    // 1. Minimum Loading Timer Başlat (Akıcılık için)
     const startTime = Date.now();
+    const myId = ++processingIdRef.current; // Concurrency control
 
-    // Concurrency control: Stale işlemlerden kurtulmak için ID ata
-    const myId = ++processingIdRef.current;
-
-    // AI Önbellek Kontrolü (Sadece parça sayısı değiştiyse AI'yı tekrar yapma)
     const currentParams = JSON.stringify({
       url: sourceUrl,
       enhance: autoEnhance,
@@ -1772,14 +1767,10 @@ const App = () => {
 
     const canUseCache = processedCanvasRef.current && lastAiParamsRef.current === currentParams;
 
-    // YENİ UX: Her işlemde (Cache olsun olmasın) içeriği geçici olarak gizle/bulanıklaştır
-    // Bu sayede parça sayısı değişirken arkadaki "sansür" bozulmaz ve geçiş hissedilir.
     setIsContentReady(false);
 
-    // Eğer Cache YOKSA (Yani yeni bir dosya veya AI işlemi ise) temizlik yap
     if (!canUseCache) {
       setSplitSlides([]);
-      // cleanupCache(); // Cache'i burada silme, aşağıda dolacak zaten.
     }
 
     const isSilent = skipFeedbackRef.current;
@@ -1788,8 +1779,6 @@ const App = () => {
       setAiLogs([]);
 
       if (!canUseCache) {
-        // Logları duruma göre seç
-        // Logları duruma göre seç
         let msgs = [];
         if (ultraHdMode || ultraHd4xMode) {
           msgs = SPLITTER_STATUS_MSGS;
@@ -1802,32 +1791,24 @@ const App = () => {
         } else if (smartCrop) {
           msgs = ["Akıllı Kadrajlama Yapılıyor...", "Kenarlar Temizleniyor..."];
         } else {
-          // Standard mode or "closing" everything
           msgs = ["Görünüm Güncelleniyor...", "Standart Mod Hazırlanıyor..."];
         }
 
-        // Logları zamana yayarak göster
         msgs.forEach((msg, i) => {
           setTimeout(() => {
             if (myId === processingIdRef.current) setAiLogs(prev => [...prev.slice(-3), msg]);
           }, i * 350);
         });
-        // UI'ın "Yükleniyor" ekranını çizmesi için bir nefes aldır
-        // GÜNCELLENDİ: Mesajların okunabilmesi için süre uzatıldı (Kullanıcı isteği)
         await new Promise(r => setTimeout(r, 400));
         if (window.tf) await window.tf.nextFrame();
       } else {
-        // --- CACHE HIT (Yumuşak Geçiş & Split Count Değişimi) ---
-        // Format Değişimi Kontrolü
+        // Cache Hit Feedback
         if (downloadFormat !== prevFormatRef.current) {
           setAiLogs(["Format Dönüştürülüyor...", `${downloadFormat.toUpperCase()} Hazırlanıyor...`]);
-          // KULLANICI İSTEĞİ: Format değişirken net bir bekleme süresi (0.35 sn - HIZLI AMA GÖRÜNÜR)
           await new Promise(r => setTimeout(r, 350));
           prevFormatRef.current = downloadFormat;
         } else {
           setAiLogs(["Görünüm Düzenleniyor..."]);
-          // YUMUŞAK GEÇİŞ GECİKMESİ (Smooth Transition)
-          // Parça sayısı değişirken anlık titremeyi önlemek için çok kısa (50ms) bekle.
           await new Promise(r => setTimeout(r, 50));
         }
       }
@@ -1837,15 +1818,11 @@ const App = () => {
       let finalW, finalH, sourceCanvas;
 
       if (canUseCache) {
-        // --- CACHE HIT: Sadece Bölme İşlemi Yap ---
         sourceCanvas = processedCanvasRef.current;
         finalW = sourceCanvas.width;
         finalH = sourceCanvas.height;
       } else {
-        // --- CACHE MISS: Tüm Pipeline'ı Çalıştır ---
-
-        // Gecikmeli Başlat (Fade-out efekti için) - GÜNCELLENDİ: 200ms -> 10ms (Hızlandırıldı)
-        await new Promise(r => setTimeout(r, 10));
+        await new Promise(r => setTimeout(r, 10)); // Yield
 
         // --- MEDIA LOAD ---
         const mediaElement = isVideo ? document.createElement('video') : new Image();
@@ -1855,7 +1832,6 @@ const App = () => {
         await new Promise((resolveMedia, rejectMedia) => {
           if (isVideo) {
             mediaElement.muted = true;
-            // loadeddata -> currentTime -> seeked
             mediaElement.onloadeddata = () => { mediaElement.currentTime = 0.5; };
             mediaElement.onseeked = resolveMedia;
             mediaElement.onerror = rejectMedia;
@@ -1867,34 +1843,24 @@ const App = () => {
 
         const w = isVideo ? mediaElement.videoWidth : mediaElement.width;
         const h = isVideo ? mediaElement.videoHeight : mediaElement.height;
-
-        // --- PIPELINE STEP 1: Determine Essentials ---
-        const upscaleFactor = ultraHd4xMode ? 4 : (ultraHdMode ? 2 : 1);
-        if (myId !== processingIdRef.current) return;
-        let processingCanvas = document.createElement('canvas'); // Temporary working canvas
         finalW = w;
         finalH = h;
 
+        let processingCanvas = document.createElement('canvas'); // Temp canvas
+
+        // --- UPSCALING CHECK ---
         if ((ultraHdMode || ultraHd4xMode) && !forceStandard) {
-
-          // --- AI HOOK INTEGRATION ---
-
-          // 1. Prepare Input (Blob for Video, URL/Blob for Image)
           let inputSource = sourceUrl;
           if (isVideo) {
             const tempC = document.createElement('canvas');
             tempC.width = w; tempC.height = h;
             tempC.getContext('2d').drawImage(mediaElement, 0, 0);
-            // Convert canvas to blob for the worker
             inputSource = await new Promise(r => tempC.toBlob(r));
           }
 
-          // 2. Call Hook (Handles Worker Lifecycle Internally)
           const resultUrl = await upscaleImage(inputSource, ultraHd4xMode ? '4x' : '2x');
-
           if (myId !== processingIdRef.current) return;
 
-          // 3. Process Result
           const resImg = new Image();
           resImg.src = resultUrl;
           await new Promise((resolve, reject) => {
@@ -1909,85 +1875,30 @@ const App = () => {
           processingCanvas.height = finalH;
           processingCanvas.getContext('2d').drawImage(resImg, 0, 0);
 
-          // Cleanup result URL after drawing
           setTimeout(() => URL.revokeObjectURL(resultUrl), 1000);
-
         } else {
-          // No Upscale -> Draw directly to canvas
+          // Standard size
           processingCanvas.width = w;
           processingCanvas.height = h;
-          const pCtx = processingCanvas.getContext('2d');
-          pCtx.drawImage(mediaElement, 0, 0);
+          processingCanvas.getContext('2d').drawImage(mediaElement, 0, 0);
         }
 
         setMediaDimensions({ width: finalW, height: finalH });
 
-        // --- PIPELINE STEP 3: ENHANCE / PRE-PROCESS ---
-        sourceCanvas = document.createElement('canvas');
-        sourceCanvas.width = finalW;
-        sourceCanvas.height = finalH;
-        const sCtx = sourceCanvas.getContext('2d', { willReadFrequently: true });
+        // --- ENHANCE / CROP / SHARPEN ---
+        // Use the extracted helper!
+        sourceCanvas = processCanvasImage(processingCanvas, finalW, finalH, {
+          smartCrop, hdMode, autoEnhance, optimizeMode
+        });
 
-        // --- VARSAYILAN KALİTE AYARLARI (Start Balanced) ---
-        // Kullanıcı hiçbir ayarı açmasa bile (AI Enhance vb. kapalı olsa da)
-        // Canvas'ın çizim kalitesini en yükseğe (High) çekiyoruz ki görüntü "Dengeli ve Net" olsun.
-        sCtx.imageSmoothingEnabled = true;
-        sCtx.imageSmoothingQuality = 'high';
-
-        // a) Smart Crop
-        if (smartCrop) {
-          const cropMargin = 0.02;
-          const srcX = finalW * cropMargin;
-          const srcY = finalH * cropMargin;
-          const srcW = finalW * (1 - 2 * cropMargin);
-          const srcH = finalH * (1 - 2 * cropMargin);
-          sCtx.drawImage(processingCanvas, srcX, srcY, srcW, srcH, 0, 0, finalW, finalH);
-        } else {
-          sCtx.drawImage(processingCanvas, 0, 0);
-        }
-
-        // b) HD Mode (Deblur / Sharpen)
-        // Artık HD Mode aktifse Sharpen filtresini uyguluyoruz
-        if (hdMode) {
-          applySharpen(sCtx, finalW, finalH, 0.7); // 0.7 intensity
-          if (!isSilent) setAiLogs(prev => [...prev, "Detail Reconstruction uygulandı."]);
-        }
-
-        // c) AI Enhance (Color Correction)
-        // Bu CSS filtresi oldugu icin sCtx uzerinde drawImage yaparken veya sonrasinda 
-        // apply etmek icin: context'in filter ozelligini set edip kendisini kendisine cizdiririz.
-
-        // GÜNCELLENDİ: "Görsel neredeyse siyaha gömülüyor" fix.
-        // Contrast değerleri düşürüldü (Black crush'ı önlemek için)
-        // Brightness değerleri artırıldı (Karanlık bölgeleri açmak için)
-
-        if (autoEnhance) {
-          // Bu CSS filtresi oldugu icin sCtx uzerinde drawImage yaparken veya sonrasinda 
-          // apply etmek icin: context'in filter ozelligini set edip kendisini kendisine cizdiririz.
-          const contrastVal = hdMode ? 1.15 : 1.1;
-          const saturateVal = hdMode ? 1.25 : 1.15;
-
-          // Mevcut içeriği temp canvas'a al
-          const tempC = document.createElement('canvas');
-          tempC.width = finalW;
-          tempC.height = finalH;
-          tempC.getContext('2d').drawImage(sourceCanvas, 0, 0);
-
-          sCtx.filter = `contrast(${contrastVal}) saturate(${saturateVal}) brightness(1.05)`;
-          sCtx.drawImage(tempC, 0, 0);
-          sCtx.filter = 'none';
-        }
-
-        // Sonucu Cache'e yaz
+        // Cache update
         processedCanvasRef.current = sourceCanvas;
         lastAiParamsRef.current = currentParams;
       }
 
-      // Pipeline Step 4 ve sonrası için değişkenleri hazırla
-      // sourceCanvas, finalW ve finalH zaten güncel
       setMediaDimensions({ width: finalW, height: finalH });
 
-      // --- PIPELINE STEP 4: SPLIT ---
+      // --- SPLIT ---
       let parts = [];
       let rows = 1, cols = 1;
 
@@ -2011,9 +1922,9 @@ const App = () => {
           partCtx.drawImage(sourceCanvas, c * pW, r * pH, pW, pH, 0, 0, pW, pH);
 
           const mimeType = `image/${downloadFormat === 'jpg' ? 'jpeg' : downloadFormat}`;
-          let quality = 0.90; // Standart kaliteyi biraz düşürelim ki HD ve Optimize farkı belli olsun
-          if (hdMode) quality = 1.0; // HD Mod: Maksimum Kalite
-          if (optimizeMode) quality = 0.70; // Optimize: Görünür sıkıştırma ve düşük boyut
+          let quality = 0.90;
+          if (hdMode) quality = 1.0;
+          if (optimizeMode) quality = 0.70;
 
           parts.push({
             id: parts.length + 1,
@@ -2022,9 +1933,7 @@ const App = () => {
             aspectRatio: pW / pH
           });
 
-          // Her parçadan sonra UI'a nefes aldır (Donmayı önle)
-          // Her parçadan sonra UI'a nefes aldır (Donmayı önle)
-          // OPTIMIZATION: Her parça yerine 3 parçada bir yield et (Hızlanma)
+          // Optimization: Yield every 3 parts
           if ((parts.length) % 3 === 0) {
             await new Promise(r => setTimeout(r, 0));
           }
@@ -2033,8 +1942,6 @@ const App = () => {
 
       setSplitSlides(parts);
 
-      // --- MINIMUM DURATION ENFORCEMENT ---
-      // GÜNCELLENDİ: 500ms -> 50ms (Hızlandırıldı)
       const elapsedTime = Date.now() - startTime;
       const minDuration = 50;
       if (elapsedTime < minDuration) {
@@ -2043,9 +1950,8 @@ const App = () => {
 
       if (myId === processingIdRef.current) {
         setIsProcessing(false);
-        clearLoadingTimeout(); // Clear timeout on successful processing
+        clearLoadingTimeout();
         if (!isSilent && !canUseCache) {
-          // GÜNCELLENDİ: Standart mod bildirimleri sadeleştirildi
           if ((ultraHd4xMode || ultraHdMode) && !forceStandard) {
             const mode = ultraHd4xMode ? "4X" : "2X";
             showToast(`AI İyileştirme Tamamlandı (${mode})`);
@@ -2055,39 +1961,30 @@ const App = () => {
         }
         setIsContentReady(true);
       }
-
       skipFeedbackRef.current = false;
 
     } catch (error) {
       console.error("Pipeline Error:", error);
       if (myId === processingIdRef.current) {
-        clearLoadingTimeout(); // Clear timeout on processing error
+        clearLoadingTimeout();
 
-        // --- AUTO-FALLBACK TO STANDARD MODE ---
+        // Fallback Logic
         if ((ultraHdMode || ultraHd4xMode) && !forceStandard) {
           console.warn("AI Failure detected. Falling back to Standard Mode...");
           if (!isSilent) setAiLogs(prev => [...prev, "AI Başarısız. Standart moda geçiliyor..."]);
 
-          // 1. Kill the potentially stuck worker
           if (aiWorkerRef.current) {
             aiWorkerRef.current.terminate();
             aiWorkerRef.current = null;
           }
 
-          console.log("AI Worker terminated. Retrying with Standard Mode.");
-          // DEBUG: Show actual error to user for diagnosis
           showToast(`AI Hatası: ${error.message} (Fallback Active)`, "error");
 
-          // Give UI a moment to breathe then retry
           setTimeout(() => {
-            // Update UI state to reflect fallback (This will also trigger useEffect to re-run processSplit)
-            if (ultraHdMode) {
-              updateSetting('ultraHd', false);
-            }
-            if (ultraHd4xMode) {
-              updateSetting('ultraHd4x', false);
-            }
-          }, 1000); // 1 sec delay specifically to let GPU cool down/reset
+            // Reset UI toggles which will trigger re-run in useEffect
+            if (ultraHdMode) updateSetting('ultraHd', false);
+            if (ultraHd4xMode) updateSetting('ultraHd4x', false);
+          }, 1000);
           return;
         }
 
