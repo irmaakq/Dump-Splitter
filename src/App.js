@@ -1313,7 +1313,7 @@ const App = () => {
 
     setIsZipping(true);
     setZipProgress({ current: 0, total: fileList.length });
-    startLoadingTimeout(); // Start timeout for batch download
+    startLoadingTimeout(300000); // 5 DAKİKA: Mobilde batch (toplu) indirme işlem uzun sürebilir, timeout hatası vermesin.
 
     const zip = new window.JSZip();
     const mainFolder = zip.folder("Dump_Splitter_Pack");
@@ -1781,7 +1781,13 @@ const App = () => {
     setIsContentReady(false);
 
     if (!canUseCache) {
-      setSplitSlides([]);
+      // Clean up previous ObjectURLs to prevent memory leaks
+      setSplitSlides(prev => {
+        prev.forEach(s => {
+          if (s.dataUrl && s.dataUrl.startsWith('blob:')) URL.revokeObjectURL(s.dataUrl);
+        });
+        return [];
+      });
     }
 
     const isSilent = skipFeedbackRef.current;
@@ -1937,17 +1943,19 @@ const App = () => {
           if (hdMode) quality = 1.0;
           if (optimizeMode) quality = 0.70;
 
+          // Use Blob instead of Base64 for performance
+          const blob = await new Promise(resolve => partCanvas.toBlob(resolve, mimeType, quality));
+          const blobUrl = URL.createObjectURL(blob);
+
           parts.push({
             id: parts.length + 1,
-            dataUrl: partCanvas.toDataURL(mimeType, quality),
+            dataUrl: blobUrl,
             label: `Parça ${parts.length + 1}`,
             aspectRatio: pW / pH
           });
 
-          // Optimization: Yield every 3 parts
-          if ((parts.length) % 3 === 0) {
-            await new Promise(r => setTimeout(r, 0));
-          }
+          // Yield to main thread after EVERY part to prevent freezing
+          await new Promise(r => setTimeout(r, 0));
         }
       }
 
