@@ -7,7 +7,7 @@ import {
   Zap, CheckCircle2,
   Grid, DownloadCloud, FileImage,
   ShieldCheck, Cpu, Activity, Target, Lock, ServerOff, HelpCircle as HelpIcon, Info, MessageCircleQuestion, FileQuestion, ZoomIn, Maximize,
-  Download, Eye, Shield, Github, Settings, ChevronRight, Loader2, Menu, Trash2, RefreshCcw, Archive, Layers, Smartphone, Wand2, AlertTriangle, Cookie, Scale, MousePointerClick, ListChecks, Scissors, Files, Move, Minimize, Home, Timer, Eraser, Columns, FolderInput // Added New Icons
+  Download, Eye, Shield, Github, Settings, ChevronRight, Loader2, Menu, Trash2, RefreshCcw, Archive, Layers, Smartphone, Wand2, AlertTriangle, Cookie, Scale, MousePointerClick, ListChecks, Scissors, Files, Move, Minimize, Home, Timer, Eraser, Columns, FolderInput, Layout, ZoomOut // Added New Icons
 } from 'lucide-react';
 
 
