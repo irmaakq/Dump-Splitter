@@ -838,13 +838,13 @@ const App = () => {
   const [timeoutError, setTimeoutError] = useState(false);
   const loadingTimeoutRef = useRef(null);
 
-  // 15 Saniye limitini başlat
-  const startLoadingTimeout = () => {
+  // 15 Saniye limitini başlat (Parametrik yapıldı)
+  const startLoadingTimeout = (ms = 15000) => {
     if (loadingTimeoutRef.current) clearTimeout(loadingTimeoutRef.current);
     loadingTimeoutRef.current = setTimeout(() => {
       setTimeoutError(true);
       setIsProcessing(false); // İşlemi fiilen durdur (UI kilidini açmayabilir ama state'i bozar)
-    }, 15000); // 15 Saniye
+    }, ms);
   };
 
   // Limiti temizle (işlem başarılırsa)
@@ -2019,7 +2019,7 @@ const App = () => {
     }
 
     setIsDownloading(true);
-    startLoadingTimeout(); // Start timeout for batch download
+    startLoadingTimeout(120000); // Batch download için 2 dakika süre tanı (Büyük dosyalarda timeout yememesi için)
 
     try {
       const zip = new window.JSZip();
