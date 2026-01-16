@@ -2256,7 +2256,7 @@ const App = () => {
                     {['png', 'jpg', 'webp'].map(fmt => (
                       <button
                         key={fmt}
-                        disabled={!isContentReady || isProcessing || page === 'loading' || timeoutError} // GÜNCELLENDİ: disabled prop
+                        disabled={downloadFormat === fmt || !isContentReady || isProcessing || page === 'loading' || timeoutError} // GÜNCELLENDİ: Seçili format tıklanamaz
                         onClick={() => { skipFeedbackRef.current = false; updateSetting('downloadFormat', fmt); }}
                         className={`flex-1 py-2 rounded-lg text-[12px] font-black uppercase transition-all 
                           ${!isContentReady || isProcessing || page === 'loading' || timeoutError ? 'opacity-30 cursor-not-allowed' : ''}
@@ -2290,12 +2290,9 @@ const App = () => {
                     {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(num => (
                       <button
                         key={num}
-                        disabled={!isContentReady || isProcessing || page === 'loading' || timeoutError} // GÜNCELLENDİ: disabled prop
+                        disabled={splitCount === num || !isContentReady || isProcessing || page === 'loading' || timeoutError} // GÜNCELLENDİ: Seçili olan butona tıklanamaz
                         onClick={() => {
                           if (isContentReady && !isProcessing) {
-                            setSplitSlides([]);
-                            setIsContentReady(false);
-                            setIsProcessing(true);
                             skipFeedbackRef.current = false;
                             updateSetting('splitCount', num);
                           }
