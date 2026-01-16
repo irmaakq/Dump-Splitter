@@ -840,8 +840,8 @@ const App = () => {
   const [timeoutError, setTimeoutError] = useState(false);
   const loadingTimeoutRef = useRef(null);
 
-  // 15 Saniye limitini başlat (Parametrik yapıldı)
-  const startLoadingTimeout = (ms = 15000) => {
+  // 5 DAKİKA Varsayılan Limit (Global Fix)
+  const startLoadingTimeout = (ms = 300000) => {
     if (loadingTimeoutRef.current) clearTimeout(loadingTimeoutRef.current);
     loadingTimeoutRef.current = setTimeout(() => {
       setTimeoutError(true);
@@ -1102,6 +1102,22 @@ const App = () => {
 
   // --- AYAR GÜNCELLEME YÖNETİCİSİ ---
   const updateSetting = (key, value) => {
+    // 1. AYNI DEĞER KONTROLÜ (Donmayı önler)
+    // Eğer kullanıcı zaten seçili olan (örneğin Split Count: 5) butona tekrar basarsa,
+    // işlem yapma. Çünkü useEffect tetiklenmez ama loading ekranı açılırsa sonsuza kadar döner.
+    let isSame = false;
+    switch (key) {
+      case 'splitCount': if (splitCount === value) isSame = true; break;
+      case 'downloadFormat': if (downloadFormat === value) isSame = true; break;
+      case 'aiEnhance': if (autoEnhance === value) isSame = true; break;
+      case 'hdMode': if (hdMode === value) isSame = true; break;
+      case 'optimize': if (optimizeMode === value) isSame = true; break;
+      case 'smartCrop': if (smartCrop === value) isSame = true; break;
+      case 'ultraHd': if (ultraHdMode === value) isSame = true; break;
+      case 'ultraHd4x': if (ultraHd4xMode === value) isSame = true; break;
+    }
+    if (isSame) return; // Değişiklik yoksa çık
+
     // GÜNCELLENDİ: INSTANT LOCK (Debounce beklemeden kitle)
     if (uploadedFile && page === 'editor') {
       setIsProcessing(true);
