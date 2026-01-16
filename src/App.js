@@ -868,12 +868,19 @@ const App = () => {
     // Ignore buttons
     if (e.target.closest('button')) return;
 
-    e.preventDefault();
+    // Do NOT prevent default or capture immediately for single touch to allow scrolling
+    // e.preventDefault(); 
+
     // Cache the event
     evCache.current.push(e);
 
+    // Only capture if we are doing multi-touch (pinch) or if we really wanted to custom pan (but pan is disabled)
+    // For now, let's only strictly track. If scrolling happens, we'll get pointercancel.
     const imgContainer = e.currentTarget;
-    imgContainer.setPointerCapture(e.pointerId);
+    if (evCache.current.length > 1) {
+      imgContainer.setPointerCapture(e.pointerId);
+      e.preventDefault(); // Prevent default only when we are sure it's a multi-touch gesture
+    }
 
     // If starting a pan (1 finger), store initial state
     if (evCache.current.length === 1) {
@@ -893,7 +900,8 @@ const App = () => {
 
   const handlePointerMove = (e) => {
     if (e.target.closest('button')) return;
-    e.preventDefault();
+
+    // e.preventDefault(); // REMOVED to allow scrolling on single touch
 
     // Find this event in the cache and update it
     const index = evCache.current.findIndex((cachedEv) => cachedEv.pointerId === e.pointerId);
@@ -905,6 +913,7 @@ const App = () => {
 
     // MULTI-TOUCH (PINCH ZOOM)
     if (evCache.current.length === 2) {
+      e.preventDefault(); // Block default only for pinch actions
       const curDiff = Math.hypot(
         evCache.current[0].clientX - evCache.current[1].clientX,
         evCache.current[0].clientY - evCache.current[1].clientY
@@ -2330,7 +2339,7 @@ const App = () => {
 
                           <div
                             className="relative w-full h-full z-10"
-                            style={{ transform: `scale(${zoom / 100})`, transformOrigin: 'center center', transition: 'transform 0.2s', touchAction: 'none' }}
+                            style={{ transform: `scale(${zoom / 100})`, transformOrigin: 'center center', transition: 'transform 0.2s', touchAction: 'pan-y' }}
                             onPointerDown={handlePointerDown}
                             onPointerMove={handlePointerMove}
                             onPointerUp={handlePointerUp}
