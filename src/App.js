@@ -1743,7 +1743,7 @@ const App = () => {
     ultraHd4xMode
   }), [splitCount, autoEnhance, hdMode, optimizeMode, smartCrop, downloadFormat, ultraHdMode, ultraHd4xMode]);
 
-  const debouncedSettings = useDebounce(settingsObj, 150); // 400ms -> 150ms (Daha seri tepki)
+  const debouncedSettings = useDebounce(settingsObj, 500); // 150ms -> 500ms: Seri tıklamalarda donmayı önlemek için debounce süresini artırdık
 
   // ... (Zoom vs diğer stateler aynı kalacak) ...
 
@@ -2030,7 +2030,7 @@ const App = () => {
     }
 
     setIsDownloading(true);
-    startLoadingTimeout(120000); // Batch download için 2 dakika süre tanı (Büyük dosyalarda timeout yememesi için)
+    startLoadingTimeout(300000); // 5 DAKİKA: Mobilde batch işlem uzun sürebilir, timeout hatası vermesin.
 
     try {
       const zip = new window.JSZip();
@@ -2082,7 +2082,7 @@ const App = () => {
         splitCount={splitCount}
         isProcessing={isProcessing}
         isContentReady={isContentReady}
-        isLocked={page === 'loading' || timeoutError} // GÜNCELLENDİ: Loading ekranında ve timeoutError durumunda da kilitli
+        isLocked={page === 'loading' || timeoutError || isProcessing} // GÜNCELLENDİ: Loading ekranında, timeout hatasında VE işlem yapılırken (isProcessing) kilitli
       />
 
       <MobileMenu
