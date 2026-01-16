@@ -7,7 +7,7 @@ import {
   Zap, CheckCircle2,
   Grid, DownloadCloud, FileImage,
   ShieldCheck, Cpu, Activity, Target, Lock, ServerOff, HelpCircle as HelpIcon, Info, MessageCircleQuestion, FileQuestion, ZoomIn, Maximize,
-  Download, Eye, Shield, Github, Settings, ChevronRight, Loader2, Menu, Trash2, RefreshCcw, Archive, Layers, Smartphone, Wand2, AlertTriangle, Cookie, Scale, MousePointerClick, ListChecks, Scissors, Files, Move, Minimize // Added Minimize
+  Download, Eye, Shield, Github, Settings, ChevronRight, Loader2, Menu, Trash2, RefreshCcw, Archive, Layers, Smartphone, Wand2, AlertTriangle, Cookie, Scale, MousePointerClick, ListChecks, Scissors, Files, Move, Minimize, Home // Added Home
 } from 'lucide-react';
 
 
@@ -336,21 +336,9 @@ const TimeoutErrorModal = ({ isOpen, onCancel, onRetry, onNewUpload, onGoHome })
           Beklenen süre aşıldı. Bağlantı sorunu olabilir veya dosya çok büyük olabilir. Ne yapmak istersiniz?
         </p>
 
-        <div className="grid grid-cols-1 gap-3">
-          <button onClick={onRetry} className="bg-white text-black font-bold py-3.5 rounded-xl hover:bg-gray-200 transition-all uppercase text-xs flex items-center justify-center gap-2">
-            <RefreshCcw size={16} /> Tekrar Dene
-          </button>
-
-          <button onClick={onNewUpload} className="bg-white/10 text-white font-bold py-3.5 rounded-xl hover:bg-white/20 transition-all uppercase text-xs flex items-center justify-center gap-2 border border-white/5">
-            <Upload size={16} /> Yeni Dosya Yükle
-          </button>
-
-          <button onClick={onGoHome} className="bg-white/5 text-gray-300 font-bold py-3.5 rounded-xl hover:bg-white/10 transition-all uppercase text-xs flex items-center justify-center gap-2">
-            <Home size={16} /> Ana Menü
-          </button>
-
-          <button onClick={onCancel} className="text-red-400 font-bold py-2 rounded-xl hover:bg-red-500/10 transition-all uppercase text-[10px] mt-2">
-            İptal Et ve Geri Dön
+        <div className="w-full">
+          <button onClick={onGoHome} className="w-full bg-white text-black font-black py-4 rounded-xl hover:bg-gray-200 transition-all uppercase tracking-widest text-xs shadow-[0_0_40px_rgba(255,255,255,0.2)] hover:shadow-[0_0_60px_rgba(255,255,255,0.4)] active:scale-95 flex items-center justify-center gap-2">
+            <Home size={18} /> ANA MENÜ
           </button>
         </div>
       </div>
@@ -741,7 +729,7 @@ const App = () => {
     loadingTimeoutRef.current = setTimeout(() => {
       setTimeoutError(true);
       setIsProcessing(false); // İşlemi fiilen durdur (UI kilidini açmayabilir ama state'i bozar)
-    }, 15000); // 15 Saniye
+    }, 2000); // 15 Saniye
   };
 
   // Limiti temizle (işlem başarılırsa)
