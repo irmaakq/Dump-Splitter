@@ -1929,6 +1929,10 @@ const App = () => {
         lastAiParamsRef.current = currentParams;
       }
 
+      // CRITICAL FIX: Ensure final dimensions usage matches the PROCESSED canvas (which might be cropped)
+      finalW = sourceCanvas.width;
+      finalH = sourceCanvas.height;
+
       setMediaDimensions({ width: finalW, height: finalH });
 
       // --- SPLIT ---
