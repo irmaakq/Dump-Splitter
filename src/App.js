@@ -1841,8 +1841,8 @@ const App = () => {
           await new Promise(r => setTimeout(r, 350));
           prevFormatRef.current = downloadFormat;
         } else {
-          setAiLogs(["Görünüm Düzenleniyor..."]);
-          await new Promise(r => setTimeout(r, 50));
+          setAiLogs(["Parçalar Yeniden Düzenleniyor...", "Görünüm Güncelleniyor..."]);
+          await new Promise(r => setTimeout(r, 350)); // 50ms -> 350ms: Format değişimi gibi yumuşak geçiş için süreyi eşitledik.
         }
       }
     }
