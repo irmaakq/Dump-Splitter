@@ -1782,17 +1782,17 @@ const App = () => {
     const startTime = Date.now();
     const myId = ++processingIdRef.current; // Concurrency control
 
-    const currentParams = JSON.stringify({
+    // 1. Processing Params (Only these affect the Source Canvas)
+    const processingParams = JSON.stringify({
       url: sourceUrl,
-      enhance: autoEnhance,
-      hd: hdMode,
-      opt: optimizeMode,
-      crop: smartCrop,
-      uhd: ultraHdMode,
-      uhd4x: ultraHd4xMode
+      // MAINTENANCE MODE FORCE DISABLE
+      enhance: false, hd: false, opt: false, crop: false, uhd: false, uhd4x: false
     });
 
-    const canUseCache = processedCanvasRef.current && lastAiParamsRef.current === currentParams;
+    // 2. Can we reuse the processed Source Canvas?
+    // We can reuse it if the URL and AI/Enhance settings haven't changed.
+    // Changing Split Count or Format does NOT require re-processing the source.
+    const canUseCache = processedCanvasRef.current && lastAiParamsRef.current === processingParams;
 
     setIsContentReady(false);
 
@@ -1921,12 +1921,12 @@ const App = () => {
         // --- ENHANCE / CROP / SHARPEN ---
         // Use the extracted helper!
         sourceCanvas = processCanvasImage(processingCanvas, finalW, finalH, {
-          smartCrop, hdMode, autoEnhance, optimizeMode
+          smartCrop: false, hdMode: false, autoEnhance: false, optimizeMode: false
         });
 
         // Cache update
         processedCanvasRef.current = sourceCanvas;
-        lastAiParamsRef.current = currentParams;
+        lastAiParamsRef.current = processingParams;
       }
 
       // CRITICAL FIX: Ensure final dimensions usage matches the PROCESSED canvas (which might be cropped)
