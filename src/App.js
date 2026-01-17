@@ -2298,6 +2298,8 @@ const App = () => {
                         disabled={splitCount === num || !isContentReady || isProcessing || page === 'loading' || timeoutError} // GÜNCELLENDİ: Seçili olan butona tıklanamaz
                         onClick={() => {
                           if (isContentReady && !isProcessing) {
+                            setIsContentReady(false); // Trigger Fade Out
+                            setIsProcessing(true); // Lock UI
                             skipFeedbackRef.current = false;
                             updateSetting('splitCount', num);
                           }
@@ -2356,7 +2358,14 @@ const App = () => {
                     {/* GÜNCELLENDİ: justify-items-center ve grid gap ayarı */}
                     <div className={`grid gap-4 md:gap-8 w-full justify-items-center ${splitCount === 1 ? 'grid-cols-1' : (splitCount % 2 !== 0 || splitCount === 2 ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2')}`}>
                       {splitSlides.length > 0 ? splitSlides.map((s) => (
-                        <div key={`${uploadedFile}-${splitCount}-${s.id}`} style={{ aspectRatio: s.aspectRatio }} className="relative w-full max-w-[500px] h-auto max-h-[50vh] md:max-h-[70vh] group hover:scale-[1.01] transition-all flex items-center justify-center snap-center rounded-2xl md:rounded-3xl overflow-hidden shadow-2xl bg-black">
+                        <div key={`${uploadedFile}-${s.id}`} style={{ aspectRatio: s.aspectRatio }} className="relative w-full max-w-[500px] h-auto max-h-[50vh] md:max-h-[70vh] group hover:scale-[1.01] transition-all flex items-center justify-center snap-center rounded-2xl md:rounded-3xl overflow-hidden shadow-2xl bg-black">
+                          {/* DYNAMIC BACKGROUND (BLUR) - Fills gaps */}
+                          {isContentReady && (
+                            <div className="absolute inset-0 z-0">
+                              <img src={s.dataUrl} className="w-full h-full object-cover blur-xl scale-110 opacity-60" alt="blur-bg" draggable="false" />
+                              <div className="absolute inset-0 bg-black/20" /> {/* Dimming overlay */}
+                            </div>
+                          )}
 
                           <div
                             className="relative w-full h-full z-10"
@@ -2369,7 +2378,7 @@ const App = () => {
                           >
                             <img
                               src={s.dataUrl}
-                              className="w-full h-full object-contain drop-shadow-2xl rounded-2xl md:rounded-3xl transition-all duration-500 animate-in fade-in zoom-in-95 duration-700"
+                              className="w-full h-full object-contain drop-shadow-2xl rounded-2xl md:rounded-3xl transition-all duration-500"
                               alt="Slide"
                               draggable="false"
                             />
@@ -2537,4 +2546,3 @@ const App = () => {
 };
 
 export default App;
-
