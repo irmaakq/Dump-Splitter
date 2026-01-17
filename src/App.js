@@ -2231,25 +2231,25 @@ const App = () => {
               <div className="space-y-6">
                 <div className="p-5 bg-white/[0.03] border border-white/10 rounded-[28px] space-y-5 shadow-inner">
                   {/* AI ENHANCE - MAINTENANCE */}
-                  <div className="space-y-2 relative group cursor-not-allowed" onClick={() => showToast("AI Enhance özelliği bakım çalışması nedeniyle devre dışıdır.", "error")} title="⚠️ Bakım Çalışması: Bu özellik geçici olarak kullanılamıyor">
+                  <div className="space-y-2 relative group cursor-not-allowed" onClick={() => showToast("AI Enhance özelliği devre dışıdır.", "error")} title=" ❌ Hizmet dışı: Bu özellik kullanılamıyor.">
                     <div className="opacity-50 grayscale pointer-events-none">
                       <FeatureToggle featureKey="aiEnhance" state={false} onToggle={() => { }} onInfo={setFeatureInfo} />
                     </div>
                   </div>
                   {/* HD MODE - MAINTENANCE */}
-                  <div className="space-y-2 border-t border-white/5 pt-4 relative group cursor-not-allowed" onClick={() => showToast("HD Kalite özelliği bakım çalışması nedeniyle devre dışıdır.", "error")} title="⚠️ Bakım Çalışması: Bu özellik geçici olarak kullanılamıyor">
+                  <div className="space-y-2 border-t border-white/5 pt-4 relative group cursor-not-allowed" onClick={() => showToast("HD Kalite özelliği devre dışıdır.", "error")} title="❌ Hizmet dışı: Bu özellik kullanılamıyor.">
                     <div className="opacity-50 grayscale pointer-events-none">
                       <FeatureToggle featureKey="hdMode" state={false} onToggle={() => { }} onInfo={setFeatureInfo} />
                     </div>
                   </div>
                   {/* OPTIMIZE - MAINTENANCE */}
-                  <div className="space-y-2 border-t border-white/5 pt-4 relative group cursor-not-allowed" onClick={() => showToast("Optimize özelliği bakım çalışması nedeniyle devre dışıdır.", "error")} title="⚠️ Bakım Çalışması: Bu özellik geçici olarak kullanılamıyor">
+                  <div className="space-y-2 border-t border-white/5 pt-4 relative group cursor-not-allowed" onClick={() => showToast("Optimize özelliği devre dışıdır.", "error")} title="❌ Hizmet dışı: Bu özellik kullanılamıyor.">
                     <div className="opacity-50 grayscale pointer-events-none">
                       <FeatureToggle featureKey="optimize" state={false} onToggle={() => { }} onInfo={setFeatureInfo} />
                     </div>
                   </div>
                   {/* SMART CROP - MAINTENANCE */}
-                  <div className="space-y-2 border-t border-white/5 pt-4 relative group cursor-not-allowed" onClick={() => showToast("Smart Crop özelliği bakım çalışması nedeniyle devre dışıdır.", "error")} title="⚠️ Bakım Çalışması: Bu özellik geçici olarak kullanılamıyor">
+                  <div className="space-y-2 border-t border-white/5 pt-4 relative group cursor-not-allowed" onClick={() => showToast("Smart Crop özelliği devre dışıdır.", "error")} title="❌ Hizmet dışı: Bu özellik kullanılamıyor.">
                     <div className="opacity-50 grayscale pointer-events-none">
                       <FeatureToggle featureKey="smartCrop" state={false} onToggle={() => { }} onInfo={setFeatureInfo} />
                     </div>
@@ -2278,12 +2278,12 @@ const App = () => {
                 {/* YENİ AI UPSCALE BÖLÜMÜ - restored to original style + new 4x toggle */}
                 <div className="p-5 bg-white/[0.03] border border-white/10 rounded-[28px] space-y-5 shadow-inner mt-6">
                   {/* ULTRA HD - MAINTENANCE */}
-                  <div className="space-y-2 relative group cursor-not-allowed" onClick={() => showToast("Ultra HD (AI SR 2X) özelliği bakım çalışması nedeniyle devre dışıdır.", "error")} title="⚠️ Bakım Çalışması: Bu özellik geçici olarak kullanılamıyor">
+                  <div className="space-y-2 relative group cursor-not-allowed" onClick={() => showToast("Ultra HD (AI SR 2X) özelliği devre dışıdır.", "error")} title="❌ Hizmet dışı: Bu özellik kullanılamıyor.">
                     <div className="opacity-50 grayscale pointer-events-none">
                       <FeatureToggle featureKey="ultraHd" state={false} onToggle={() => { }} onInfo={setFeatureInfo} />
                     </div>
                   </div>
-                  <div className="space-y-2 border-t border-white/5 pt-4 relative group cursor-not-allowed" onClick={() => showToast("4X Super Resolution özelliği şu an bakım çalışması nedeniyle devre dışıdır.", "error")} title="⚠️ Bakım Çalışması: Bu özellik geçici olarak kullanılamıyor">
+                  <div className="space-y-2 border-t border-white/5 pt-4 relative group cursor-not-allowed" onClick={() => showToast("4X Super Resolution özelliği devre dışıdır.", "error")} title="❌ Hizmet dışı: Bu özellik kullanılamıyor.">
                     <div className="opacity-50 grayscale pointer-events-none">
                       <FeatureToggle featureKey="ultraHd4x" state={false} onToggle={() => { }} onInfo={setFeatureInfo} />
                     </div>
@@ -2547,4 +2547,5 @@ const App = () => {
 };
 
 export default App;
+
 
